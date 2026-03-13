@@ -1,0 +1,154 @@
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ArrowRight, Users, Bot, Sparkles, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const content = {
+  en: {
+    badge: 'Founding clients: setup fee waived',
+    headline: 'Your complete AI team',
+    headlineSub: 'starting at \u20ac490/month',
+    subheadline:
+      '16 specialized teams. 79 AI agents. 160 skills. A C-level executive in the loop. No tool to learn. Cancel anytime.',
+    cta1: 'Choose Your Team',
+    cta2: 'See Pricing',
+    stats: [
+      { value: '16', label: 'Teams', icon: Users },
+      { value: '79', label: 'Agents', icon: Bot },
+      { value: '160', label: 'Skills', icon: Sparkles },
+      { value: '25y', label: 'Experience', icon: Clock },
+    ],
+  },
+  fr: {
+    badge: 'Clients fondateurs : frais de setup offerts',
+    headline: 'Votre \u00e9quipe IA compl\u00e8te',
+    headlineSub: '\u00e0 partir de 490 \u20ac/mois',
+    subheadline:
+      '16 \u00e9quipes sp\u00e9cialis\u00e9es. 79 agents IA. 160 comp\u00e9tences. Un dirigeant tech dans la boucle. Aucun outil \u00e0 apprendre. R\u00e9siliable \u00e0 tout moment.',
+    cta1: 'Choisir votre \u00e9quipe',
+    cta2: 'Voir les tarifs',
+    stats: [
+      { value: '16', label: '\u00c9quipes', icon: Users },
+      { value: '79', label: 'Agents', icon: Bot },
+      { value: '160', label: 'Comp\u00e9tences', icon: Sparkles },
+      { value: '25 ans', label: 'Exp\u00e9rience', icon: Clock },
+    ],
+  },
+};
+
+interface TeamHeroProps {
+  locale: 'en' | 'fr';
+}
+
+export function TeamHero({ locale }: TeamHeroProps) {
+  const t = content[locale];
+
+  return (
+    <section
+      id="hero"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
+    >
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20" />
+
+      {/* Animated grid pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, currentColor 1px, transparent 1px),
+            linear-gradient(to bottom, currentColor 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+        }}
+      />
+
+      {/* Radial glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/5 via-transparent to-transparent rounded-full blur-3xl" />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+        <div className="text-center max-w-4xl mx-auto">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge
+              variant="secondary"
+              className="mb-6 px-4 py-1.5 text-sm font-medium"
+            >
+              {t.badge}
+            </Badge>
+          </motion.div>
+
+          {/* Headline */}
+          <motion.h1
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            {t.headline}
+            <br />
+            <span className="text-muted-foreground">{t.headlineSub}</span>
+          </motion.h1>
+
+          {/* Subheadline */}
+          <motion.p
+            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {t.subheadline}
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <a href="#teams">
+              <Button size="lg" className="min-h-touch text-base px-8 group">
+                {t.cta1}
+                <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </a>
+            <a href="#pricing">
+              <Button
+                variant="outline"
+                size="lg"
+                className="min-h-touch text-base px-8"
+              >
+                {t.cta2}
+              </Button>
+            </a>
+          </motion.div>
+
+          {/* Stats row */}
+          <motion.div
+            className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            {t.stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <stat.icon className="size-5 text-muted-foreground mr-2" />
+                  <span className="text-3xl font-bold">{stat.value}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
