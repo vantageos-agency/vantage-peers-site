@@ -27,7 +27,7 @@ export function TeamLandingPage({ initialLocale = 'fr' }: TeamLandingPageProps) 
   const [locale, setLocale] = useState<Locale>(initialLocale);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <TeamStructuredData locale={locale} />
       <TeamHeader locale={locale} onLocaleChange={setLocale} />
       <main>
