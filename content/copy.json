@@ -1,0 +1,322 @@
+{
+  "hero": {
+    "en": {
+      "badge": "Open Source / MIT License",
+      "headline": "Memory, messaging, and tasks for multi-agent Claude Code",
+      "subheadline": "VantagePeers is a self-hosted MCP server that gives your Claude Code agents shared semantic memory, cross-machine messaging with read receipts, and full task management. Built on Convex + RAG. Free forever.",
+      "cta_primary": "Get Started on GitHub",
+      "cta_secondary": "Read the Docs"
+    },
+    "fr": {
+      "badge": "Open Source / Licence MIT",
+      "headline": "Memoire, messagerie et taches pour Claude Code multi-agents",
+      "subheadline": "VantagePeers est un serveur MCP auto-heberge qui donne a vos agents Claude Code une memoire semantique partagee, une messagerie cross-machine avec accuses de reception, et une gestion complete des taches. Construit sur Convex + RAG. Gratuit pour toujours.",
+      "cta_primary": "Demarrer sur GitHub",
+      "cta_secondary": "Lire la documentation"
+    }
+  },
+  "stats": {
+    "en": [
+      { "value": "10", "label": "Database Tables" },
+      { "value": "35+", "label": "MCP Tools" },
+      { "value": "$0", "label": "Monthly Cost" },
+      { "value": "<10min", "label": "Setup Time" }
+    ],
+    "fr": [
+      { "value": "10", "label": "Tables" },
+      { "value": "35+", "label": "Outils MCP" },
+      { "value": "0 $", "label": "Cout mensuel" },
+      { "value": "<10min", "label": "Installation" }
+    ]
+  },
+  "problem": {
+    "en": {
+      "headline": "Multi-agent coordination is broken",
+      "points": [
+        "mem0: $249/mo for graph memory. No messaging, no tasks. Hidden LLM extraction costs on every memory.add().",
+        "Zep: $475/mo + opaque episode-based overages. Community Edition deprecated April 2025. No self-hosting path.",
+        "claude-peers: localhost only. Two agents on different machines cannot communicate.",
+        "36.9% of multi-agent failures are caused by inter-agent misalignment. No existing product combines memory + messaging + tasks in one system."
+      ]
+    },
+    "fr": {
+      "headline": "La coordination multi-agents est cassee",
+      "points": [
+        "mem0 : 249 $/mois pour la memoire graphe. Pas de messagerie, pas de taches. Couts LLM caches a chaque memory.add().",
+        "Zep : 475 $/mois + depassements opaques par episodes. Community Edition abandonnee en avril 2025. Pas d'auto-hebergement.",
+        "claude-peers : localhost uniquement. Deux agents sur des machines differentes ne peuvent pas communiquer.",
+        "36,9 % des echecs multi-agents sont causes par le desalignement inter-agents. Aucun produit existant ne combine memoire + messagerie + taches."
+      ]
+    }
+  },
+  "solution": {
+    "en": {
+      "headline": "One MCP server. Three coordination primitives.",
+      "description": "VantagePeers replaces your memory SaaS, your messaging hack, and your task spreadsheet with a single self-hosted backend. Semantic memory with RAG search, real-time messaging with read receipts, and task management with priorities and dependencies — all accessible as MCP tools from any Claude Code instance, on any machine.",
+      "features": [
+        {
+          "title": "Shared Semantic Memory",
+          "description": "5 memory types with OpenAI embeddings, hybrid BM25+vector search, memory relations, and namespace scoping. Your agents remember what matters."
+        },
+        {
+          "title": "Cross-Machine Messaging",
+          "description": "Channels, broadcast, per-recipient read receipts, and two-tier routing (role-level + instance-level). Messages persist in Convex cloud — offline agents get their messages when they reconnect."
+        },
+        {
+          "title": "Task Management",
+          "description": "Priorities, dependencies, missions, recurring tasks with cron, and structured completion notes. Agents self-organize without human intervention."
+        }
+      ]
+    },
+    "fr": {
+      "headline": "Un serveur MCP. Trois primitives de coordination.",
+      "description": "VantagePeers remplace votre SaaS de memoire, votre hack de messagerie et votre tableur de taches par un seul backend auto-heberge. Memoire semantique avec recherche RAG, messagerie temps reel avec accuses de reception, et gestion des taches avec priorites et dependances — le tout accessible comme outils MCP depuis n'importe quelle instance Claude Code, sur n'importe quelle machine.",
+      "features": [
+        {
+          "title": "Memoire semantique partagee",
+          "description": "5 types de memoire avec embeddings OpenAI, recherche hybride BM25+vecteur, relations entre memoires et namespaces. Vos agents retiennent ce qui compte."
+        },
+        {
+          "title": "Messagerie cross-machine",
+          "description": "Canaux, broadcast, accuses de reception par destinataire, et routage a deux niveaux (role + instance). Les messages persistent dans Convex — les agents hors ligne recoivent leurs messages a la reconnexion."
+        },
+        {
+          "title": "Gestion des taches",
+          "description": "Priorites, dependances, missions, taches recurrentes avec cron, et notes de completion structurees. Les agents s'auto-organisent sans intervention humaine."
+        }
+      ]
+    }
+  },
+  "how_it_works": {
+    "en": {
+      "headline": "Running in under 10 minutes",
+      "steps": [
+        {
+          "step": "1",
+          "title": "Install",
+          "description": "Clone the repo, run npm install, then npx convex dev to deploy your backend."
+        },
+        {
+          "step": "2",
+          "title": "Configure",
+          "description": "Add the MCP server to your Claude Code settings. Point it at your Convex deployment URL."
+        },
+        {
+          "step": "3",
+          "title": "Coordinate",
+          "description": "Your agents immediately share memory, exchange messages, and manage tasks across machines."
+        }
+      ]
+    },
+    "fr": {
+      "headline": "Operationnel en moins de 10 minutes",
+      "steps": [
+        {
+          "step": "1",
+          "title": "Installer",
+          "description": "Clonez le depot, lancez npm install, puis npx convex dev pour deployer le backend."
+        },
+        {
+          "step": "2",
+          "title": "Configurer",
+          "description": "Ajoutez le serveur MCP a vos parametres Claude Code. Pointez-le vers votre URL de deploiement Convex."
+        },
+        {
+          "step": "3",
+          "title": "Coordonner",
+          "description": "Vos agents partagent instantanement memoire, messages et taches entre machines."
+        }
+      ]
+    }
+  },
+  "comparison": {
+    "en": {
+      "headline": "How VantagePeers compares",
+      "columns": ["Feature", "VantagePeers", "mem0", "Zep", "claude-peers"],
+      "rows": [
+        ["Semantic memory", "Yes (5 types + RAG)", "Yes", "Yes", "No"],
+        ["Inter-agent messaging", "Yes (channels + broadcast)", "No", "No", "Local only"],
+        ["Task management", "Yes (priorities + cron)", "No", "No", "No"],
+        ["Cross-machine", "Yes", "Cloud only", "Cloud only", "No"],
+        ["Read receipts", "Yes (per-recipient, timestamped)", "No", "No", "No"],
+        ["Multi-instance routing", "Yes (role + instance tier)", "No", "No", "No"],
+        ["Open source", "MIT (full feature set)", "Partial (no graph in OSS)", "Graphiti only (Zep CE deprecated)", "Yes"],
+        ["Self-hosted", "Yes (Convex free tier)", "Partial", "No", "Yes (localhost)"],
+        ["Monthly cost", "Free", "$249+ (Pro)", "$475+ (Flex Plus)", "Free"]
+      ]
+    },
+    "fr": {
+      "headline": "VantagePeers face a la concurrence",
+      "columns": ["Fonctionnalite", "VantagePeers", "mem0", "Zep", "claude-peers"],
+      "rows": [
+        ["Memoire semantique", "Oui (5 types + RAG)", "Oui", "Oui", "Non"],
+        ["Messagerie inter-agents", "Oui (canaux + broadcast)", "Non", "Non", "Local uniquement"],
+        ["Gestion des taches", "Oui (priorites + cron)", "Non", "Non", "Non"],
+        ["Cross-machine", "Oui", "Cloud uniquement", "Cloud uniquement", "Non"],
+        ["Accuses de reception", "Oui (par destinataire, horodates)", "Non", "Non", "Non"],
+        ["Routage multi-instance", "Oui (role + instance)", "Non", "Non", "Non"],
+        ["Open source", "MIT (toutes fonctionnalites)", "Partiel (pas de graphe en OSS)", "Graphiti seul (Zep CE abandonne)", "Oui"],
+        ["Auto-heberge", "Oui (Convex gratuit)", "Partiel", "Non", "Oui (localhost)"],
+        ["Cout mensuel", "Gratuit", "249 $+ (Pro)", "475 $+ (Flex Plus)", "Gratuit"]
+      ]
+    }
+  },
+  "features": {
+    "en": [
+      {
+        "icon": "brain",
+        "title": "5 Memory Types",
+        "description": "User, feedback, project, reference, and episode memories — each with semantic embeddings and namespace scoping for organized retrieval."
+      },
+      {
+        "icon": "message-circle",
+        "title": "Inter-Agent Messaging",
+        "description": "Channels, broadcast, per-recipient read receipts, and two-tier routing. Messages persist in cloud — offline agents get them on reconnect."
+      },
+      {
+        "icon": "list-checks",
+        "title": "Task Management",
+        "description": "Priorities, dependencies, missions, recurring tasks with cron scheduling, and structured completion notes for audit trails."
+      },
+      {
+        "icon": "search",
+        "title": "Semantic Search",
+        "description": "RAG-powered vector search with OpenAI text-embedding-3-small. Hybrid BM25+vector retrieval for high-precision recall."
+      },
+      {
+        "icon": "git-branch",
+        "title": "Memory Relations",
+        "description": "Link memories with typed relations — updates supersede old entries, extensions add detail. Build a knowledge graph that evolves."
+      },
+      {
+        "icon": "monitor",
+        "title": "Multi-Instance Support",
+        "description": "Run the same agent role on multiple machines. Instance-level routing ensures the right message reaches the right machine."
+      }
+    ],
+    "fr": [
+      {
+        "icon": "brain",
+        "title": "5 types de memoire",
+        "description": "Memoires utilisateur, feedback, projet, reference et episode — chacune avec embeddings semantiques et namespaces pour une recuperation organisee."
+      },
+      {
+        "icon": "message-circle",
+        "title": "Messagerie inter-agents",
+        "description": "Canaux, broadcast, accuses de reception par destinataire, et routage a deux niveaux. Les messages persistent dans le cloud — les agents hors ligne les recoivent a la reconnexion."
+      },
+      {
+        "icon": "list-checks",
+        "title": "Gestion des taches",
+        "description": "Priorites, dependances, missions, taches recurrentes avec planification cron, et notes de completion structurees pour l'auditabilite."
+      },
+      {
+        "icon": "search",
+        "title": "Recherche semantique",
+        "description": "Recherche vectorielle RAG avec OpenAI text-embedding-3-small. Recuperation hybride BM25+vecteur pour un rappel de haute precision."
+      },
+      {
+        "icon": "git-branch",
+        "title": "Relations entre memoires",
+        "description": "Liez les memoires avec des relations typees — les mises a jour remplacent, les extensions ajoutent du detail. Un graphe de connaissances qui evolue."
+      },
+      {
+        "icon": "monitor",
+        "title": "Support multi-instance",
+        "description": "Executez le meme role d'agent sur plusieurs machines. Le routage par instance garantit que le bon message atteint la bonne machine."
+      }
+    ]
+  },
+  "faq": {
+    "en": [
+      {
+        "q": "Is VantagePeers really free?",
+        "a": "Yes. MIT license, self-hosted on your own Convex deployment. You only pay for Convex (free tier available) and OpenAI embeddings (text-embedding-3-small costs ~$0.02 per 1M tokens). No subscription, no per-agent fees, no usage caps."
+      },
+      {
+        "q": "How is this different from mem0?",
+        "a": "mem0 is memory-only. Graph memory requires their $249/mo Pro tier and still has no messaging or task management. VantagePeers gives you memory + messaging + tasks in one system, fully open source, for free. Plus, mem0's OSS version has no graph features — the best features are cloud-locked."
+      },
+      {
+        "q": "How is this different from Zep?",
+        "a": "Zep's Flex Plus tier costs $475/mo with opaque episode-based overages. They deprecated their Community Edition in April 2025 — self-hosting is effectively dead. VantagePeers is fully self-hosted, MIT licensed, and adds messaging and tasks that Zep does not offer."
+      },
+      {
+        "q": "Can agents on different machines communicate?",
+        "a": "Yes. Unlike claude-peers (localhost only, bound to 127.0.0.1:7899), VantagePeers uses Convex cloud so any agent anywhere can send and receive messages with per-recipient read receipts. Messages persist — offline agents get their messages when they come back online."
+      },
+      {
+        "q": "What models are supported?",
+        "a": "VantagePeers works with Claude Code via MCP (Model Context Protocol). Embeddings use OpenAI text-embedding-3-small via the Vercel AI SDK. The MCP interface means any MCP-compatible client can use it."
+      },
+      {
+        "q": "How long does setup take?",
+        "a": "Under 10 minutes. Clone the repo, npm install, npx convex dev to deploy, add the MCP server config to Claude Code settings. Four steps, no infrastructure to manage."
+      },
+      {
+        "q": "Do I need to run a broker or daemon process?",
+        "a": "No. Unlike claude-peers (which requires a localhost broker on port 7899) or Redis-based solutions, VantagePeers uses Convex as a managed backend. No broker, no daemon, no Redis server. Just your Convex deployment URL."
+      }
+    ],
+    "fr": [
+      {
+        "q": "VantagePeers est-il vraiment gratuit ?",
+        "a": "Oui. Licence MIT, auto-heberge sur votre propre deploiement Convex. Vous ne payez que Convex (offre gratuite disponible) et les embeddings OpenAI (text-embedding-3-small coute environ 0,02 $ par million de tokens). Pas d'abonnement, pas de frais par agent, pas de plafond d'utilisation."
+      },
+      {
+        "q": "En quoi est-ce different de mem0 ?",
+        "a": "mem0 ne fait que la memoire. La memoire graphe necessite leur offre Pro a 249 $/mois et n'inclut toujours ni messagerie ni gestion de taches. VantagePeers offre memoire + messagerie + taches dans un seul systeme, entierement open source, gratuitement. De plus, la version OSS de mem0 n'a pas de fonctionnalites graphe — les meilleures fonctions sont verouillees dans le cloud."
+      },
+      {
+        "q": "En quoi est-ce different de Zep ?",
+        "a": "L'offre Flex Plus de Zep coute 475 $/mois avec des depassements opaques bases sur les episodes. Ils ont abandonne leur Community Edition en avril 2025 — l'auto-hebergement est mort. VantagePeers est entierement auto-heberge, sous licence MIT, et ajoute messagerie et taches que Zep n'offre pas."
+      },
+      {
+        "q": "Les agents sur differentes machines peuvent-ils communiquer ?",
+        "a": "Oui. Contrairement a claude-peers (localhost uniquement, lie a 127.0.0.1:7899), VantagePeers utilise Convex cloud pour que tout agent puisse envoyer et recevoir des messages avec accuses de reception par destinataire. Les messages persistent — les agents hors ligne recoivent leurs messages a la reconnexion."
+      },
+      {
+        "q": "Quels modeles sont supportes ?",
+        "a": "VantagePeers fonctionne avec Claude Code via MCP (Model Context Protocol). Les embeddings utilisent OpenAI text-embedding-3-small via le Vercel AI SDK. L'interface MCP signifie que tout client compatible MCP peut l'utiliser."
+      },
+      {
+        "q": "Combien de temps prend l'installation ?",
+        "a": "Moins de 10 minutes. Clonez le depot, npm install, npx convex dev pour deployer, ajoutez la configuration du serveur MCP dans les parametres Claude Code. Quatre etapes, aucune infrastructure a gerer."
+      },
+      {
+        "q": "Faut-il un broker ou un processus daemon ?",
+        "a": "Non. Contrairement a claude-peers (qui necessite un broker localhost sur le port 7899) ou aux solutions basees sur Redis, VantagePeers utilise Convex comme backend gere. Pas de broker, pas de daemon, pas de serveur Redis. Juste votre URL de deploiement Convex."
+      }
+    ]
+  },
+  "cta": {
+    "en": {
+      "headline": "Stop paying $475/mo for half the features",
+      "subheadline": "Memory + messaging + tasks. Open source. Self-hosted. Set up in 10 minutes.",
+      "button": "Get Started on GitHub"
+    },
+    "fr": {
+      "headline": "Arretez de payer 475 $/mois pour la moitie des fonctionnalites",
+      "subheadline": "Memoire + messagerie + taches. Open source. Auto-heberge. Installe en 10 minutes.",
+      "button": "Demarrer sur GitHub"
+    }
+  },
+  "footer": {
+    "en": {
+      "tagline": "Open source AI agent coordination. Built with Convex.",
+      "links": {
+        "github": "GitHub",
+        "docs": "Documentation",
+        "discord": "Community"
+      }
+    },
+    "fr": {
+      "tagline": "Coordination d'agents IA open source. Construit avec Convex.",
+      "links": {
+        "github": "GitHub",
+        "docs": "Documentation",
+        "discord": "Communaute"
+      }
+    }
+  }
+}
