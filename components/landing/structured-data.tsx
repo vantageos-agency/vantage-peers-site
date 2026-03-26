@@ -19,39 +19,43 @@ const organizationSchema = {
 	sameAs: ["https://github.com/vantageos/vantage-peers"],
 };
 
-const softwareApplicationSchema = {
+const webSiteSchema = {
 	"@context": "https://schema.org",
-	"@type": "SoftwareApplication",
-	"@id": `${BASE_URL}/#software`,
+	"@type": "WebSite",
+	"@id": `${BASE_URL}/#website`,
 	name: "VantagePeers",
-	applicationCategory: "DeveloperApplication",
-	operatingSystem: "Any",
-	description:
-		"Shared memory, messaging, and task management MCP server for multi-agent Claude Code. Built on Convex with vector embeddings via @convex-dev/rag.",
 	url: BASE_URL,
-	downloadUrl: "https://github.com/vantageos/vantage-peers",
-	softwareVersion: "1.0.0",
-	license: "https://opensource.org/licenses/MIT",
-	offers: {
-		"@type": "Offer",
-		price: "0",
-		priceCurrency: "USD",
-		description: "Free, open source, self-hosted",
-	},
-	author: {
+	publisher: {
 		"@id": `${BASE_URL}/#organization`,
 	},
 };
 
-// NOTE: FAQPage rich results are restricted to government and health sites as of
-// August 2023. Google will parse this schema but will not surface rich results
-// for non-eligible sites. It is included here per explicit project requirement
-// for knowledge graph entity linking and LLM-readable structured data.
-const faqSchema = {
+// Q&A pairs embedded in WebPage.mainEntity — FAQPage type is restricted to
+// government/health sites since August 2023 and is not used here.
+const webPageSchema = {
 	"@context": "https://schema.org",
-	"@type": "FAQPage",
-	"@id": `${BASE_URL}/#faq`,
+	"@type": "WebPage",
+	"@id": `${BASE_URL}/#webpage`,
+	name: "VantagePeers — Shared Memory for Multi-Agent Claude Code",
+	description:
+		"Open source MCP server. 35 tools, 10 tables. Semantic memory, inter-agent messaging, task management. Free, self-hosted.",
+	url: BASE_URL,
+	isPartOf: {
+		"@id": `${BASE_URL}/#website`,
+	},
+	speakable: {
+		"@type": "SpeakableSpecification",
+		cssSelector: ["#hero h1", "#hero p"],
+	},
 	mainEntity: [
+		{
+			"@type": "Question",
+			name: "Is VantagePeers free to use?",
+			acceptedAnswer: {
+				"@type": "Answer",
+				text: "Yes. VantagePeers is fully open source under the MIT license. It is free, self-hosted, and has no subscription fee.",
+			},
+		},
 		{
 			"@type": "Question",
 			name: "What is VantagePeers?",
@@ -78,14 +82,6 @@ const faqSchema = {
 		},
 		{
 			"@type": "Question",
-			name: "Is VantagePeers free to use?",
-			acceptedAnswer: {
-				"@type": "Answer",
-				text: "Yes. VantagePeers is fully open source under the MIT license. It is free, self-hosted, and has no subscription fee.",
-			},
-		},
-		{
-			"@type": "Question",
 			name: "How does VantagePeers compare to mem0 or Zep?",
 			acceptedAnswer: {
 				"@type": "Answer",
@@ -93,6 +89,30 @@ const faqSchema = {
 			},
 		},
 	],
+};
+
+const softwareApplicationSchema = {
+	"@context": "https://schema.org",
+	"@type": "SoftwareApplication",
+	"@id": `${BASE_URL}/#software`,
+	name: "VantagePeers",
+	applicationCategory: "DeveloperApplication",
+	operatingSystem: "Any",
+	description:
+		"Shared memory, messaging, and task management MCP server for multi-agent Claude Code. Built on Convex with vector embeddings via @convex-dev/rag.",
+	url: BASE_URL,
+	downloadUrl: "https://github.com/vantageos/vantage-peers",
+	softwareVersion: "1.0.0",
+	license: "https://opensource.org/licenses/MIT",
+	offers: {
+		"@type": "Offer",
+		price: "0",
+		priceCurrency: "USD",
+		description: "Free, open source, self-hosted",
+	},
+	author: {
+		"@id": `${BASE_URL}/#organization`,
+	},
 };
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
@@ -109,8 +129,9 @@ export function LandingStructuredData() {
 	return (
 		<>
 			<JsonLd data={organizationSchema} />
+			<JsonLd data={webSiteSchema} />
+			<JsonLd data={webPageSchema} />
 			<JsonLd data={softwareApplicationSchema} />
-			<JsonLd data={faqSchema} />
 		</>
 	);
 }

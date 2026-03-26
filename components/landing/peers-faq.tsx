@@ -42,18 +42,18 @@ const faqs = {
 		{
 			question: "VantagePeers est-il vraiment gratuit ?",
 			answer:
-				"Oui. Licence MIT. Vous clonez le repo, deployez sur votre propre compte Convex (genereux niveau gratuit), et c'est tout. Pas d'abonnement, pas de frais d'utilisation, pas de niveau enterprise requis.",
+				"Oui. Licence MIT. Vous clonez le repo, déployez sur votre propre compte Convex (généreux niveau gratuit), et c'est tout. Pas d'abonnement, pas de frais d'utilisation, pas de niveau enterprise requis.",
 		},
 		{
-			question: "Qu'est-ce que Convex et dois-je le gerer ?",
+			question: "Qu'est-ce que Convex et dois-je le gérer ?",
 			answer:
-				"Convex est une plateforme backend temps reel. VantagePeers l'utilise comme base de donnees et runtime serverless. Vous deployez une fois avec `npx convex deploy` — Convex gere automatiquement la mise a l'echelle, les sauvegardes et la disponibilite. Le niveau gratuit est suffisant pour la plupart des configurations d'agents.",
+				"Convex est une plateforme backend temps réel. VantagePeers l'utilise comme base de données et runtime serverless. Vous déployez une fois avec `npx convex deploy` — Convex gère automatiquement la mise à l'échelle, les sauvegardes et la disponibilité. Le niveau gratuit est suffisant pour la plupart des configurations d'agents.",
 		},
 		{
 			question:
-				"En quoi est-ce different d'un simple fichier SQLite en local ?",
+				"En quoi est-ce différent d'un simple fichier SQLite en local ?",
 			answer:
-				"Trois differences cles : (1) Cross-machine — vos agents sur differentes machines partagent la memoire. (2) Temps reel — les messages et mises a jour de taches arrivent instantanement sans polling. (3) Structure — 10 tables typees avec relations, pas de stockage cle-valeur plat. SQLite fonctionne jusqu'a la deuxieme machine.",
+				"Trois différences clés : (1) Cross-machine — vos agents sur différentes machines partagent la mémoire. (2) Temps réel — les messages et mises à jour de tâches arrivent instantanément sans polling. (3) Structure — 10 tables typées avec relations, pas de stockage clé-valeur plat. SQLite fonctionne jusqu'à la deuxième machine.",
 		},
 		{
 			question:
@@ -63,16 +63,16 @@ const faqs = {
 		},
 		{
 			question:
-				"Que se passe-t-il avec mes donnees si Convex change ses prix ?",
+				"Que se passe-t-il avec mes données si Convex change ses prix ?",
 			answer:
-				"Vous possedez vos donnees. Convex a une fonctionnalite d'export. VantagePeers est open source — le schema est documente et vous pouvez migrer vers n'importe quel backend Postgres ou SQLite en reecrivant les fonctions Convex. Pas de dependance.",
+				"Vous possédez vos données. Convex a une fonctionnalité d'export. VantagePeers est open source — le schéma est documenté et vous pouvez migrer vers n'importe quel backend Postgres ou SQLite en réécrivant les fonctions Convex. Pas de dépendance.",
 		},
 	],
 };
 
 const sectionContent = {
 	en: { title: "Frequently Asked Questions" },
-	fr: { title: "Questions frequentes" },
+	fr: { title: "Questions fréquentes" },
 };
 
 interface PeersFaqProps {

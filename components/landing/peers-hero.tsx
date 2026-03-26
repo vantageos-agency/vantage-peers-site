@@ -1,16 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-	ArrowRight,
-	CircleDollarSign,
-	Clock,
-	Database,
-	Github,
-	Wrench,
-} from "lucide-react";
+import { CircleDollarSign, Clock, Database, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 const content = {
 	en: {
@@ -30,12 +22,12 @@ const content = {
 	},
 	fr: {
 		badge: "Open-source — Licence MIT",
-		headline: "Memoire persistante pour agents IA.",
+		headline: "Mémoire persistante pour agents IA.",
 		headlineSub: "Enfin gratuite.",
 		subheadline:
-			"VantagePeers donne a vos agents Claude une memoire partagee, des messages cross-machine et une coordination de taches — sans dependance vendeur ni facture mensuelle.",
+			"VantagePeers donne à vos agents Claude une mémoire partagée, des messages cross-machine et une coordination de tâches — sans dépendance vendeur ni facture mensuelle.",
 		cta1: "Voir sur GitHub",
-		cta2: "Comment ca marche",
+		cta2: "Comment ça marche",
 		stats: [
 			{ value: "10", label: "Tables BD", icon: Database },
 			{ value: "35", label: "Outils MCP", icon: Wrench },
@@ -124,24 +116,35 @@ export function PeersHero({ locale }: PeersHeroProps) {
 							href="https://github.com/vantageos/vantage-peers"
 							target="_blank"
 							rel="noopener noreferrer"
+							className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-8 rounded-md font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring glow-on-hover group"
 						>
-							<Button
-								size="lg"
-								className="min-h-touch text-base px-8 group glow-on-hover"
+							<svg
+								aria-hidden="true"
+								className="size-4 mr-2"
+								viewBox="0 0 24 24"
+								fill="currentColor"
 							>
-								<Github className="mr-2 size-4" />
-								{t.cta1}
-								<ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
-							</Button>
+								<path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+							</svg>
+							{t.cta1}
+							<svg
+								aria-hidden="true"
+								className="ml-2 size-4 transition-transform group-hover:translate-x-1"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<path d="M5 12h14M12 5l7 7-7 7" />
+							</svg>
 						</a>
-						<a href="#how-it-works">
-							<Button
-								variant="outline"
-								size="lg"
-								className="min-h-touch text-base px-8"
-							>
-								{t.cta2}
-							</Button>
+						<a
+							href="#how-it-works"
+							className="inline-flex items-center justify-center min-h-touch text-base px-8 rounded-md font-medium border border-border bg-background text-foreground hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						>
+							{t.cta2}
 						</a>
 					</motion.div>
 
@@ -155,7 +158,7 @@ export function PeersHero({ locale }: PeersHeroProps) {
 						{t.stats.map((stat) => (
 							<div key={stat.label} className="text-center">
 								<div className="flex items-center justify-center mb-2">
-									<stat.icon className="size-5 text-muted-foreground mr-2" />
+									<stat.icon className="size-5 text-muted-foreground mr-2" aria-hidden="true" />
 									<span className="text-3xl font-bold tabular-nums">
 										{stat.value}
 									</span>

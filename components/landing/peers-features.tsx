@@ -70,13 +70,13 @@ const content = {
 	fr: {
 		title: "Tout ce dont les agents ont besoin. Rien que vous ne payez.",
 		subtitle:
-			"10 tables de base de donnees. 35 outils MCP. Un deploiement Convex. Tous les primitives pour coordonner des agents IA multi-machines.",
+			"10 tables de base de données. 35 outils MCP. Un déploiement Convex. Tous les primitifs pour coordonner des agents IA multi-machines.",
 		features: [
 			{
 				icon: Brain,
-				title: "Systeme de memoire type",
+				title: "Système de mémoire typé",
 				description:
-					"Quatre types de memoire : profils utilisateur, feedback, contexte projet et references. Par namespace de projet. Rappelable par recherche semantique.",
+					"Quatre types de mémoire : profils utilisateur, feedback, contexte projet et références. Par namespace de projet. Rappelable par recherche sémantique.",
 				color: "text-chart-1",
 				bgColor: "bg-chart-1/10",
 			},
@@ -84,31 +84,31 @@ const content = {
 				icon: MessageSquare,
 				title: "Messagerie cross-machine",
 				description:
-					"Les agents s'envoient des messages entre machines avec accuses de lecture, routage par canal et ciblage d'instance. Pas de polling necessaire.",
+					"Les agents s'envoient des messages entre machines avec accusés de lecture, routage par canal et ciblage d'instance. Pas de polling nécessaire.",
 				color: "text-chart-2",
 				bgColor: "bg-chart-2/10",
 			},
 			{
 				icon: CheckSquare,
-				title: "Coordination de taches",
+				title: "Coordination de tâches",
 				description:
-					"Assignez des taches entre agents avec priorite, echeances, bloqueurs et notes de completion. Audit complet. Taches recurrentes via cron.",
+					"Assignez des tâches entre agents avec priorité, échéances, bloqueurs et notes de complétion. Audit complet. Tâches récurrentes via cron.",
 				color: "text-chart-4",
 				bgColor: "bg-chart-4/10",
 			},
 			{
 				icon: Search,
-				title: "Rappel semantique",
+				title: "Rappel sémantique",
 				description:
-					'Interrogez la memoire par sens, pas seulement par mot-cle. Demandez "que savons-nous sur l\'auth ?" et obtenez les memoires les plus pertinentes classees par pertinence.',
+					'Interrogez la mémoire par sens, pas seulement par mot-clé. Demandez "que savons-nous sur l\'auth ?" et obtenez les mémoires les plus pertinentes classées par pertinence.',
 				color: "text-chart-5",
 				bgColor: "bg-chart-5/10",
 			},
 			{
 				icon: GitBranch,
-				title: "Graphe de memoire",
+				title: "Graphe de mémoire",
 				description:
-					"Liez les memoires aux taches, sessions et agents. Suivez l'evolution du contexte dans le temps. Construisez automatiquement une connaissance institutionnelle.",
+					"Liez les mémoires aux tâches, sessions et agents. Suivez l'évolution du contexte dans le temps. Construisez automatiquement une connaissance institutionnelle.",
 				color: "text-chart-3",
 				bgColor: "bg-chart-3/10",
 			},
@@ -116,7 +116,7 @@ const content = {
 				icon: Layers,
 				title: "Support multi-instances",
 				description:
-					"Executez le meme agent sur plusieurs machines avec des namespaces isoles. Coordonnez via des canaux broadcast ou des messages d'instance directs.",
+					"Exécutez le même agent sur plusieurs machines avec des namespaces isolés. Coordonnez via des canaux broadcast ou des messages d'instance directs.",
 				color: "text-chart-1",
 				bgColor: "bg-chart-1/10",
 			},

@@ -73,21 +73,21 @@ create_task(
 		},
 	},
 	fr: {
-		title: "Demarrage rapide.",
-		subtitle: "De zero a des agents coordonnes en moins de 10 minutes.",
+		title: "Démarrage rapide.",
+		subtitle: "De zéro à des agents coordonnés en moins de 10 minutes.",
 		tabs: [
 			{ id: "install", label: "Installer" },
 			{ id: "configure", label: "Configurer" },
 			{ id: "use", label: "Utiliser" },
 		],
 		snippets: {
-			install: `# Cloner et deployer sur Convex
+			install: `# Cloner et déployer sur Convex
 git clone https://github.com/vantageos/vantage-peers
 cd vantage-peers
 npm install
 npx convex deploy
 
-# Ajouter a la config Claude (~/.claude/settings.json)
+# Ajouter à la config Claude (~/.claude/settings.json)
 {
   "mcpServers": {
     "vantage-peers": {
@@ -99,16 +99,16 @@ npx convex deploy
     }
   }
 }`,
-			configure: `# Chaque instance d'agent obtient une identite unique
-# A definir dans le CLAUDE.md ou le prompt systeme :
+			configure: `# Chaque instance d'agent obtient une identité unique
+# À définir dans le CLAUDE.md ou le prompt système :
 
 ORCHESTRATOR_ID=pi
 INSTANCE_ID=pi-vps   # ou pi-chromebook, tau-desktop, etc.
 
-# Les namespaces isolent la memoire par projet
+# Les namespaces isolent la mémoire par projet
 # global   → partage entre tous les projets
 # project/X → scope au projet X`,
-			use: `# Stocker la memoire (35 outils disponibles via MCP)
+			use: `# Stocker la mémoire (35 outils disponibles via MCP)
 store_memory(
   namespace="project/myapp",
   type="feedback",
@@ -120,17 +120,17 @@ store_memory(
 send_message(
   from="tau",
   channel="pi-vps",
-  content="Refactoring auth termine. Pret pour review."
+  content="Refactoring auth terminé. Prêt pour review."
 )
 
-# Rappel par requete semantique
+# Rappel par requête sémantique
 recall(
   query="decisions architecture auth",
   namespace="project/myapp",
   limit=5
 )
 
-# Assigner une tache
+# Assigner une tâche
 create_task(
   title="Review refactoring auth",
   assignedTo="pi",
@@ -192,7 +192,7 @@ export function PeersCode({ locale }: PeersCodeProps) {
 									onClick={() =>
 										setActiveTab(tab.id as "install" | "configure" | "use")
 									}
-									className={`px-3 py-1.5 text-sm rounded-md font-medium transition-all ${
+									className={`px-3 py-2 min-h-[44px] text-sm rounded-md font-medium transition-all ${
 										activeTab === tab.id
 											? "bg-background text-foreground shadow-sm"
 											: "text-muted-foreground hover:text-foreground"
@@ -205,7 +205,7 @@ export function PeersCode({ locale }: PeersCodeProps) {
 						<button
 							type="button"
 							onClick={handleCopy}
-							className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+							className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
 							aria-label="Copy code"
 						>
 							{copied ? (

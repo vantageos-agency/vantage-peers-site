@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
+import { LandingStructuredData } from "@/components/landing/structured-data";
 import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
 
@@ -85,7 +86,10 @@ export async function generateMetadata({
 					url: "/opengraph-image",
 					width: 1200,
 					height: 630,
-					alt: "VantagePeers - Shared Memory for AI Agent Swarms",
+					alt:
+						locale === "fr"
+							? "VantagePeers - Mémoire partagée pour essaims d’agents IA"
+							: "VantagePeers - Shared Memory for AI Agent Swarms",
 				},
 			],
 		},
@@ -124,6 +128,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 					sizes="180x180"
 					href="/apple-touch-icon.png"
 				/>
+				<LandingStructuredData />
 			</head>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -134,6 +139,17 @@ export default async function LocaleLayout({ children, params }: Props) {
 					enableSystem
 					disableTransitionOnChange
 				>
+					<a
+						href="#main-content"
+						className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+					>
+						{locale === "fr" ? "Aller au contenu principal" : "Skip to main content"}
+					</a>
+					<noscript>
+						<style>{`
+							[data-framer-motion-initial], .motion-safe\:opacity-0 { opacity: 1 !important; transform: none !important; }
+						`}</style>
+					</noscript>
 					<NextIntlClientProvider messages={messages}>
 						{children}
 					</NextIntlClientProvider>

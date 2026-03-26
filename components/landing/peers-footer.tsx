@@ -19,25 +19,25 @@ const content = {
 			{ label: "Legal Notice", href: "/en/legal" },
 		],
 		github: "GitHub",
-		switchLabel: "Francais",
+		switchLabel: "Français",
 		lastUpdated: "Last updated: March 2026",
 	},
 	fr: {
-		tagline: "Coordination de memoire d'agents open-source. Licence MIT.",
-		copyright: "Perello Consulting / ElPi Corp. Tous droits reserves.",
+		tagline: "Coordination de mémoire d’agents open-source. Licence MIT.",
+		copyright: "Perello Consulting / ElPi Corp. Tous droits réservés.",
 		links: [
-			{ label: "Fonctionnalites", href: "#features" },
-			{ label: "Comment ca marche", href: "#how-it-works" },
+			{ label: "Fonctionnalités", href: "#features" },
+			{ label: "Comment ça marche", href: "#how-it-works" },
 			{ label: "Comparer", href: "#compare" },
 			{ label: "FAQ", href: "#faq" },
 		],
 		legalLinks: [
-			{ label: "Politique de confidentialite", href: "/fr/privacy" },
-			{ label: "Mentions legales", href: "/fr/legal" },
+			{ label: "Politique de confidentialité", href: "/fr/privacy" },
+			{ label: "Mentions légales", href: "/fr/legal" },
 		],
 		github: "GitHub",
 		switchLabel: "English",
-		lastUpdated: "Derniere mise a jour : mars 2026",
+		lastUpdated: "Dernière mise à jour : mars 2026",
 	},
 };
 

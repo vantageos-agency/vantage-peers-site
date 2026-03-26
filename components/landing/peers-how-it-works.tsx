@@ -41,9 +41,9 @@ const content = {
 			"Powered by Convex — real-time database with built-in auth, full-text search, and zero-config scaling.",
 	},
 	fr: {
-		title: "Operationnel en moins de 10 minutes.",
+		title: "Opérationnel en moins de 10 minutes.",
 		subtitle:
-			"Trois etapes de zero a un systeme de memoire multi-agents coordonne.",
+			"Trois étapes de zéro à un système de mémoire multi-agents coordonné.",
 		steps: [
 			{
 				number: "01",
@@ -59,7 +59,7 @@ const content = {
 				icon: Settings,
 				title: "Configurer",
 				description:
-					"Definissez votre ID d'orchestrateur et nom d'instance. Chaque agent obtient une identite unique. Les namespaces isolent par projet. Aucune migration de schema necessaire.",
+					"Définissez votre ID d'orchestrateur et nom d'instance. Chaque agent obtient une identité unique. Les namespaces isolent par projet. Aucune migration de schéma nécessaire.",
 				color: "text-chart-2",
 				bgColor: "bg-chart-2/10",
 			},
@@ -68,13 +68,13 @@ const content = {
 				icon: Network,
 				title: "Coordonner",
 				description:
-					"Les agents stockent la memoire, envoient des messages, assignent des taches — le tout via les 35 outils MCP. Fonctionne entre machines, entre sessions, entre instances d'agents.",
+					"Les agents stockent la mémoire, envoient des messages, assignent des tâches — le tout via les 35 outils MCP. Fonctionne entre machines, entre sessions, entre instances d'agents.",
 				color: "text-chart-4",
 				bgColor: "bg-chart-4/10",
 			},
 		],
 		emphasis:
-			"Propulse par Convex — base de donnees temps reel avec auth integree, recherche full-text et mise a l'echelle sans configuration.",
+			"Propulsé par Convex — base de données temps réel avec auth intégrée, recherche full-text et mise à l’échelle sans configuration.",
 	},
 };
 

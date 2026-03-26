@@ -40,34 +40,34 @@ const content = {
 			"You do not need a SaaS. You need an open protocol that runs on your infrastructure.",
 	},
 	fr: {
-		title: "Les solutions existantes sont cassees.",
+		title: "Les solutions existantes sont cassées.",
 		titleAccent: "Voici pourquoi.",
 		subtitle:
-			"Vous avez essaye mem0 — 249$/mois pour la memoire graphe. Vous avez essaye Zep — la Community Edition a ete abandonnee. Vous avez bricole quelque chose en local — pas de multi-machine, pas d'accuses de lecture, pas de taches.",
+			"Vous avez essayé mem0 — 249$/mois pour la mémoire graphe. Vous avez essayé Zep — la Community Edition a été abandonnée. Vous avez bricolé quelque chose en local — pas de multi-machine, pas d'accusés de lecture, pas de tâches.",
 		problems: [
 			{
 				icon: CreditCard,
-				title: "249-475$/mois juste pour la memoire",
+				title: "249-475$/mois juste pour la mémoire",
 				description:
-					"mem0 facture 249$/mois pour la memoire graphe. Zep commence a 475$/mois + depassements. La memoire ne devrait pas couter plus que votre LLM.",
+					"mem0 facture 249$/mois pour la mémoire graphe. Zep commence à 475$/mois + dépassements. La mémoire ne devrait pas coûter plus que votre LLM.",
 			},
 			{
 				icon: ServerCrash,
-				title: "Zep Community Edition abandonnee",
+				title: "Zep Community Edition abandonnée",
 				description:
-					"Zep a pousse tout le monde vers son cloud. La version auto-hebergee a arrete de recevoir des mises a jour. On ne peut pas construire sur une base abandonnee.",
+					"Zep a poussé tout le monde vers son cloud. La version auto-hébergée a arrêté de recevoir des mises à jour. On ne peut pas construire sur une base abandonnée.",
 			},
 			{
 				icon: Lock,
-				title: "Dependance vendeur",
+				title: "Dépendance vendeur",
 				description:
-					"Schemas proprietaires, APIs fermees, pas d'export. Quand ils augmentent les prix ou ferment, vos agents perdent leur memoire du jour au lendemain.",
+					"Schémas propriétaires, APIs fermées, pas d'export. Quand ils augmentent les prix ou ferment, vos agents perdent leur mémoire du jour au lendemain.",
 			},
 			{
 				icon: WifiOff,
-				title: "Les hacks locaux ne passent pas a l'echelle",
+				title: "Les hacks locaux ne passent pas à l'échelle",
 				description:
-					"Les fichiers SQLite et dumps JSON ne survivent pas aux configurations multi-agents et multi-machines. Pas de messagerie. Pas d'accuses de lecture. Pas de taches.",
+					"Les fichiers SQLite et dumps JSON ne survivent pas aux configurations multi-agents et multi-machines. Pas de messagerie. Pas d'accusés de lecture. Pas de tâches.",
 			},
 		],
 		closing:

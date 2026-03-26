@@ -1,5 +1,6 @@
 "use client";
 
+import { MotionConfig } from "framer-motion";
 import { useState } from "react";
 import { PeersCode } from "@/components/landing/peers-code";
 import { PeersComparison } from "@/components/landing/peers-comparison";
@@ -22,19 +23,27 @@ export function LandingPage({ initialLocale = "en" }: LandingPageProps) {
 	const [locale, setLocale] = useState<Locale>(initialLocale);
 
 	return (
-		<div className="min-h-screen bg-background overflow-x-hidden">
-			<PeersHeader locale={locale} onLocaleChange={setLocale} />
-			<main>
-				<PeersHero locale={locale} />
-				<PeersProblem locale={locale} />
-				<PeersFeatures locale={locale} />
-				<PeersHowItWorks locale={locale} />
-				<PeersComparison locale={locale} />
-				<PeersCode locale={locale} />
-				<PeersFaq locale={locale} />
-				<PeersCta locale={locale} />
-			</main>
-			<PeersFooter locale={locale} onLocaleChange={setLocale} />
-		</div>
+		<MotionConfig reducedMotion="user">
+			<div className="min-h-screen bg-background overflow-x-hidden">
+				<a
+					href="#main-content"
+					className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
+				>
+					{locale === "fr" ? "Aller au contenu principal" : "Skip to main content"}
+				</a>
+				<PeersHeader locale={locale} onLocaleChange={setLocale} />
+				<main id="main-content">
+					<PeersHero locale={locale} />
+					<PeersProblem locale={locale} />
+					<PeersFeatures locale={locale} />
+					<PeersHowItWorks locale={locale} />
+					<PeersComparison locale={locale} />
+					<PeersCode locale={locale} />
+					<PeersFaq locale={locale} />
+					<PeersCta locale={locale} />
+				</main>
+				<PeersFooter locale={locale} onLocaleChange={setLocale} />
+			</div>
+		</MotionConfig>
 	);
 }

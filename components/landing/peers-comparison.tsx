@@ -1,12 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, X } from "lucide-react";
 
 const content = {
 	en: {
 		title: "Why VantagePeers wins.",
 		subtitle: "The math is simple. The difference is structural.",
+		caption: "Comparison of AI agent memory solutions",
 		headers: ["", "mem0", "Zep", "claude-peers", "VantagePeers"],
 		rows: [
 			{
@@ -78,21 +78,24 @@ const content = {
 			"Zep: Community Edition no longer maintained as of 2024.",
 			"claude-peers: local SQLite only, no cross-machine coordination.",
 		],
+		available: "Available",
+		notAvailable: "Not available",
 	},
 	fr: {
 		title: "Pourquoi VantagePeers gagne.",
-		subtitle: "Le calcul est simple. La difference est structurelle.",
+		subtitle: "Le calcul est simple. La différence est structurelle.",
+		caption: "Comparaison des solutions de mémoire pour agents IA",
 		headers: ["", "mem0", "Zep", "claude-peers", "VantagePeers"],
 		rows: [
 			{
 				feature: "Prix",
 				mem0: "249$/mois (graphe)",
-				zep: "475$/mois + depassements",
+				zep: "475$/mois + dépassements",
 				claudePeers: "Gratuit",
 				vantagePeers: "Gratuit (MIT)",
 			},
 			{
-				feature: "Memoire graphe",
+				feature: "Mémoire graphe",
 				mem0: true,
 				zep: true,
 				claudePeers: false,
@@ -106,30 +109,30 @@ const content = {
 				vantagePeers: true,
 			},
 			{
-				feature: "Accuses de lecture",
+				feature: "Accusés de lecture",
 				mem0: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
-				feature: "Coordination de taches",
+				feature: "Coordination de tâches",
 				mem0: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
-				feature: "Taches recurrentes (cron)",
+				feature: "Tâches récurrentes (cron)",
 				mem0: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
-				feature: "Auto-hebergeable",
+				feature: "Auto-hébergeable",
 				mem0: false,
-				zep: "Community abandonnee",
+				zep: "Community abandonnée",
 				claudePeers: "Local seulement",
 				vantagePeers: true,
 			},
@@ -149,10 +152,12 @@ const content = {
 			},
 		],
 		notes: [
-			"mem0 : la memoire graphe necessite l'Enterprise a 249$/mois.",
+			"mem0 : la mémoire graphe nécessite l'Enterprise à 249$/mois.",
 			"Zep : la Community Edition n'est plus maintenue depuis 2024.",
 			"claude-peers : SQLite local uniquement, pas de coordination cross-machine.",
 		],
+		available: "Disponible",
+		notAvailable: "Non disponible",
 	},
 };
 
@@ -161,18 +166,44 @@ type CellValue = boolean | string;
 function CellContent({
 	value,
 	isVantage,
+	availableLabel,
+	notAvailableLabel,
 }: {
 	value: CellValue;
 	isVantage: boolean;
+	availableLabel: string;
+	notAvailableLabel: string;
 }) {
 	if (typeof value === "boolean") {
 		return value ? (
-			<Check
+			<svg
+				aria-label={availableLabel}
+				role="img"
 				className={`size-4 mx-auto ${isVantage ? "text-chart-1" : "text-muted-foreground"}`}
-				aria-label="yes"
-			/>
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2.5"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			>
+				<polyline points="20 6 9 17 4 12" />
+			</svg>
 		) : (
-			<X className="size-4 mx-auto text-muted-foreground/40" aria-label="no" />
+			<svg
+				aria-label={notAvailableLabel}
+				role="img"
+				className="size-4 mx-auto text-muted-foreground/40"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2.5"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			>
+				<line x1="18" y1="6" x2="6" y2="18" />
+				<line x1="6" y1="6" x2="18" y2="18" />
+			</svg>
 		);
 	}
 	return (
@@ -216,16 +247,24 @@ export function PeersComparison({ locale }: PeersComparisonProps) {
 				>
 					<div className="overflow-x-auto">
 						<table className="w-full text-sm">
+							<caption className="sr-only">{t.caption}</caption>
 							<thead>
 								<tr className="border-b border-border bg-muted/30">
 									{t.headers.map((header, i) => (
 										<th
 											key={header || `h-${i}`}
+											scope="col"
 											className={`py-4 px-5 text-left font-semibold ${
 												i === 0 ? "w-1/3" : "text-center"
 											} ${i === t.headers.length - 1 ? "text-chart-1" : "text-muted-foreground"}`}
 										>
-											{header}
+											{i === 0 ? (
+												<span className="sr-only">
+													{locale === "fr" ? "Fonctionnalité" : "Feature"}
+												</span>
+											) : (
+												header
+											)}
 										</th>
 									))}
 								</tr>
@@ -238,20 +277,20 @@ export function PeersComparison({ locale }: PeersComparisonProps) {
 											rowIndex % 2 === 0 ? "" : "bg-muted/10"
 										}`}
 									>
-										<td className="py-3.5 px-5 font-medium text-foreground">
+										<th scope="row" className="py-3.5 px-5 font-medium text-foreground text-left">
 											{row.feature}
+										</th>
+										<td className="py-3.5 px-5 text-center">
+											<CellContent value={row.mem0} isVantage={false} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
 										</td>
 										<td className="py-3.5 px-5 text-center">
-											<CellContent value={row.mem0} isVantage={false} />
+											<CellContent value={row.zep} isVantage={false} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
 										</td>
 										<td className="py-3.5 px-5 text-center">
-											<CellContent value={row.zep} isVantage={false} />
-										</td>
-										<td className="py-3.5 px-5 text-center">
-											<CellContent value={row.claudePeers} isVantage={false} />
+											<CellContent value={row.claudePeers} isVantage={false} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
 										</td>
 										<td className="py-3.5 px-5 text-center bg-chart-1/5">
-											<CellContent value={row.vantagePeers} isVantage={true} />
+											<CellContent value={row.vantagePeers} isVantage={true} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
 										</td>
 									</tr>
 								))}
