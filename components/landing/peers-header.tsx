@@ -169,7 +169,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 						{mounted && (
 							<button
 								type="button"
-								className="p-2 text-muted-foreground hover:text-foreground"
+								className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground"
 								onClick={toggleTheme}
 								aria-label={t.toggleThemeLabel}
 							>

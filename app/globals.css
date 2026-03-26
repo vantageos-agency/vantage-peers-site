@@ -191,10 +191,21 @@ input, select, textarea {
 @media (prefers-reduced-motion: reduce) {
   [data-framer-motion-initial],
   [style*="opacity: 0"],
-  [style*="opacity:0"] {
+  [style*="opacity:0"],
+  .reveal {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
     animation: none !important;
+  }
+}
+
+/* Noscript fallback: reveal all animated elements when JS is disabled */
+@media (scripting: none) {
+  .reveal,
+  [style*="opacity: 0"],
+  [style*="opacity:0"] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
