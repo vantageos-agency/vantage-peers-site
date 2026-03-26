@@ -140,7 +140,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 							variant="ghost"
 							size="sm"
 							onClick={toggleLocale}
-							className="gap-1.5"
+							className="gap-1.5 min-h-[44px]"
 						>
 							<Globe className="size-4" aria-hidden="true" />
 							{t.langLabel}

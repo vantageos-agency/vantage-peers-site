@@ -128,7 +128,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 					sizes="180x180"
 					href="/apple-touch-icon.png"
 				/>
-				<LandingStructuredData />
+				<LandingStructuredData locale={locale} />
 			</head>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
