@@ -97,7 +97,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 			>
 				<div className="flex items-center justify-between h-16 md:h-20">
 					{/* Logo */}
-					<a href="#hero" className="flex items-center gap-2 group">
+					<a href="#hero" className="flex items-center gap-2 group min-h-[44px]">
 						<div className="size-8 rounded-lg bg-foreground flex items-center justify-center transition-transform group-hover:scale-105">
 							<span className="text-background font-bold text-lg">V</span>
 						</div>

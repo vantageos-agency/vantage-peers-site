@@ -207,5 +207,6 @@ input, select, textarea {
   [style*="opacity:0"] {
     opacity: 1 !important;
     transform: none !important;
+    height: auto !important;
   }
 }
