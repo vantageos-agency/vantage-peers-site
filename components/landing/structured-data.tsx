@@ -4,20 +4,23 @@ const BASE_URL = "https://vantagepeers.com";
 // server-rendered structured data. No user input is interpolated here — all
 // values are static literals defined in this file.
 
-const organizationSchema = {
-	"@context": "https://schema.org",
-	"@type": "Organization",
-	"@id": `${BASE_URL}/#organization`,
-	name: "VantagePeers",
-	url: BASE_URL,
-	logo: {
-		"@type": "ImageObject",
-		url: `${BASE_URL}/opengraph-image`,
-	},
-	description:
-		"Open source shared memory, messaging, and task management MCP server for multi-agent Claude Code. 10 database tables, 35 MCP tools. Free, self-hosted on Convex.",
-	sameAs: ["https://github.com/vantageos/vantage-peers"],
-};
+function getOrganizationSchema(locale: string) {
+	return {
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"@id": `${BASE_URL}/#organization`,
+		name: "VantagePeers",
+		url: BASE_URL,
+		logo: {
+			"@type": "ImageObject",
+			url: `${BASE_URL}/opengraph-image`,
+		},
+		description: locale === "fr"
+			? "Serveur MCP open source pour la mémoire partagée, la messagerie et la gestion de tâches multi-agents Claude Code. 10 tables, 35 outils. Gratuit, auto-hébergé sur Convex."
+			: "Open source shared memory, messaging, and task management MCP server for multi-agent Claude Code. 10 database tables, 35 MCP tools. Free, self-hosted on Convex.",
+		sameAs: ["https://github.com/vantageos/vantage-peers"],
+	};
+}
 
 const webSiteSchema = {
 	"@context": "https://schema.org",
@@ -87,29 +90,32 @@ function getWebPageSchema(locale: string) {
 	};
 }
 
-const softwareApplicationSchema = {
-	"@context": "https://schema.org",
-	"@type": "SoftwareApplication",
-	"@id": `${BASE_URL}/#software`,
-	name: "VantagePeers",
-	applicationCategory: "DeveloperApplication",
-	operatingSystem: "Any",
-	description:
-		"Shared memory, messaging, and task management MCP server for multi-agent Claude Code. Built on Convex with vector embeddings via @convex-dev/rag.",
-	url: BASE_URL,
-	downloadUrl: "https://github.com/vantageos/vantage-peers",
-	softwareVersion: "1.0.0",
-	license: "https://opensource.org/licenses/MIT",
-	offers: {
-		"@type": "Offer",
-		price: "0",
-		priceCurrency: "USD",
-		description: "Free, open source, self-hosted",
-	},
-	author: {
-		"@id": `${BASE_URL}/#organization`,
-	},
-};
+function getSoftwareApplicationSchema(locale: string) {
+	return {
+		"@context": "https://schema.org",
+		"@type": "SoftwareApplication",
+		"@id": `${BASE_URL}/#software`,
+		name: "VantagePeers",
+		applicationCategory: "DeveloperApplication",
+		operatingSystem: "Any",
+		description: locale === "fr"
+			? "Serveur MCP de mémoire partagée, messagerie et gestion de tâches pour agents Claude Code. Construit sur Convex avec embeddings vectoriels via @convex-dev/rag."
+			: "Shared memory, messaging, and task management MCP server for multi-agent Claude Code. Built on Convex with vector embeddings via @convex-dev/rag.",
+		url: BASE_URL,
+		downloadUrl: "https://github.com/vantageos/vantage-peers",
+		softwareVersion: "1.0.0",
+		license: "https://opensource.org/licenses/MIT",
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "USD",
+			description: locale === "fr" ? "Gratuit, open source, auto-hébergé" : "Free, open source, self-hosted",
+		},
+		author: {
+			"@id": `${BASE_URL}/#organization`,
+		},
+	};
+}
 
 function JsonLd({ data }: { data: Record<string, unknown> }) {
 	return (
@@ -124,10 +130,10 @@ function JsonLd({ data }: { data: Record<string, unknown> }) {
 export function LandingStructuredData({ locale = "en" }: { locale?: string }) {
 	return (
 		<>
-			<JsonLd data={organizationSchema} />
+			<JsonLd data={getOrganizationSchema(locale)} />
 			<JsonLd data={webSiteSchema} />
 			<JsonLd data={getWebPageSchema(locale)} />
-			<JsonLd data={softwareApplicationSchema} />
+			<JsonLd data={getSoftwareApplicationSchema(locale)} />
 		</>
 	);
 }
