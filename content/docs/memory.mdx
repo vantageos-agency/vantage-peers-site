@@ -1,0 +1,189 @@
+---
+title: Memory
+description: Semantic memory with vector embeddings, namespaces, episodes, and memory graph relations.
+---
+
+# Memory
+
+VantagePeers provides a typed, namespaced memory system with semantic vector search. Agents store knowledge once and recall it by meaning — not by exact keyword — across sessions and machines.
+
+## Memory Types
+
+Every memory has a `type` field that declares its semantic category. Types help agents understand what a memory represents and filter recalls appropriately.
+
+| Type | Purpose | Example |
+|------|---------|---------|
+| `user` | Facts about a person's role, preferences, or knowledge | "Laurent is a senior engineer. Prefers terse responses, no trailing summaries." |
+| `feedback` | Guidance on how to approach work — corrections and confirmations | "Never use Write tool on existing files without reading first. Caused data loss." |
+| `project` | Architecture decisions, tech choices, configuration changes | "Landing page uses lit-ui components exclusively. No shadcn/ui imports." |
+| `reference` | Pointers to external resources and their purpose | "Pipeline bugs tracked in Linear project INGEST." |
+| `episode` | Structured event records with context/goal/action/outcome | See Episodes section below. |
+
+### Choosing the Right Type
+
+Use `feedback` for any guidance that should change how you behave in future work. Use `project` for decisions that explain *why* the codebase looks the way it does. Use `reference` for external resources that would otherwise require asking the user to locate. Use `user` to build a profile of who you are working with.
+
+`episode` is different from the others — it has its own tool (`store_episode`) and a structured schema.
+
+## Namespaces
+
+Namespaces scope memories to a context. A namespace is a string path. Use forward-slash separators for hierarchy.
+
+### Namespace Conventions
+
+| Namespace | What to store |
+|-----------|---------------|
+| `global` | Cross-project knowledge, universal conventions, tool patterns |
+| `project/your-project-name` | Project-specific architecture, decisions, configuration |
+| `orchestrator/name` | Agent-specific state, role preferences, active context |
+
+When you call `recall`, results come from the specified namespace. Querying `global` does not return memories from `project/foo` — namespaces are isolated.
+
+### Namespace Strategy
+
+For a typical multi-project agent team, you might have:
+
+```
+global                          ← universal lessons and patterns
+project/vantage-starter         ← VantageStarter-specific context
+project/vantage-peers           ← VantagePeers-specific context
+orchestrator/tau                ← Tau agent's personal state
+orchestrator/pi                 ← Pi agent's personal state
+```
+
+Agents should write project context to the project namespace and recall from it before starting work on that project.
+
+## Vector Search and Recall
+
+Every memory is embedded using OpenAI `text-embedding-3-small` at write time. The embedding is stored alongside the memory content in the `memories` table.
+
+When you call `recall`, VantagePeers:
+
+1. Generates an embedding for your query string
+2. Runs a vector similarity search over the namespace
+3. Applies optional keyword filters (BM25)
+4. Returns the top `limit` results ranked by combined score
+
+This means you can recall memories using natural language descriptions, not just exact phrases. A query like `"best practices for Convex mutations"` will surface memories about mutation patterns even if those exact words do not appear in the memory content.
+
+### Recall Call
+
+```json
+{
+  "query": "how to handle auth in middleware",
+  "namespace": "project/vantage-starter",
+  "limit": 10
+}
+```
+
+Returns memories sorted by relevance. Each result includes the memory ID, type, content, namespace, and a similarity score.
+
+### Recall Best Practices
+
+- **Be specific in queries.** "auth middleware Clerk route protection" yields better results than "auth".
+- **Use the right namespace.** If you know the context, scope the query. Broader namespaces return noisier results.
+- **Use limit 3-5 for focused questions.** Use limit 10-20 when doing a broad context load at session start.
+
+## Episodes
+
+Episodes are structured event records — the equivalent of a structured log entry for significant things that happened during agent work.
+
+### Episode Schema
+
+```json
+{
+  "namespace": "orchestrator/tau",
+  "createdBy": "tau",
+  "context": "Deploying Convex schema changes",
+  "goal": "Add vector index to memories table",
+  "action": "Ran npx convex deploy after editing schema.ts",
+  "outcome": "Deploy failed — vector index requires embedding field to exist first",
+  "insight": "Vector indexes must be added in the same deploy as the embedding field. Order matters.",
+  "severity": "major"
+}
+```
+
+### Severity Levels
+
+| Severity | When to use |
+|----------|-------------|
+| `info` | Routine events, successful patterns worth recording |
+| `minor` | Small issues, easily recovered, low impact |
+| `major` | Significant failures, wasted time, correctible with insight |
+| `critical` | Data loss risk, production incidents, blockers |
+
+### When to Store Episodes
+
+Store an episode:
+- After any failure, so future agents can avoid it
+- After discovering a non-obvious gotcha (library quirk, API behavior, deployment order)
+- After a successful pattern that was not obvious in advance
+
+Recall episodes before repeating a task you have failed at before:
+
+```json
+{
+  "query": "Convex deploy schema vector index",
+  "namespace": "orchestrator/tau",
+  "limit": 5
+}
+```
+
+## Memory Graph Relations
+
+Memories can be linked with typed relations to build an evolving knowledge graph.
+
+### Relation Types
+
+| Relation | Meaning |
+|----------|---------|
+| `updates` | The new memory supersedes the old one. Old memory is auto-archived. |
+| `extends` | The new memory adds detail to an existing one without replacing it. |
+| `derives` | The new memory was inferred or concluded from the referenced memory. |
+
+### Using Relations
+
+When storing a memory that replaces outdated information:
+
+```json
+{
+  "namespace": "project/vantage-starter",
+  "type": "project",
+  "content": "Landing page now uses OKLCH tokens exclusively. All hex/HSL removed.",
+  "createdBy": "tau",
+  "relationType": "updates",
+  "relatedToId": "memory-old-color-convention-id"
+}
+```
+
+The old memory is archived automatically — it will not appear in recall results by default.
+
+### Why Relations Matter
+
+Without relations, you accumulate conflicting memories. A feedback memory saying "use shadcn" followed by a later memory saying "never use shadcn" leaves agents uncertain which is current. The `updates` relation resolves this: the later memory explicitly supersedes the earlier one, and the earlier one is archived.
+
+## Memory Lifecycle
+
+1. **Created** — memory stored with embedding, appears in recall
+2. **Active** — default state, returned in all queries
+3. **Archived** — superseded via `updates` relation, excluded from recall by default
+4. **Deleted** — hard delete, only use for genuinely incorrect data
+
+Archived memories are not deleted — they are retained for audit trail. If you need to see the full history including archived memories, pass `includeArchived: true` to recall.
+
+## Session Start Pattern
+
+The recommended pattern for loading context at the start of a session:
+
+```json
+// 1. Load global lessons
+{ "query": "conventions and patterns", "namespace": "global", "limit": 10 }
+
+// 2. Load project context
+{ "query": "architecture decisions", "namespace": "project/vantage-starter", "limit": 10 }
+
+// 3. Load agent-specific state
+{ "query": "current work and priorities", "namespace": "orchestrator/tau", "limit": 5 }
+```
+
+This gives the agent the context it needs without requiring human briefing.

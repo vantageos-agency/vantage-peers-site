@@ -1,0 +1,147 @@
+---
+title: Getting Started
+description: Deploy VantagePeers and connect your first agent in under 10 minutes.
+---
+
+# Getting Started
+
+VantagePeers deploys in four steps: clone, install, deploy, configure. No infrastructure to manage beyond a Convex account.
+
+## Prerequisites
+
+Before you begin, you need:
+
+- **Node.js 18+** — for running the Convex CLI
+- **A Convex account** — free tier at [convex.dev](https://convex.dev). No credit card required.
+- **Claude Code** — the primary MCP client VantagePeers is built for
+- **An OpenAI API key** — used exclusively for generating vector embeddings (`text-embedding-3-small`). Cost is approximately $0.02 per 1M tokens.
+
+## Installation
+
+### Step 1: Clone the repository
+
+```bash
+git clone https://github.com/your-org/vantage-peers.git
+cd vantage-peers
+npm install
+```
+
+### Step 2: Configure environment variables
+
+Copy the example environment file and fill in your values:
+
+```bash
+cp .env.example .env.local
+```
+
+Open `.env.local` and set:
+
+```bash
+# Your Convex deployment URL (assigned after deploy)
+CONVEX_URL=https://your-deployment.convex.cloud
+
+# OpenAI API key for vector embeddings
+OPENAI_API_KEY=sk-...
+```
+
+### Step 3: Deploy to Convex
+
+```bash
+npx convex deploy
+```
+
+This deploys all 10 database tables, serverless functions, and vector indexes to your Convex account. Convex will output your deployment URL — copy it.
+
+### Step 4: Configure the MCP server
+
+Add VantagePeers to your Claude Code MCP configuration. Open your Claude Code settings file (typically `~/.config/claude/claude_desktop_config.json`) and add:
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "node",
+      "args": ["/path/to/vantage-peers/mcp-server/index.js"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud",
+        "OPENAI_API_KEY": "sk-..."
+      }
+    }
+  }
+}
+```
+
+Restart Claude Code. VantagePeers tools will appear in the tool list.
+
+## Quick Start
+
+Once connected, verify everything works by running these two operations from within Claude Code.
+
+### Store your first memory
+
+Call `store_memory` with:
+
+```json
+{
+  "namespace": "global",
+  "type": "project",
+  "content": "VantagePeers is now connected and operational.",
+  "createdBy": "my-agent"
+}
+```
+
+You should receive a memory ID in response.
+
+### Recall it back
+
+Call `recall` with:
+
+```json
+{
+  "query": "VantagePeers connected",
+  "namespace": "global",
+  "limit": 5
+}
+```
+
+You should see the memory you just stored returned as the top result.
+
+### Send your first message
+
+Call `send_message` with:
+
+```json
+{
+  "from": "my-agent",
+  "channel": "broadcast",
+  "content": "Agent online and ready."
+}
+```
+
+### Check for messages
+
+Call `check_messages` with:
+
+```json
+{
+  "recipient": "my-agent"
+}
+```
+
+You should see the message listed with its receipt ID and read status.
+
+## Verification
+
+To confirm your full deployment is healthy, check the Convex dashboard at [dashboard.convex.dev](https://dashboard.convex.dev). You should see:
+
+- 10 tables in the Data section: `memories`, `messages`, `messageReceipts`, `tasks`, `missions`, `recurringTasks`, `agentProfiles`, `diaryEntries`, `briefings`, `components`
+- Your recent function calls in the Functions section
+- Vector indexes active on the `memories` table
+
+If any table is missing, re-run `npx convex deploy` to apply the full schema.
+
+## Next Steps
+
+- Read [Architecture](/docs/architecture) to understand how orchestrators, instances, and namespaces work
+- Read [Memory](/docs/memory) to learn how to organize knowledge across agents
+- Read [Tasks](/docs/tasks) to set up task coordination between agents

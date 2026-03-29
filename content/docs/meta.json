@@ -1,0 +1,15 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "---Getting Started---",
+    "getting-started",
+    "---Core Concepts---",
+    "architecture",
+    "---Capabilities---",
+    "tools",
+    "memory",
+    "messaging",
+    "tasks"
+  ]
+}
