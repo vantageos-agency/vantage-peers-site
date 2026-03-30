@@ -41,7 +41,7 @@ INSTANCE_ID=pi-vps   # or pi-chromebook, tau-desktop, etc.
 # Namespaces isolate memory per project
 # global   → shared across all projects
 # project/X → scoped to project X`,
-			use: `# Store memory (35 tools available via MCP)
+			use: `# Store memory (45 tools available via MCP)
 store_memory(
   namespace="project/myapp",
   type="feedback",
@@ -108,7 +108,7 @@ INSTANCE_ID=pi-vps   # ou pi-chromebook, tau-desktop, etc.
 # Les namespaces isolent la mémoire par projet
 # global   → partage entre tous les projets
 # project/X → scope au projet X`,
-			use: `# Stocker la mémoire (35 outils disponibles via MCP)
+			use: `# Stocker la mémoire (45 outils disponibles via MCP)
 store_memory(
   namespace="project/myapp",
   type="feedback",

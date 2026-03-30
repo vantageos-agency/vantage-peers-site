@@ -22,14 +22,14 @@ VantagePeers is a Convex-backed MCP server. Convex provides the database, server
 │              VantagePeers MCP Server                     │
 │         (Node.js process, runs locally per agent)        │
 │                                                          │
-│  37 tools across 7 categories                           │
+│  45 tools across 7 categories                           │
 └──────────────────────────┬──────────────────────────────┘
                            │  Convex SDK
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Convex Cloud Backend                        │
 │                                                          │
-│  10 database tables    Vector indexes (memories)        │
+│  13 database tables    Vector indexes (memories)        │
 │  Serverless functions  OpenAI embeddings pipeline       │
 │  Cron scheduler        Real-time subscriptions          │
 └─────────────────────────────────────────────────────────┘
@@ -61,7 +61,7 @@ When calling `recall`, queries only search within the specified namespace by def
 
 ## Database Schema
 
-VantagePeers uses 10 Convex tables. Each table has a defined schema with typed validators and indexes for efficient querying.
+VantagePeers uses 13 Convex tables. Each table has a defined schema with typed validators and indexes for efficient querying.
 
 ### memories
 
@@ -195,4 +195,4 @@ VantagePeers exposes all capabilities as MCP tools. The MCP server runs as a loc
 3. Convex executes the function against the database (with vector search if applicable)
 4. The result is returned to Claude Code as the tool response
 
-All 37 tools are stateless from the MCP server's perspective — state lives in Convex. This means you can restart the MCP server process at any time without losing data.
+All 45 tools are stateless from the MCP server's perspective — state lives in Convex. This means you can restart the MCP server process at any time without losing data.

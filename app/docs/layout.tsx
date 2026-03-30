@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 			className={`${geistSans.variable} ${geistMono.variable} dark`}
 			suppressHydrationWarning
 		>
-			<body className="antialiased">
+			<body className="antialiased" style={{ minHeight: "100dvh" }}>
 				<RootProvider
 					theme={{
 						defaultTheme: "dark",
