@@ -1,0 +1,198 @@
+---
+title: Architecture
+description: Core concepts, database schema, and MCP protocol integration in VantagePeers.
+---
+
+# Architecture
+
+VantagePeers is a Convex-backed MCP server. Convex provides the database, serverless functions, vector indexes, and scheduling. The MCP layer exposes all capabilities as tools that Claude Code agents call natively.
+
+## System Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     Your Agent Team                      │
+│                                                          │
+│  Agent A (Machine 1)     Agent B (Machine 2)            │
+│  Claude Code + MCP       Claude Code + MCP              │
+└──────────────┬───────────────────┬──────────────────────┘
+               │  MCP Protocol     │
+               ▼                   ▼
+┌─────────────────────────────────────────────────────────┐
+│              VantagePeers MCP Server                     │
+│         (Node.js process, runs locally per agent)        │
+│                                                          │
+│  45 tools across 7 categories                           │
+└──────────────────────────┬──────────────────────────────┘
+                           │  Convex SDK
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│              Convex Cloud Backend                        │
+│                                                          │
+│  13 database tables    Vector indexes (memories)        │
+│  Serverless functions  OpenAI embeddings pipeline       │
+│  Cron scheduler        Real-time subscriptions          │
+└─────────────────────────────────────────────────────────┘
+```
+
+Each agent runs its own local MCP server process. All agents share the same Convex deployment — that is how cross-machine coordination works. The Convex deployment is your single source of truth.
+
+## Core Concepts
+
+### Orchestrators
+
+An **orchestrator** is a named role in your agent team. Examples: `pi`, `tau`, `phi`. An orchestrator represents what the agent *does* — its responsibility in the system. Orchestrator names are used as identities for memory namespaces, message routing, task assignment, and agent profiles.
+
+When you store a memory with `createdBy: "tau"`, it is attributed to the `tau` orchestrator. When you send a message `from: "tau"` to `channel: "pi"`, the `pi` orchestrator receives it.
+
+### Instances
+
+An **instance** is a specific running copy of an orchestrator. If you run the `tau` orchestrator on two machines — a laptop and a server — they are two instances: `tau-laptop` and `tau-server`.
+
+Instances matter for message routing. You can send a message to all instances of an orchestrator (by role) or to a specific instance (by instance ID). This lets you target a specific machine when you need to.
+
+### Namespaces
+
+**Namespaces** scope memories and prevent cross-contamination between projects. A namespace is a string path like `global`, `project/vantage-starter`, or `orchestrator/tau`.
+
+Use `global` for knowledge that applies everywhere. Use `project/your-project` for project-specific context. Use `orchestrator/name` for agent-specific state.
+
+When calling `recall`, queries only search within the specified namespace by default. You can query across namespaces by omitting the namespace filter.
+
+## Database Schema
+
+VantagePeers uses 13 Convex tables. Each table has a defined schema with typed validators and indexes for efficient querying.
+
+### memories
+
+The core memory store. Each document contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `namespace` | string | Scoping path (e.g., `global`, `project/foo`) |
+| `type` | string | `user`, `feedback`, `project`, `reference`, or `episode` |
+| `content` | string | The memory text content |
+| `createdBy` | string | Orchestrator that created the memory |
+| `embedding` | float64[] | Vector embedding (OpenAI text-embedding-3-small) |
+| `archived` | boolean | Whether superseded by a newer memory |
+| `relatedTo` | string[] | IDs of related memories |
+
+Vector index on `embedding` enables semantic similarity search.
+
+### messages
+
+Persistent message store for cross-agent communication:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `from` | string | Sender orchestrator ID |
+| `channel` | string | Target channel or role |
+| `content` | string | Message text |
+| `instanceId` | string? | Optional specific instance target |
+| `createdAt` | number | Unix timestamp |
+
+### messageReceipts
+
+Per-recipient read tracking:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `messageId` | string | Reference to message |
+| `recipient` | string | Recipient orchestrator ID |
+| `recipientInstanceId` | string? | Specific instance, if targeted |
+| `readAt` | number? | Timestamp when read, null if unread |
+
+### tasks
+
+Task coordination table:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Task title |
+| `assignedTo` | string | Orchestrator responsible |
+| `status` | string | `todo`, `in_progress`, `review`, `blocked`, `done` |
+| `priority` | string | `low`, `medium`, `high`, `critical` |
+| `missionId` | string? | Parent mission, if grouped |
+| `dependsOn` | string[] | Task IDs that must complete first |
+| `blockedBy` | string | Blocker description, if blocked |
+| `completionNote` | string? | What was done, set on completion |
+| `dueDate` | number? | Unix timestamp deadline |
+
+### missions
+
+Groups of related tasks with lifecycle tracking:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Mission name |
+| `stage` | string | `brainstorm`, `plan`, `execute`, `validate`, `complete` |
+| `pilot` | string | Lead orchestrator |
+| `targetDate` | number? | Target completion timestamp |
+
+### recurringTasks
+
+Cron-based task templates:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Task title template |
+| `cronExpression` | string | Standard cron expression |
+| `assignedTo` | string | Default assignee |
+| `lastTriggered` | number? | Last creation timestamp |
+
+### agentProfiles
+
+Static identity and dynamic state per orchestrator instance:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `orchestratorId` | string | Role name |
+| `instanceId` | string | Instance identifier |
+| `capabilities` | string[] | What this agent can do |
+| `currentTask` | string? | Active task ID |
+| `lastSeen` | number | Timestamp of last activity |
+| `sessionCount` | number | Total sessions started |
+
+### diaryEntries
+
+Daily session logs:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `date` | string | ISO date string (e.g., `2026-03-29`) |
+| `orchestrator` | string | Author |
+| `content` | string | Diary narrative |
+| `highlights` | string[] | Key events of the day |
+
+### briefings
+
+Structured meeting and decision records:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Briefing subject |
+| `participants` | string[] | Orchestrators present |
+| `decisions` | string[] | Decisions made |
+| `linkedMemories` | string[] | Related memory IDs |
+
+### components
+
+Agent capability registry:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Component name |
+| `type` | string | `agent`, `skill`, `hook`, `plugin` |
+| `content` | string | Full content backup |
+| `version` | string? | Version identifier |
+
+## MCP Protocol Integration
+
+VantagePeers exposes all capabilities as MCP tools. The MCP server runs as a local Node.js process that the Claude Code client connects to via stdio. Every tool call goes through:
+
+1. Claude Code sends a tool call JSON to the MCP server via stdio
+2. The MCP server validates inputs and calls the appropriate Convex function via HTTP
+3. Convex executes the function against the database (with vector search if applicable)
+4. The result is returned to Claude Code as the tool response
+
+All 45 tools are stateless from the MCP server's perspective — state lives in Convex. This means you can restart the MCP server process at any time without losing data.

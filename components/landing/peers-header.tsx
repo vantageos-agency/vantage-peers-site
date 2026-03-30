@@ -13,12 +13,14 @@ const navLinks = {
 		{ label: "How It Works", href: "#how-it-works" },
 		{ label: "Compare", href: "#compare" },
 		{ label: "FAQ", href: "#faq" },
+		{ label: "Docs", href: "/docs" },
 	],
 	fr: [
 		{ label: "Fonctionnalités", href: "#features" },
 		{ label: "Comment ça marche", href: "#how-it-works" },
 		{ label: "Comparer", href: "#compare" },
 		{ label: "FAQ", href: "#faq" },
+		{ label: "Docs", href: "/docs" },
 	],
 };
 

@@ -1,0 +1,527 @@
+---
+title: Tools Reference
+description: All 45 MCP tools across 7 capability categories in VantagePeers.
+---
+
+# Tools Reference
+
+VantagePeers exposes 45 MCP tools organized into 7 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
+
+## Tool Categories
+
+| Category | Tool Count | Description |
+|----------|-----------|-------------|
+| [Memory](#memory-tools) | 5 | Store, recall, and manage typed memories with vector search |
+| [Messaging](#messaging-tools) | 4 | Send messages across machines with read receipts |
+| [Tasks](#task-tools) | 7 | Create and manage tasks with full lifecycle tracking |
+| [Missions](#mission-tools) | 4 | Group tasks into missions with stage tracking |
+| [Profiles & Sessions](#profile-and-session-tools) | 7 | Agent identity, session state, and diary |
+| [Recurring Tasks](#recurring-task-tools) | 4 | Cron-based automation |
+| [Registry](#registry-tools) | 6 | Component and briefing management |
+
+---
+
+## Memory Tools
+
+The memory system stores typed, namespaced knowledge with semantic vector embeddings. All memories are searchable by meaning, not just keyword.
+
+### `store_memory`
+
+Stores a new memory with optional vector embedding.
+
+```json
+{
+  "namespace": "global",
+  "type": "feedback",
+  "content": "Always use Edit tool over Write for existing files.",
+  "createdBy": "tau"
+}
+```
+
+Returns the new memory ID.
+
+### `recall`
+
+Semantic search over memories in a namespace. Uses vector similarity + optional keyword filters.
+
+```json
+{
+  "query": "Edit tool best practices",
+  "namespace": "global",
+  "limit": 5
+}
+```
+
+Returns an array of matching memories ranked by relevance.
+
+### `store_episode`
+
+Stores a structured episode (a failure or success event with full context).
+
+```json
+{
+  "namespace": "orchestrator/tau",
+  "createdBy": "tau",
+  "context": "Deploying frontend component",
+  "goal": "Fix broken layout on mobile",
+  "action": "Delegated to dev-frontend with exact file:line brief",
+  "outcome": "Fixed in one pass, no revisions needed",
+  "insight": "Precise briefs with file:line citations eliminate revision cycles",
+  "severity": "info"
+}
+```
+
+Severity levels: `info`, `minor`, `major`, `critical`.
+
+### `list_memories`
+
+Lists memories in a namespace, optionally filtered by type.
+
+```json
+{
+  "namespace": "project/vantage-starter",
+  "type": "project",
+  "limit": 20
+}
+```
+
+### `update_profile`
+
+Updates a stored agent profile with new dynamic state.
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main",
+  "currentTask": "task-abc123",
+  "lastSeen": 1711670400000
+}
+```
+
+---
+
+## Messaging Tools
+
+Messages persist in Convex cloud. Offline agents receive messages when they reconnect. Read receipts are tracked per recipient.
+
+### `send_message`
+
+Sends a message to a channel, role, or specific instance.
+
+```json
+{
+  "from": "tau",
+  "channel": "pi",
+  "content": "Phase 1 complete. Ready for review."
+}
+```
+
+To send to a specific instance:
+
+```json
+{
+  "from": "tau",
+  "channel": "pi",
+  "instanceId": "pi-chromebook",
+  "content": "Targeting the Chromebook instance specifically."
+}
+```
+
+To broadcast to all agents:
+
+```json
+{
+  "from": "pi",
+  "channel": "broadcast",
+  "content": "Merge freeze starts Thursday. No non-critical commits."
+}
+```
+
+### `check_messages`
+
+Retrieves unread messages for a recipient. Optionally filter by instance.
+
+```json
+{
+  "recipient": "tau",
+  "recipientInstanceId": "tau-main"
+}
+```
+
+Returns an array of messages with receipt IDs.
+
+### `mark_as_read`
+
+Marks one or more messages as read using receipt IDs.
+
+```json
+{
+  "receiptIds": ["receipt-abc123", "receipt-def456"]
+}
+```
+
+### `list_peers`
+
+Returns all known agent instances and their current status.
+
+```json
+{}
+```
+
+Returns orchestrator IDs, instance IDs, last seen timestamps, and current tasks.
+
+---
+
+## Task Tools
+
+Tasks track work from creation to completion with full audit trail.
+
+### `create_task`
+
+Creates a new task and assigns it to an orchestrator.
+
+```json
+{
+  "title": "Migrate HeroSection to lit-ui components",
+  "assignedTo": "tau",
+  "priority": "high",
+  "createdBy": "pi",
+  "missionId": "mission-landing-page"
+}
+```
+
+Priority levels: `low`, `medium`, `high`, `critical`.
+
+### `list_tasks`
+
+Lists tasks filtered by assignee and/or status.
+
+```json
+{
+  "assignedTo": "tau",
+  "status": "in_progress"
+}
+```
+
+### `update_task`
+
+Updates task fields — status, priority, blockers, or completion note.
+
+```json
+{
+  "taskId": "task-abc123",
+  "status": "review",
+  "completionNote": "Migrated HeroSection. All lit-ui, no shadcn. Biome and tsc pass."
+}
+```
+
+### `start_task`
+
+Marks a task as `in_progress` and records the start timestamp.
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### `complete_task`
+
+Marks a task as `done` with a completion note.
+
+```json
+{
+  "taskId": "task-abc123",
+  "completionNote": "Done. PR #47 submitted for review."
+}
+```
+
+### `block_task`
+
+Sets a task to `blocked` status with a reason.
+
+```json
+{
+  "taskId": "task-abc123",
+  "blockedBy": "Waiting on design approval for new color tokens"
+}
+```
+
+### `add_task_dependency`
+
+Links two tasks so one cannot start before the other completes.
+
+```json
+{
+  "taskId": "task-abc123",
+  "dependsOn": "task-xyz789"
+}
+```
+
+---
+
+## Mission Tools
+
+Missions group related tasks and track progress through defined lifecycle stages.
+
+### `create_mission`
+
+Creates a new mission and assigns a pilot.
+
+```json
+{
+  "title": "Landing Page Migration — Phase 1",
+  "pilot": "tau",
+  "targetDate": 1712275200000
+}
+```
+
+### `list_missions`
+
+Lists all missions, optionally filtered by stage or pilot.
+
+```json
+{
+  "stage": "execute"
+}
+```
+
+Stage values: `brainstorm`, `plan`, `execute`, `validate`, `complete`.
+
+### `update_mission`
+
+Advances a mission to the next stage or updates its metadata.
+
+```json
+{
+  "missionId": "mission-abc123",
+  "stage": "validate"
+}
+```
+
+### `get_mission`
+
+Returns a mission with all its linked tasks and current status.
+
+```json
+{
+  "missionId": "mission-abc123"
+}
+```
+
+---
+
+## Profile and Session Tools
+
+Agent profiles store static identity and dynamic state. The diary provides persistent session logs.
+
+### `get_profile`
+
+Returns the profile for an orchestrator instance.
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main"
+}
+```
+
+### `set_summary`
+
+Updates the current working summary for an orchestrator instance. Used to communicate what an agent is doing right now to peers.
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main",
+  "summary": "Migrating HeroSection to lit-ui — ETA 30 minutes"
+}
+```
+
+### `write_diary`
+
+Writes a diary entry for a given date. Overwrites any existing entry for that date.
+
+```json
+{
+  "date": "2026-03-29",
+  "orchestrator": "tau",
+  "content": "Completed Phase 1 of landing page migration. Nav and Hero sections done.",
+  "highlights": [
+    "Nav fully migrated to lit-ui",
+    "Hero responsive layout fixed",
+    "Biome and tsc passing on all changed files"
+  ]
+}
+```
+
+### `read_diary`
+
+Reads diary entries for an orchestrator, optionally filtered by date range.
+
+```json
+{
+  "orchestrator": "tau",
+  "from": "2026-03-25",
+  "to": "2026-03-29"
+}
+```
+
+### `create_briefing`
+
+Creates a structured briefing record.
+
+```json
+{
+  "title": "Landing page migration kickoff",
+  "participants": ["pi", "tau"],
+  "decisions": [
+    "Migrate section by section, not all at once",
+    "Each section gets its own commit"
+  ],
+  "linkedMemories": ["memory-abc123"]
+}
+```
+
+### `list_briefings`
+
+Lists briefings, optionally filtered by participant.
+
+```json
+{
+  "participant": "tau"
+}
+```
+
+### `check_tasks`
+
+Shorthand for listing all tasks assigned to the current agent across all statuses. Used at session start.
+
+```json
+{
+  "assignedTo": "tau"
+}
+```
+
+---
+
+## Recurring Task Tools
+
+Recurring tasks auto-create new task instances on a cron schedule.
+
+### `create_recurring_task`
+
+Defines a recurring task template.
+
+```json
+{
+  "title": "Daily standup: review open tasks and unread messages",
+  "cronExpression": "0 9 * * *",
+  "assignedTo": "tau",
+  "priority": "medium"
+}
+```
+
+Standard cron expressions. Convex runs the scheduler.
+
+### `list_recurring_tasks`
+
+Lists all recurring task templates.
+
+```json
+{}
+```
+
+### `update_recurring_task`
+
+Updates a recurring task template.
+
+```json
+{
+  "recurringTaskId": "rt-abc123",
+  "cronExpression": "0 8 * * 1-5"
+}
+```
+
+### `delete_recurring_task`
+
+Removes a recurring task template. Does not delete already-created instances.
+
+```json
+{
+  "recurringTaskId": "rt-abc123"
+}
+```
+
+---
+
+## Registry Tools
+
+The component registry stores your agent team's capability inventory — agents, skills, hooks, and plugins.
+
+### `register_component`
+
+Registers a component with full content backup.
+
+```json
+{
+  "name": "dev-frontend",
+  "type": "agent",
+  "content": "...full agent file content...",
+  "version": "1.2.0"
+}
+```
+
+Type values: `agent`, `skill`, `hook`, `plugin`.
+
+### `get_component`
+
+Retrieves a component by name.
+
+```json
+{
+  "name": "dev-frontend"
+}
+```
+
+### `list_components`
+
+Lists all registered components, optionally filtered by type.
+
+```json
+{
+  "type": "agent"
+}
+```
+
+### `update_component`
+
+Updates a component's content or version.
+
+```json
+{
+  "name": "dev-frontend",
+  "content": "...updated content...",
+  "version": "1.3.0"
+}
+```
+
+### `delete_component`
+
+Removes a component from the registry.
+
+```json
+{
+  "name": "dev-frontend"
+}
+```
+
+### `search_components`
+
+Full-text search over component names and content.
+
+```json
+{
+  "query": "lit-ui frontend"
+}
+```

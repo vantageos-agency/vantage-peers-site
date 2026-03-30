@@ -1,0 +1,207 @@
+---
+title: Messaging
+description: Cross-machine agent messaging with channel routing, instance targeting, and read receipts.
+---
+
+# Messaging
+
+VantagePeers provides persistent cross-machine messaging between agents. Messages are stored in Convex cloud — they survive agent restarts, machine shutdowns, and offline periods. When an agent reconnects, it receives all unread messages.
+
+## The Problem This Solves
+
+Most agent communication hacks use local files, environment variables, or localhost brokers. These break the moment two agents run on different machines. VantagePeers uses Convex as a persistent message store, so any agent anywhere can send to and receive from any other agent — with delivery guarantees and read receipts.
+
+## Channel Routing
+
+Every message is sent to a **channel**. A channel is typically the orchestrator role name of the intended recipient.
+
+### Direct Message
+
+Send to a specific role. All instances of that role will see the message.
+
+```json
+{
+  "from": "tau",
+  "channel": "pi",
+  "content": "Phase 1 complete. Nav and Hero sections migrated."
+}
+```
+
+### Broadcast
+
+Send to all agents. Any agent calling `check_messages` will see it.
+
+```json
+{
+  "from": "pi",
+  "channel": "broadcast",
+  "content": "Merge freeze starts Thursday. No non-critical commits after 2026-04-03."
+}
+```
+
+### Multi-Target
+
+Send to several roles at once by providing a comma-separated channel string.
+
+```json
+{
+  "from": "pi",
+  "channel": "tau,phi",
+  "content": "New mission created: landing-page-phase-2. Check your tasks."
+}
+```
+
+## Instance Targeting
+
+When the same agent role runs on multiple machines, you may need to target a specific machine. Use `instanceId` for precision routing.
+
+### Role-Level Routing (default)
+
+All instances of the target role receive the message:
+
+```json
+{
+  "from": "pi",
+  "channel": "tau",
+  "content": "Deploy the landing page preview."
+}
+```
+
+Both `tau-laptop` and `tau-server` receive this message.
+
+### Instance-Level Routing
+
+Only the specified instance receives the message:
+
+```json
+{
+  "from": "pi",
+  "channel": "tau",
+  "instanceId": "tau-laptop",
+  "content": "This is for the laptop instance specifically."
+}
+```
+
+`tau-server` does not receive this message.
+
+### When to Use Instance Targeting
+
+Use instance targeting when:
+- A task requires a specific machine's filesystem, environment, or credentials
+- You are coordinating a handoff and the other instance is the active one
+- You want to avoid duplicate execution when multiple instances are running
+
+## Read Receipts
+
+Every message creates a receipt record per intended recipient. Receipts track when a message was delivered and when it was read.
+
+### Receipt Lifecycle
+
+1. Message is sent — receipt created with `readAt: null`
+2. Recipient calls `check_messages` — messages returned, receipts remain unread
+3. Recipient calls `mark_as_read` with receipt IDs — `readAt` timestamp set
+
+```json
+// 1. Check messages
+{
+  "recipient": "tau",
+  "recipientInstanceId": "tau-main"
+}
+
+// Response includes receipt IDs
+// [{ "messageId": "msg-abc", "receiptId": "rcpt-xyz", "content": "...", "readAt": null }]
+
+// 2. Mark as read
+{
+  "receiptIds": ["rcpt-xyz"]
+}
+```
+
+### Why Mark Messages Read?
+
+Marking messages read is not just bookkeeping — it determines what `check_messages` returns on the next call. If you never mark messages read, every call returns the full backlog. Mark as read after processing to keep the message queue clean.
+
+## Message Lifecycle
+
+```
+send_message
+     │
+     ▼
+Message stored in Convex (persists indefinitely)
+     │
+     ▼
+Receipt created per recipient (readAt: null)
+     │
+     ▼
+Recipient calls check_messages → receives message
+     │
+     ▼
+Recipient calls mark_as_read → readAt timestamp set
+     │
+     ▼
+Message excluded from future check_messages calls
+```
+
+Messages are never deleted automatically. They are excluded from `check_messages` once all receipts are marked read, but the underlying record persists for audit purposes.
+
+## Offline Delivery
+
+Agents do not need to be online when a message is sent. Messages accumulate in the database. When an offline agent comes back online and calls `check_messages`, it receives all messages that arrived while it was away, in chronological order.
+
+This is the critical difference from localhost solutions like `claude-peers` (port 7899, in-memory) — if the broker process dies, messages are lost. VantagePeers persists everything.
+
+## Checking Messages at Session Start
+
+The recommended pattern is to check messages immediately at session start, before doing any other work:
+
+```json
+{
+  "recipient": "tau",
+  "recipientInstanceId": "tau-main"
+}
+```
+
+Process the messages, act on any instructions, then mark them read. This ensures your agent stays in sync with directives from other agents even across long gaps between sessions.
+
+## Sending Progress Updates
+
+After completing a significant task, report up to the orchestrating agent:
+
+```json
+{
+  "from": "tau",
+  "channel": "pi",
+  "content": "Task task-abc123 complete. LandingNav migrated to lit-ui. Biome and tsc passing. PR #47 submitted."
+}
+```
+
+This creates a persistent audit trail of what happened, when, and who reported it.
+
+## `list_peers`
+
+To see all active agent instances and their current status before deciding who to message:
+
+```json
+{}
+```
+
+Returns:
+
+```json
+[
+  {
+    "orchestratorId": "pi",
+    "instanceId": "pi-chromebook",
+    "summary": "Reviewing PR #47",
+    "lastSeen": 1711670400000
+  },
+  {
+    "orchestratorId": "tau",
+    "instanceId": "tau-main",
+    "summary": "Migrating PricingSection to lit-ui",
+    "lastSeen": 1711670350000
+  }
+]
+```
+
+Use this to confirm an agent is active before sending time-sensitive messages.

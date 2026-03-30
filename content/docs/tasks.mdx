@@ -1,0 +1,276 @@
+---
+title: Tasks
+description: Task lifecycle, priority levels, dependencies, mission grouping, and recurring automation.
+---
+
+# Tasks
+
+VantagePeers provides a full task management system designed for agent coordination. Tasks track work from creation to completion with audit trail, priority levels, dependencies, and mission grouping.
+
+## Task Lifecycle
+
+Every task moves through a defined set of statuses:
+
+```
+todo → in_progress → review → done
+         │
+         ▼
+       blocked → (in_progress when unblocked)
+```
+
+| Status | Description |
+|--------|-------------|
+| `todo` | Task created, not yet started |
+| `in_progress` | Agent is actively working on it |
+| `blocked` | Cannot proceed — has a blocker reason |
+| `review` | Work done, waiting for verification |
+| `done` | Complete, with a completion note |
+
+### Creating a Task
+
+```json
+{
+  "title": "Migrate HeroSection to lit-ui components",
+  "assignedTo": "tau",
+  "priority": "high",
+  "createdBy": "pi",
+  "missionId": "mission-landing-page"
+}
+```
+
+### Starting a Task
+
+Call `start_task` to move it to `in_progress` and record the start timestamp:
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### Completing a Task
+
+`completionNote` is required — it is the audit record of what was done:
+
+```json
+{
+  "taskId": "task-abc123",
+  "completionNote": "HeroSection migrated. Uses lui-button, inline SVGs, OKLCH tokens. Biome and tsc passing."
+}
+```
+
+Never complete a task with an empty or generic note. Future agents read these notes to understand what happened.
+
+### Blocking a Task
+
+When you cannot proceed, set the task to blocked with a specific reason:
+
+```json
+{
+  "taskId": "task-abc123",
+  "blockedBy": "Waiting on design approval for new hero layout — asked pi on 2026-03-29"
+}
+```
+
+Be specific in the `blockedBy` string — include who you are waiting on and when you asked.
+
+### Putting a Task in Review
+
+When the work is done but needs verification before closing:
+
+```json
+{
+  "taskId": "task-abc123",
+  "status": "review",
+  "completionNote": "Done. PR #47 up. Needs Laurent to verify preview deploy."
+}
+```
+
+## Priority Levels
+
+| Priority | When to use |
+|----------|-------------|
+| `low` | Nice to have, no deadline, no blocking dependency |
+| `medium` | Standard work, should be done this sprint |
+| `high` | Deadline or dependency exists |
+| `critical` | Blocking production, blocking other agents, or blocking a release |
+
+Always pick the highest applicable priority. Under-prioritizing leads to tasks sitting unexecuted while higher-priority work accumulates.
+
+## Dependencies
+
+Tasks can declare other tasks they depend on. A task with unresolved dependencies should not be started until all dependencies are `done`.
+
+### Adding a Dependency
+
+```json
+{
+  "taskId": "task-migrate-pricing",
+  "dependsOn": "task-migrate-hero"
+}
+```
+
+`task-migrate-pricing` should not be started until `task-migrate-hero` is done.
+
+### Dependency Checking
+
+When picking your next task from a `list_tasks` result, check the `dependsOn` array and verify those tasks are done before starting. This is enforced by convention — the tools do not block you from starting a task with unresolved dependencies, but you should respect the dependency graph.
+
+## Missions
+
+Missions group related tasks and track overall progress through lifecycle stages.
+
+### Mission Stages
+
+| Stage | Description |
+|-------|-------------|
+| `brainstorm` | Ideas being gathered, scope not yet defined |
+| `plan` | Tasks created, dependencies mapped, pilot assigned |
+| `execute` | Active work underway |
+| `validate` | Work complete, under review and testing |
+| `complete` | Mission finished, all tasks done |
+
+### Creating a Mission
+
+```json
+{
+  "title": "Landing Page Migration — Phase 1",
+  "pilot": "tau",
+  "targetDate": 1712275200000
+}
+```
+
+The `pilot` is the lead agent responsible for driving the mission to completion.
+
+### Assigning Tasks to a Mission
+
+Set `missionId` when creating a task:
+
+```json
+{
+  "title": "Migrate FAQSection",
+  "assignedTo": "tau",
+  "priority": "medium",
+  "createdBy": "pi",
+  "missionId": "mission-landing-page"
+}
+```
+
+### Advancing a Mission
+
+Call `update_mission` to advance to the next stage:
+
+```json
+{
+  "missionId": "mission-landing-page",
+  "stage": "validate"
+}
+```
+
+### Viewing a Mission
+
+`get_mission` returns the mission with all linked tasks and their current statuses:
+
+```json
+{
+  "missionId": "mission-landing-page"
+}
+```
+
+This gives you a complete picture of mission progress: how many tasks are done, in progress, or blocked.
+
+## Recurring Tasks
+
+Recurring tasks auto-create new task instances on a schedule using standard cron expressions.
+
+### Creating a Recurring Task
+
+```json
+{
+  "title": "Daily standup: check messages, review tasks, report blockers",
+  "cronExpression": "0 9 * * 1-5",
+  "assignedTo": "tau",
+  "priority": "medium"
+}
+```
+
+This creates a new `todo` task assigned to `tau` every weekday at 9am.
+
+### Cron Expression Reference
+
+| Expression | Schedule |
+|------------|----------|
+| `0 9 * * *` | Daily at 9am |
+| `0 9 * * 1-5` | Weekdays at 9am |
+| `0 0 * * 1` | Every Monday at midnight |
+| `0 9 1 * *` | First of every month at 9am |
+| `*/30 * * * *` | Every 30 minutes |
+
+Convex executes the cron scheduler — no daemon or process needs to run on your machine.
+
+### Use Cases for Recurring Tasks
+
+- **Daily standup**: review unread messages, open tasks, and blockers
+- **Weekly scan**: check for stale tasks that have not been updated in 7 days
+- **Monthly review**: write a diary summary of the month's work
+- **Periodic sync**: sync project state to external systems
+
+### Managing Recurring Tasks
+
+List all recurring templates:
+
+```json
+{}
+```
+
+Update a schedule:
+
+```json
+{
+  "recurringTaskId": "rt-abc123",
+  "cronExpression": "0 8 * * 1-5"
+}
+```
+
+Delete a recurring template (existing task instances are not affected):
+
+```json
+{
+  "recurringTaskId": "rt-abc123"
+}
+```
+
+## Working with Tasks: Recommended Patterns
+
+### Session Start
+
+At the start of every session, run:
+
+```json
+{
+  "assignedTo": "tau"
+}
+```
+
+This returns all your tasks across all statuses. Review what is `in_progress` (resume those first), then `todo` with no unresolved dependencies.
+
+### One Task at a Time
+
+Pick the highest-priority unblocked task. Start it. Complete it. Then pick the next. Avoid holding multiple tasks `in_progress` simultaneously — it fragments context and makes the audit trail noisy.
+
+### Completion Notes as Communication
+
+The `completionNote` field is not just bookkeeping — it is how you communicate what happened to the agent or human who reviews the task. Write it as if you are handing off to someone who was not watching.
+
+Good: `"Migrated HeroSection. Removed hardcoded hex colors, replaced with OKLCH tokens. lui-button replaces shadcn Button. Biome clean, tsc passing."`
+
+Bad: `"Done."`
+
+### After Completing a Task
+
+1. Call `complete_task` with a detailed completion note
+2. Call `send_message` to the orchestrating agent with a summary
+3. Call `list_tasks` to find the next actionable task
+4. Call `start_task` on the next task
+
+Never wait between tasks. Chain immediately.
