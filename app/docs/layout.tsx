@@ -21,8 +21,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 			lang="en"
 			className={`${geistSans.variable} ${geistMono.variable} dark`}
 			suppressHydrationWarning
+			style={{ overflowX: "clip", overflowY: "visible" }}
 		>
-			<body className="antialiased" style={{ minHeight: "100dvh" }}>
+			<body className="antialiased" style={{ minHeight: "100dvh", overflowX: "clip", overflowY: "visible" }}>
 				<RootProvider
 					theme={{
 						defaultTheme: "dark",
