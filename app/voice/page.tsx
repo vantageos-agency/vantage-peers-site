@@ -10,37 +10,74 @@ interface Message {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+const POLL_INTERVAL_MS = 2000;
+const POLL_MAX_ATTEMPTS = 30; // 60 seconds max wait
+
 export default function VoicePage() {
   const [status, setStatus] = useState<Status>('idle');
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
   const [history, setHistory] = useState<Message[]>([]);
   const [supported, setSupported] = useState(true);
 
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const pollForResponse = useCallback(async (): Promise<string | null> => {
+    for (let i = 0; i < POLL_MAX_ATTEMPTS; i++) {
+      try {
+        const res = await fetch('/api/voice/check');
+        const data = await res.json();
+
+        if (data.messages && data.messages.length > 0) {
+          // Find the most recent non-VOICE message (the orchestrator's response)
+          const responseMsg = data.messages.find(
+            (m: any) => !m.content.startsWith('[VOICE]'),
+          );
+          if (responseMsg) {
+            return responseMsg.content;
+          }
+        }
+      } catch {
+        // Ignore poll errors, keep trying
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+    }
+    return null;
+  }, []);
+
   const processVoice = useCallback(
     async (text: string) => {
       setStatus('processing');
+      setResponse('Sending to orchestrator...');
 
       try {
-        // Chat
-        const chatRes = await fetch('/api/voice/chat', {
+        // Send message via VantagePeers
+        const sendRes = await fetch('/api/voice/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, history }),
+          body: JSON.stringify({ message: text }),
         });
-        const chatData = await chatRes.json();
+        const sendData = await sendRes.json();
 
-        if (!chatRes.ok) {
-          setResponse(`Error: ${chatData.error}`);
+        if (!sendRes.ok) {
+          setResponse(`Error: ${sendData.error}`);
           setStatus('idle');
           return;
         }
 
-        const assistantText: string = chatData.response;
+        setResponse('Waiting for orchestrator response...');
+
+        // Poll for response
+        const assistantText = await pollForResponse();
+
+        if (!assistantText) {
+          setResponse('No response received from orchestrator. Please try again.');
+          setStatus('idle');
+          return;
+        }
+
         setResponse(assistantText);
         setHistory((prev) => [
           ...prev,
@@ -62,7 +99,6 @@ export default function VoicePage() {
           return;
         }
 
-        setAudioUrl(ttsData.audio_url);
         setStatus('speaking');
 
         // Play audio
@@ -79,7 +115,7 @@ export default function VoicePage() {
         setStatus('idle');
       }
     },
-    [history],
+    [pollForResponse],
   );
 
   const toggleListening = useCallback(() => {
@@ -127,7 +163,6 @@ export default function VoicePage() {
 
     setTranscript('');
     setResponse('');
-    setAudioUrl('');
     setStatus('listening');
     recognition.start();
   }, [status, transcript, processVoice]);
@@ -135,7 +170,7 @@ export default function VoicePage() {
   const statusLabel: Record<Status, string> = {
     idle: 'Tap to speak',
     listening: 'Listening...',
-    processing: 'Thinking...',
+    processing: 'Waiting for orchestrator response...',
     speaking: 'Speaking...',
   };
 

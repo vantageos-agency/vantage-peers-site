@@ -52,5 +52,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
 				},
 			},
 		},
+		...([
+			"/docs",
+			"/docs/getting-started",
+			"/docs/architecture",
+			"/docs/tools",
+			"/docs/memory",
+			"/docs/messaging",
+			"/docs/tasks",
+		].map((path) => ({
+			url: `${baseUrl}${path}`,
+			lastModified: new Date(),
+			changeFrequency: "weekly" as const,
+			priority: 0.7,
+		}))),
 	];
 }

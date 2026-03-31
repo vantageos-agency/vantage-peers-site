@@ -9,8 +9,8 @@ function getOrganizationSchema(locale: string) {
 		"@context": "https://schema.org",
 		"@type": "Organization",
 		"@id": `${BASE_URL}/#organization`,
-		name: "VantagePeers",
-		url: BASE_URL,
+		name: "ElPi Corp",
+		url: "https://elpi.co",
 		logo: {
 			"@type": "ImageObject",
 			url: `${BASE_URL}/opengraph-image`,
@@ -18,7 +18,7 @@ function getOrganizationSchema(locale: string) {
 		description: locale === "fr"
 			? "Serveur MCP open source pour la mémoire partagée, la messagerie et la gestion de tâches multi-agents Claude Code. 13 tables, 45 outils. Gratuit, auto-hébergé sur Convex."
 			: "Open source shared memory, messaging, and task management MCP server for multi-agent Claude Code. 13 database tables, 45 MCP tools. Free, self-hosted on Convex.",
-		sameAs: ["https://github.com/vantageos/vantage-peers"],
+		sameAs: ["https://github.com/vantageos", "https://x.com/PerelloLaurent"],
 	};
 }
 
@@ -117,6 +117,23 @@ function getSoftwareApplicationSchema(locale: string) {
 	};
 }
 
+function getFaqPageSchema(locale: string) {
+	const content = locale === "fr" ? webPageContent.fr : webPageContent.en;
+	return {
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		"@id": `${locale === "fr" ? `${BASE_URL}/fr` : BASE_URL}#faqpage`,
+		mainEntity: content.faq.map((item) => ({
+			"@type": "Question",
+			name: item.q,
+			acceptedAnswer: {
+				"@type": "Answer",
+				text: item.a,
+			},
+		})),
+	};
+}
+
 function JsonLd({ data }: { data: Record<string, unknown> }) {
 	return (
 		<script
@@ -134,6 +151,7 @@ export function LandingStructuredData({ locale = "en" }: { locale?: string }) {
 			<JsonLd data={webSiteSchema} />
 			<JsonLd data={getWebPageSchema(locale)} />
 			<JsonLd data={getSoftwareApplicationSchema(locale)} />
+			<JsonLd data={getFaqPageSchema(locale)} />
 		</>
 	);
 }
