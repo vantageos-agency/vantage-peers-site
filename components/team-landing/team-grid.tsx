@@ -152,7 +152,7 @@ export function TeamGrid({ locale }: TeamGridProps) {
                   <CardContent className="p-5">
                     {/* Card header */}
                     <div className="flex items-start justify-between mb-3">
-                      <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center">
                         <team.icon className="size-5 text-primary" />
                       </div>
                       <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export function TeamGrid({ locale }: TeamGridProps) {
                                   {details.agents.map((agent) => (
                                     <div
                                       key={agent.name}
-                                      className="rounded-md bg-muted/50 px-3 py-2"
+                                      className="rounded-2xl bg-muted/50 px-3 py-2"
                                     >
                                       <span className="text-sm font-medium">
                                         {agent.name}
@@ -235,7 +235,7 @@ export function TeamGrid({ locale }: TeamGridProps) {
                                   {details.skills.map((skill) => (
                                     <span
                                       key={skill.name}
-                                      className="inline-flex items-center rounded-md bg-muted/50 px-2 py-1 text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                      className="inline-flex items-center rounded-2xl bg-muted/50 px-2 py-1 text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                       title={skill.description}
                                     >
                                       {skill.command}

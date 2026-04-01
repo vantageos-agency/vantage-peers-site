@@ -112,7 +112,7 @@ export function PeersFaq({ locale }: PeersFaqProps) {
 								open={openIndex === index}
 								onOpenChange={(open) => setOpenIndex(open ? index : null)}
 							>
-								<CollapsibleTrigger className="w-full flex items-center justify-between p-4 text-left rounded-lg bg-card border border-border hover:bg-muted/50 transition-colors">
+								<CollapsibleTrigger className="w-full flex items-center justify-between p-4 text-left rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors">
 									<span className="font-medium pr-4">{faq.question}</span>
 									<ChevronDown
 										className={cn(

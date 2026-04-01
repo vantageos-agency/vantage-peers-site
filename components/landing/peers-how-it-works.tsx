@@ -141,7 +141,7 @@ export function PeersHowItWorks({ locale }: PeersHowItWorksProps) {
 
 				{/* Emphasis */}
 				<motion.div
-					className="text-center mt-16 p-6 rounded-xl bg-primary/5 border border-primary/20 max-w-2xl mx-auto"
+					className="text-center mt-16 p-6 rounded-3xl bg-primary/5 border border-primary/20 max-w-2xl mx-auto"
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
 					viewport={{ once: true }}

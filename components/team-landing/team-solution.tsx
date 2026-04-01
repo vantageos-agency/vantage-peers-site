@@ -112,7 +112,7 @@ export function TeamSolution({ locale }: TeamSolutionProps) {
             >
               <div className="p-8 rounded-2xl border border-border bg-card h-full">
                 <div
-                  className={`size-12 rounded-xl ${benefit.bgColor} flex items-center justify-center mb-6`}
+                  className={`size-12 rounded-3xl ${benefit.bgColor} flex items-center justify-center mb-6`}
                 >
                   <benefit.icon className={`size-6 ${benefit.color}`} />
                 </div>

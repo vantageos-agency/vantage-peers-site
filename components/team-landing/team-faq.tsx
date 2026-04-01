@@ -147,7 +147,7 @@ export function TeamFaq({ locale }: TeamFaqProps) {
               setOpenIndex(0);
             }}
             className={cn(
-              'px-3 py-1.5 rounded-md text-sm font-medium transition-all',
+              'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
               activeCategory === null
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
@@ -163,7 +163,7 @@ export function TeamFaq({ locale }: TeamFaqProps) {
                 setOpenIndex(0);
               }}
               className={cn(
-                'px-3 py-1.5 rounded-md text-sm font-medium transition-all',
+                'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                 activeCategory === cat
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
@@ -187,7 +187,7 @@ export function TeamFaq({ locale }: TeamFaqProps) {
                 open={openIndex === index}
                 onOpenChange={(open) => setOpenIndex(open ? index : null)}
               >
-                <CollapsibleTrigger className="w-full flex items-center justify-between p-4 text-left rounded-lg bg-card border border-border hover:bg-muted/50 transition-colors">
+                <CollapsibleTrigger className="w-full flex items-center justify-between p-4 text-left rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors">
                   <span className="font-medium pr-4">{faq.question}</span>
                   <ChevronDown
                     className={cn(

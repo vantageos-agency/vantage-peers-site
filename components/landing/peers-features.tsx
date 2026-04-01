@@ -159,7 +159,7 @@ export function PeersFeatures({ locale }: PeersFeaturesProps) {
 							<Card className="h-full hover:shadow-lg transition-shadow">
 								<CardContent className="p-6">
 									<div
-										className={`size-12 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}
+										className={`size-12 rounded-3xl ${feature.bgColor} flex items-center justify-center mb-4`}
 									>
 										<feature.icon className={`size-6 ${feature.color}`} />
 									</div>

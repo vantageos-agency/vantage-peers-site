@@ -192,7 +192,7 @@ export function PeersCode({ locale }: PeersCodeProps) {
 									onClick={() =>
 										setActiveTab(tab.id as "install" | "configure" | "use")
 									}
-									className={`px-3 py-2 min-h-[44px] text-sm rounded-md font-medium transition-all ${
+									className={`px-3 py-2 min-h-[44px] text-sm rounded-3xl font-medium transition-all ${
 										activeTab === tab.id
 											? "bg-background text-foreground shadow-sm"
 											: "text-muted-foreground hover:text-foreground"

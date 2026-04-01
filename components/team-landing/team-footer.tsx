@@ -55,7 +55,7 @@ export function TeamFooter({ locale, onLocaleChange }: TeamFooterProps) {
           {/* Logo and tagline */}
           <div>
             <a href="#hero" className="flex items-center gap-2 mb-4">
-              <div className="size-8 rounded-lg bg-foreground flex items-center justify-center">
+              <div className="size-8 rounded-2xl bg-foreground flex items-center justify-center">
                 <span className="text-background font-bold text-lg">V</span>
               </div>
               <span className="font-semibold text-lg">

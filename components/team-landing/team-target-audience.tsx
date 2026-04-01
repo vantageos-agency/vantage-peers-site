@@ -94,7 +94,7 @@ export function TeamTargetAudience({ locale }: TeamTargetAudienceProps) {
             {t.soloProfiles.map((profile) => (
               <Card key={profile.title} className="h-full">
                 <CardContent className="p-5 flex items-start gap-4">
-                  <div className="size-10 rounded-lg bg-chart-1/10 flex items-center justify-center shrink-0">
+                  <div className="size-10 rounded-2xl bg-chart-1/10 flex items-center justify-center shrink-0">
                     <profile.icon className="size-5 text-chart-1" />
                   </div>
                   <div>
@@ -121,7 +121,7 @@ export function TeamTargetAudience({ locale }: TeamTargetAudienceProps) {
             {t.smbProfiles.map((profile) => (
               <Card key={profile.title} className="h-full">
                 <CardContent className="p-5 flex items-start gap-4">
-                  <div className="size-10 rounded-lg bg-chart-4/10 flex items-center justify-center shrink-0">
+                  <div className="size-10 rounded-2xl bg-chart-4/10 flex items-center justify-center shrink-0">
                     <profile.icon className="size-5 text-chart-4" />
                   </div>
                   <div>

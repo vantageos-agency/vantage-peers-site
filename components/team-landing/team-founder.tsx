@@ -84,7 +84,7 @@ export function TeamFounder({ locale }: TeamFounderProps) {
           </div>
 
           <motion.div
-            className="text-center p-6 rounded-xl bg-primary/5 border border-primary/20"
+            className="text-center p-6 rounded-3xl bg-primary/5 border border-primary/20"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}

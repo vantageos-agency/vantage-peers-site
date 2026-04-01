@@ -52,7 +52,7 @@ export function PeersCta({ locale }: PeersCtaProps) {
 						href="https://github.com/vantageos/vantage-peers"
 						target="_blank"
 						rel="noopener noreferrer"
-						className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-10 rounded-md font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group"
+						className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-10 rounded-4xl font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group"
 					>
 						<svg
 							aria-hidden="true"
@@ -80,7 +80,7 @@ export function PeersCta({ locale }: PeersCtaProps) {
 						href="https://github.com/vantageos/vantage-peers#readme"
 						target="_blank"
 						rel="noopener noreferrer"
-						className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-8 rounded-md font-medium border border-border bg-background text-foreground hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-8 rounded-4xl font-medium border border-border bg-background text-foreground hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					>
 						<svg
 							aria-hidden="true"

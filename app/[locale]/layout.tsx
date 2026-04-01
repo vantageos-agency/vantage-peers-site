@@ -141,7 +141,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 				>
 					<a
 						href="#main-content"
-						className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+						className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-2xl focus:bg-primary focus:text-primary-foreground focus:font-medium focus:outline-none focus:ring-2 focus:ring-ring"
 					>
 						{locale === "fr" ? "Aller au contenu principal" : "Skip to main content"}
 					</a>

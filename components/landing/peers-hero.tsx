@@ -116,7 +116,7 @@ export function PeersHero({ locale }: PeersHeroProps) {
 							href="https://github.com/vantageos/vantage-peers"
 							target="_blank"
 							rel="noopener noreferrer"
-							className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-8 rounded-md font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring glow-on-hover group"
+							className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-8 rounded-4xl font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring glow-on-hover group"
 						>
 							<svg
 								aria-hidden="true"
@@ -142,7 +142,7 @@ export function PeersHero({ locale }: PeersHeroProps) {
 						</a>
 						<a
 							href="#how-it-works"
-							className="inline-flex items-center justify-center min-h-touch text-base px-8 rounded-md font-medium border border-border bg-background text-foreground hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+							className="inline-flex items-center justify-center min-h-touch text-base px-8 rounded-4xl font-medium border border-border bg-background text-foreground hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
 							{t.cta2}
 						</a>

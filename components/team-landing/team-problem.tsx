@@ -101,7 +101,7 @@ export function TeamProblem({ locale }: TeamProblemProps) {
             >
               <Card className="relative overflow-hidden h-full">
                 <CardContent className="relative p-6 text-center">
-                  <div className="size-12 rounded-xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                  <div className="size-12 rounded-3xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
                     <problem.icon className="size-6 text-destructive" />
                   </div>
                   <h3 className="font-semibold text-lg mb-2">

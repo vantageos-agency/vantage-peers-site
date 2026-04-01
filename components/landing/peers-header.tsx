@@ -100,7 +100,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 				<div className="flex items-center justify-between h-16 md:h-20">
 					{/* Logo */}
 					<a href="#hero" className="flex items-center gap-2 group min-h-[44px]">
-						<div className="size-8 rounded-lg bg-foreground flex items-center justify-center transition-transform group-hover:scale-105">
+						<div className="size-8 rounded-2xl bg-foreground flex items-center justify-center transition-transform group-hover:scale-105">
 							<span className="text-background font-bold text-lg">V</span>
 						</div>
 						<span className="font-semibold text-lg tracking-tight">
@@ -114,7 +114,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 							<a
 								key={link.href}
 								href={link.href}
-								className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
+								className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-2xl hover:bg-muted/50"
 							>
 								{link.label}
 							</a>
@@ -152,7 +152,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 							target="_blank"
 							rel="noopener noreferrer"
 							aria-label={t.githubLabel}
-							className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium min-h-[44px] px-3 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+							className="inline-flex items-center justify-center gap-2 rounded-4xl text-sm font-medium min-h-[44px] px-3 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
 							<svg
 								aria-hidden="true"
@@ -215,7 +215,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 								<a
 									key={link.href}
 									href={link.href}
-									className="block px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+									className="block px-4 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-2xl transition-colors"
 									onClick={() => setIsMobileMenuOpen(false)}
 								>
 									{link.label}
@@ -238,7 +238,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 									target="_blank"
 									rel="noopener noreferrer"
 									aria-label={t.githubLabel}
-									className="flex items-center justify-center gap-2 w-full min-h-touch rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring px-4 py-2"
+									className="flex items-center justify-center gap-2 w-full min-h-touch rounded-4xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring px-4 py-2"
 									onClick={() => setIsMobileMenuOpen(false)}
 								>
 									<svg

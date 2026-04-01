@@ -217,7 +217,7 @@ export default function VoicePage() {
 
       {/* Transcript */}
       {transcript && (
-        <div className="w-full max-w-md rounded-lg bg-white/5 p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white/5 p-4">
           <p className="mb-1 text-xs uppercase tracking-wider text-gray-500">You said</p>
           <p id="transcript-display" className="text-gray-200">
             {transcript}
@@ -227,7 +227,7 @@ export default function VoicePage() {
 
       {/* Response */}
       {response && (
-        <div className="w-full max-w-md rounded-lg bg-white/5 p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white/5 p-4">
           <p className="mb-1 text-xs uppercase tracking-wider text-gray-500">Pi says</p>
           <p className="text-gray-200">{response}</p>
         </div>

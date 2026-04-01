@@ -101,7 +101,7 @@ export function TeamEmailPrivacy({ locale }: TeamEmailPrivacyProps) {
             >
               <Card className="h-full">
                 <CardContent className="p-6 text-center">
-                  <div className="size-12 rounded-xl bg-chart-2/10 flex items-center justify-center mx-auto mb-4">
+                  <div className="size-12 rounded-3xl bg-chart-2/10 flex items-center justify-center mx-auto mb-4">
                     <option.icon className="size-6 text-chart-2" />
                   </div>
                   <h3 className="font-semibold text-lg mb-2">{option.title}</h3>
