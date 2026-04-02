@@ -1,0 +1,142 @@
+---
+title: Fix Patterns KB
+description: Knowledge base of bugs, root causes, fix attempts, and validated fixes with semantic search.
+---
+
+# Fix Patterns KB
+
+The Fix Patterns knowledge base documents bugs, their root causes, what was tried (including failures), and what ultimately fixed the issue. Agents search this **before** attempting any fix to avoid repeating past mistakes.
+
+## How It Works
+
+```
+Agent encounters bug
+        │
+        ▼
+search_fix_patterns("error message or symptom")
+        │
+        ▼
+  Found match? ──Yes──▶ Apply validated fix
+        │
+       No
+        ▼
+  Fix the bug manually
+        │
+        ▼
+create_fix_pattern + add_fix_attempt
+```
+
+## Schema
+
+### fixPatterns
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `symptom` | string | What the bug looks like (searchable via RAG) |
+| `rootCause` | string | Why the bug happens |
+| `validatedFix` | string? | The fix that worked |
+| `files` | string[]? | Files involved |
+| `tags` | string[] | Categories like `react-hydration`, `credit-system` |
+| `stack` | string[] | Tech stack like `next.js`, `convex`, `clerk` |
+| `sourceProject` | string | Which project this was discovered in |
+| `linkedIssueIds` | string[]? | Linked VantagePeers issue IDs |
+| `severity` | `critical` \| `major` \| `minor` | Impact level |
+
+### fixAttempts
+
+Fix attempts are stored in a separate table (per Convex guidelines for unbounded arrays):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `patternId` | Id | Reference to the parent fixPattern |
+| `description` | string | What was tried |
+| `commit` | string? | Git commit hash |
+| `worked` | boolean | Whether this attempt fixed the issue |
+| `why` | string | Why it worked or did not |
+
+## MCP Tools
+
+### search_fix_patterns
+
+The most important tool. Use this **before fixing any bug**.
+
+```json
+{
+  "query": "message disappears after sending in chat",
+  "limit": 5
+}
+```
+
+Returns patterns ranked by semantic similarity with scores.
+
+### create_fix_pattern
+
+Create a new pattern when you discover a bug:
+
+```json
+{
+  "symptom": "Credits not deducted after video generation",
+  "rootCause": "Race condition in credit validation mutation",
+  "tags": ["credit-system", "race-condition"],
+  "stack": ["convex"],
+  "sourceProject": "myreeldream",
+  "createdBy": "omega",
+  "severity": "critical"
+}
+```
+
+### add_fix_attempt
+
+Document what you tried:
+
+```json
+{
+  "patternId": "pattern-id-here",
+  "description": "Added optimistic locking to credit mutation",
+  "worked": true,
+  "why": "Prevents concurrent mutations from reading stale credit balance",
+  "createdBy": "omega",
+  "commit": "abc1234"
+}
+```
+
+If `worked` is `true` and the pattern has no `validatedFix`, it is auto-set.
+
+### validate_fix
+
+Explicitly set the validated fix:
+
+```json
+{
+  "patternId": "pattern-id-here",
+  "validatedFix": "Use optimistic locking in credit mutation with retry on conflict"
+}
+```
+
+### list_fix_patterns
+
+List patterns by project:
+
+```json
+{
+  "project": "myreeldream",
+  "limit": 20
+}
+```
+
+### link_issue_to_pattern
+
+Connect a GitHub issue to a fix pattern:
+
+```json
+{
+  "patternId": "pattern-id-here",
+  "issueId": "myreeldream-ai/MyShortReel-beta#282"
+}
+```
+
+## Cross-Project Learning
+
+Fix patterns are **not scoped to a single project**. A bug pattern discovered in one project is searchable from any other. The `sourceProject` field tracks where it was found, but `search_fix_patterns` searches across all projects by default.
+
+This means: fix a bug once, never fix it again -- even in a different codebase.

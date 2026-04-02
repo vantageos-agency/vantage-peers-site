@@ -11,13 +11,17 @@ VantagePeers exposes 64 MCP tools organized into 12 capability categories. Every
 
 | Category | Tool Count | Description |
 |----------|-----------|-------------|
-| [Memory](#memory-tools) | 5 | Store, recall, and manage typed memories with vector search |
-| [Messaging](#messaging-tools) | 4 | Send messages across machines with read receipts |
-| [Tasks](#task-tools) | 7 | Create and manage tasks with full lifecycle tracking |
+| [Memory](#memory-tools) | 6 | Store, recall, and manage typed memories with vector search |
+| [Messaging](#messaging-tools) | 5 | Send messages across machines with read receipts |
+| [Tasks](#task-tools) | 8 | Create and manage tasks with full lifecycle tracking |
 | [Missions](#mission-tools) | 4 | Group tasks into missions with stage tracking |
 | [Profiles & Sessions](#profile-and-session-tools) | 7 | Agent identity, session state, and diary |
-| [Recurring Tasks](#recurring-task-tools) | 4 | Cron-based automation |
-| [Registry](#registry-tools) | 6 | Component and briefing management |
+| [Recurring Tasks](#recurring-task-tools) | 5 | Cron-based automation |
+| [Registry](#registry-tools) | 3 | Component backup and inventory |
+| [Mandates](#mandate-tools) | 6 | Cross-agent service requests with budgets |
+| [Business Units](#business-unit-tools) | 5 | BU strategy, pricing, and KPIs |
+| [GitHub Issues](#github-issue-tools) | 9 | Issue tracking with webhook sync |
+| [Fix Patterns](#fix-pattern-tools) | 6 | Bug fix knowledge base with semantic search |
 
 ---
 
@@ -525,3 +529,65 @@ Full-text search over component names and content.
   "query": "lit-ui frontend"
 }
 ```
+
+---
+
+## Mandate Tools
+
+Cross-agent service requests with budget tracking. See [Mandates](/docs/mandates) for full documentation.
+
+| Tool | Description |
+|------|-------------|
+| `create_mandate` | Create a service request with budget |
+| `accept_mandate` | Accept a mandate |
+| `update_mandate` | Update mandate fields |
+| `settle_mandate` | Record actual cost, close mandate |
+| `validate_mandate_spending` | Check if transaction is within limits |
+| `list_mandates` | List mandates with filters |
+
+---
+
+## Business Unit Tools
+
+Track organizational units with strategy and KPIs. See [Business Units](/docs/business-units) for full documentation.
+
+| Tool | Description |
+|------|-------------|
+| `create_bu` | Create a business unit |
+| `update_bu` | Update BU fields |
+| `get_bu` | Fetch a BU by ID |
+| `list_bus` | List all BUs |
+| `delete_bu` | Delete a BU |
+
+---
+
+## GitHub Issue Tools
+
+Issue tracking with webhook sync and auto-linking. See [GitHub Issues](/docs/issues) for full documentation.
+
+| Tool | Description |
+|------|-------------|
+| `add_repo_mapping` | Map a GitHub repo to an orchestrator |
+| `list_repo_mappings` | List all repo mappings |
+| `remove_repo_mapping` | Remove a repo mapping |
+| `list_issues` | List issues with filters |
+| `get_issue` | Fetch a single issue |
+| `update_issue_status` | Update issue status |
+| `link_commit_to_issue` | Link a commit to an issue |
+| `verify_issue` | Mark an issue as verified |
+| `issue_stats` | Get issue count stats |
+
+---
+
+## Fix Pattern Tools
+
+Bug fix knowledge base with semantic search. See [Fix Patterns KB](/docs/fix-patterns) for full documentation.
+
+| Tool | Description |
+|------|-------------|
+| `create_fix_pattern` | Create a fix pattern |
+| `add_fix_attempt` | Document a fix attempt |
+| `validate_fix` | Set the validated fix |
+| `search_fix_patterns` | Semantic search over patterns |
+| `list_fix_patterns` | List patterns by project |
+| `link_issue_to_pattern` | Link an issue to a pattern |

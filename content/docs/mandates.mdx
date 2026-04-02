@@ -1,0 +1,87 @@
+---
+title: Mandates
+description: Cross-agent service requests with budget tracking, spending limits, and settlement.
+---
+
+# Mandates
+
+Mandates are formal service requests between orchestrators. One agent requests a service from another, with an agreed token budget. This enables delegated work with accountability.
+
+## Mandate Lifecycle
+
+```
+requested → accepted → in_progress → delivered → settled
+```
+
+| Status | Description |
+|--------|-------------|
+| `requested` | Service request created with budget |
+| `accepted` | Fulfilling agent agrees to the terms |
+| `in_progress` | Work is underway |
+| `delivered` | Work complete, pending settlement |
+| `settled` | Actual cost recorded, mandate closed |
+
+## Spending Limits (AP2)
+
+Mandates support spending limits for authorization control:
+
+```json
+{
+  "spendingLimits": {
+    "maxPerTransaction": 50000,
+    "maxPerPeriod": 200000,
+    "periodDays": 30
+  },
+  "approvedCategories": ["seo", "content", "development"]
+}
+```
+
+Use `validate_mandate_spending` to check if a transaction is within limits before proceeding.
+
+## MCP Tools
+
+### create_mandate
+
+```json
+{
+  "requestedBy": "pi",
+  "fulfilledBy": "tau",
+  "service": "Build landing page for new product",
+  "budget": 100000
+}
+```
+
+### accept_mandate
+
+```json
+{
+  "mandateId": "mandate-id-here"
+}
+```
+
+### settle_mandate
+
+```json
+{
+  "mandateId": "mandate-id-here",
+  "tokensCost": 85000
+}
+```
+
+### validate_mandate_spending
+
+```json
+{
+  "mandateId": "mandate-id-here",
+  "amount": 25000
+}
+```
+
+### list_mandates
+
+```json
+{
+  "requestedBy": "pi",
+  "status": "in_progress"
+}
+```

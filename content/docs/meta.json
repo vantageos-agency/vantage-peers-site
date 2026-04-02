@@ -10,6 +10,12 @@
     "tools",
     "memory",
     "messaging",
-    "tasks"
+    "tasks",
+    "fix-patterns",
+    "issues",
+    "mandates",
+    "recurring-tasks",
+    "components",
+    "business-units"
   ]
 }

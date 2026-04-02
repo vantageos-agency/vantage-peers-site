@@ -1,0 +1,118 @@
+---
+title: GitHub Issues
+description: Track GitHub issues with webhook sync, status lifecycle, auto-linking, and fix verification.
+---
+
+# GitHub Issues
+
+VantagePeers tracks GitHub issues with a full lifecycle from open to verified. Issues are synced via webhooks and can be auto-linked to tasks when they are completed.
+
+## Issue Lifecycle
+
+```
+open → in_progress → fixed → verified → closed
+```
+
+| Status | Description |
+|--------|-------------|
+| `open` | Issue reported, not yet being worked on |
+| `in_progress` | An agent is actively working on it |
+| `fixed` | A fix has been applied (with commit reference) |
+| `verified` | Fix confirmed working |
+| `closed` | Issue resolved and closed |
+
+## Repo Mappings
+
+Before issues can be tracked, map GitHub repos to orchestrators:
+
+```json
+// add_repo_mapping
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "orchestrator": "omega",
+  "project": "myreeldream"
+}
+```
+
+This tells VantagePeers which agent handles issues from which repo.
+
+## Auto-Link: Tasks to Issues
+
+When a task title contains `#NNN` (e.g., `Fix #282 — credit race condition`), completing that task automatically:
+
+1. **Links the task** to issue #NNN via `linkedTaskIds`
+2. **Extracts commit SHAs** from the completion note
+3. **Updates issue status** to `fixed` if the note contains "fix", "fixed", or a commit hash
+
+This means agents can close issues just by completing tasks with the right title format.
+
+## MCP Tools
+
+### list_issues
+
+```json
+{
+  "project": "myreeldream",
+  "status": "open",
+  "limit": 20
+}
+```
+
+### get_issue
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "issueNumber": 282
+}
+```
+
+### update_issue_status
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "issueNumber": 282,
+  "status": "in_progress"
+}
+```
+
+### link_commit_to_issue
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "issueNumber": 282,
+  "commitSha": "abc1234"
+}
+```
+
+### verify_issue
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "issueNumber": 282,
+  "verifiedBy": "sigma"
+}
+```
+
+### issue_stats
+
+Get counts grouped by status:
+
+```json
+{
+  "project": "myreeldream"
+}
+```
+
+Returns: `{ "open": 23, "in_progress": 5, "fixed": 12, "verified": 8, "closed": 47 }`
+
+### Repo Management
+
+| Tool | Description |
+|------|-------------|
+| `add_repo_mapping` | Map a GitHub repo to an orchestrator and project |
+| `list_repo_mappings` | List all active repo mappings |
+| `remove_repo_mapping` | Remove a repo mapping |

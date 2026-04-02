@@ -1,0 +1,36 @@
+---
+title: Business Units
+description: Track business units with strategy, pricing, KPIs, and management fees.
+---
+
+# Business Units
+
+The business units table tracks organizational entities with their strategy, services, pricing, revenue projections, and KPIs.
+
+## Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | BU name (e.g., "VantagePeers") |
+| `description` | string | What it does |
+| `purpose` | string | Why it exists |
+| `domain` | string? | Website domain |
+| `orchestratorId` | string | Lead orchestrator |
+| `status` | `idea` \| `building` \| `live` \| `revenue` | Current stage |
+| `businessModel` | string | How it makes money |
+| `targetCustomers` | string | Who it serves |
+| `services` | string[] | What it offers |
+| `pricing` | string | Pricing strategy |
+| `revenueProjections` | object | Y1, Y2, Y3 revenue targets |
+| `coreTeam` | object | Agents, skills, hooks, plugins |
+| `managementFee` | number | Percentage cut (default 10%) |
+
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_bu` | Create a business unit with full strategy |
+| `update_bu` | Update business unit fields |
+| `get_bu` | Fetch a business unit by ID |
+| `list_bus` | List all BUs with optional filters |
+| `delete_bu` | Delete a business unit |

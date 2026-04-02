@@ -1,0 +1,49 @@
+---
+title: Recurring Tasks
+description: Cron-based task templates that auto-create on schedule.
+---
+
+# Recurring Tasks
+
+Recurring tasks are templates that automatically create new tasks on a schedule. A Convex cron job checks every 15 minutes and creates tasks when `nextRunAt <= now`.
+
+## Use Cases
+
+- Daily standup reports
+- Weekly pipeline health checks
+- Monthly security audits
+- Periodic data cleanup
+
+## Creating a Recurring Task
+
+```json
+{
+  "title": "Daily standup report",
+  "description": "Generate standup: what was done, in progress, blockers",
+  "assignedTo": "sigma",
+  "priority": "medium",
+  "cronExpression": "0 9 * * *",
+  "project": "vantage-memory"
+}
+```
+
+### Cron Expression Format
+
+Standard 5-field cron: `minute hour day-of-month month day-of-week`
+
+| Example | Schedule |
+|---------|----------|
+| `0 9 * * *` | Daily at 9am |
+| `0 9 * * 1` | Monday at 9am |
+| `0 0 1 * *` | First of each month |
+| `*/30 * * * *` | Every 30 minutes |
+
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_recurring_task` | Create a new recurring task template |
+| `list_recurring_tasks` | List all recurring task templates |
+| `pause_recurring_task` | Pause (stops auto-creation) |
+| `resume_recurring_task` | Resume a paused task |
+| `delete_recurring_task` | Delete a template |

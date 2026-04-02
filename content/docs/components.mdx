@@ -1,0 +1,51 @@
+---
+title: Component Registry
+description: Backup and inventory of agents, skills, hooks, and plugins.
+---
+
+# Component Registry
+
+The component registry stores a backup of all agents, skills, hooks, and plugins. Each entry includes the full file content, so nothing is lost if the filesystem is destroyed.
+
+## Component Types
+
+| Type | Description |
+|------|-------------|
+| `agent` | Autonomous agent definitions |
+| `skill` | Slash-command skills |
+| `hook` | Event-driven hooks |
+| `plugin` | Plugin bundles |
+
+## MCP Tools
+
+### register_component
+
+```json
+{
+  "name": "dev-convex-expert",
+  "type": "agent",
+  "team": "development",
+  "content": "Full agent file content here...",
+  "version": "1.0.0",
+  "project": "vantage-memory",
+  "createdBy": "sigma"
+}
+```
+
+### list_components
+
+```json
+{
+  "type": "agent",
+  "team": "development"
+}
+```
+
+### get_component
+
+```json
+{
+  "name": "dev-convex-expert",
+  "type": "agent"
+}
+```
