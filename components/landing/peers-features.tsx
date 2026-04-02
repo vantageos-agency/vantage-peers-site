@@ -15,7 +15,7 @@ const content = {
 	en: {
 		title: "Everything agents need. Nothing you pay for.",
 		subtitle:
-			"13 database tables. 45 MCP tools. One Convex deployment. All the primitives for coordinating AI agents across machines.",
+			"16 database tables. 64 MCP tools. One Convex deployment. All the primitives for coordinating AI agents across machines.",
 		features: [
 			{
 				icon: Brain,
@@ -70,7 +70,7 @@ const content = {
 	fr: {
 		title: "Tout ce dont les agents ont besoin. Rien que vous ne payez.",
 		subtitle:
-			"13 tables de base de données. 45 outils MCP. Un déploiement Convex. Tous les primitifs pour coordonner des agents IA multi-machines.",
+			"16 tables de base de données. 64 outils MCP. Un déploiement Convex. Tous les primitifs pour coordonner des agents IA multi-machines.",
 		features: [
 			{
 				icon: Brain,

@@ -30,7 +30,7 @@ const faqs = {
 		{
 			question: "Can I use this with any AI agent, not just Claude?",
 			answer:
-				"VantagePeers exposes 45 MCP tools. Any MCP-compatible agent can use them. Claude is the primary use case because of the Claude Code / Claude Desktop MCP support, but the protocol is open.",
+				"VantagePeers exposes 64 MCP tools. Any MCP-compatible agent can use them. Claude is the primary use case because of the Claude Code / Claude Desktop MCP support, but the protocol is open.",
 		},
 		{
 			question: "What happens to my data if Convex changes pricing?",
@@ -53,13 +53,13 @@ const faqs = {
 			question:
 				"En quoi est-ce différent d'un simple fichier SQLite en local ?",
 			answer:
-				"Trois différences clés : (1) Cross-machine — vos agents sur différentes machines partagent la mémoire. (2) Temps réel — les messages et mises à jour de tâches arrivent instantanément sans polling. (3) Structure — 13 tables typées avec relations, pas de stockage clé-valeur plat. SQLite fonctionne jusqu'à la deuxième machine.",
+				"Trois différences clés : (1) Cross-machine — vos agents sur différentes machines partagent la mémoire. (2) Temps réel — les messages et mises à jour de tâches arrivent instantanément sans polling. (3) Structure — 16 tables typées avec relations, pas de stockage clé-valeur plat. SQLite fonctionne jusqu'à la deuxième machine.",
 		},
 		{
 			question:
 				"Puis-je l'utiliser avec n'importe quel agent IA, pas seulement Claude ?",
 			answer:
-				"VantagePeers expose 45 outils MCP. N'importe quel agent compatible MCP peut les utiliser. Claude est le cas d'utilisation principal en raison du support MCP de Claude Code / Claude Desktop, mais le protocole est ouvert.",
+				"VantagePeers expose 64 outils MCP. N'importe quel agent compatible MCP peut les utiliser. Claude est le cas d'utilisation principal en raison du support MCP de Claude Code / Claude Desktop, mais le protocole est ouvert.",
 		},
 		{
 			question:

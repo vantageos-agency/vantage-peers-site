@@ -32,7 +32,7 @@ const content = {
 				icon: Network,
 				title: "Coordinate",
 				description:
-					"Agents store memory, send messages, assign tasks — all via the 45 MCP tools. Works across machines, across sessions, across agent instances.",
+					"Agents store memory, send messages, assign tasks — all via the 64 MCP tools. Works across machines, across sessions, across agent instances.",
 				color: "text-chart-4",
 				bgColor: "bg-chart-4/10",
 			},
