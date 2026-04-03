@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 const content = {
 	en: {
 		badge: "Open-source — FSL License",
-		headline: "Persistent memory for AI agents.",
-		headlineSub: "Finally free.",
+		headline: "The coordination layer for AI agent teams.",
+		headlineSub: "Memory. Messaging. Tasks. Knowledge.",
 		subheadline:
-			"VantagePeers gives your Claude agents shared memory, cross-machine messaging, and task coordination — without vendor lock-in or monthly bills.",
+			"VantagePeers gives your agents shared memory, cross-machine messaging, task coordination, fix pattern knowledge base, issue tracking, and mission planning — one Convex deployment, zero monthly bills.",
 		cta1: "View on GitHub",
 		cta2: "See How It Works",
 		stats: [
@@ -22,10 +22,10 @@ const content = {
 	},
 	fr: {
 		badge: "Open-source — Licence FSL",
-		headline: "Mémoire persistante pour agents IA.",
-		headlineSub: "Enfin gratuite.",
+		headline: "La couche de coordination pour \u00e9quipes d\u2019agents IA.",
+		headlineSub: "M\u00e9moire. Messagerie. T\u00e2ches. Connaissances.",
 		subheadline:
-			"VantagePeers donne à vos agents Claude une mémoire partagée, des messages cross-machine et une coordination de tâches — sans dépendance vendeur ni facture mensuelle.",
+			"VantagePeers donne \u00e0 vos agents une m\u00e9moire partag\u00e9e, une messagerie cross-machine, une coordination de t\u00e2ches, une base de connaissances de fix patterns, un suivi d\u2019issues et une planification de missions \u2014 un d\u00e9ploiement Convex, z\u00e9ro facture mensuelle.",
 		cta1: "Voir sur GitHub",
 		cta2: "Comment ça marche",
 		stats: [
