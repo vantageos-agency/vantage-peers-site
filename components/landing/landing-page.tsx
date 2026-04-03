@@ -11,6 +11,7 @@ import { PeersFooter } from "@/components/landing/peers-footer";
 import { PeersHeader } from "@/components/landing/peers-header";
 import { PeersHero } from "@/components/landing/peers-hero";
 import { PeersHowItWorks } from "@/components/landing/peers-how-it-works";
+import { PeersPricing } from "@/components/landing/peers-pricing";
 import { PeersProblem } from "@/components/landing/peers-problem";
 
 export type Locale = "en" | "fr";
@@ -39,6 +40,7 @@ export function LandingPage({ initialLocale = "en" }: LandingPageProps) {
 					<PeersHowItWorks locale={locale} />
 					<PeersComparison locale={locale} />
 					<PeersCode locale={locale} />
+					<PeersPricing locale={locale} />
 					<PeersFaq locale={locale} />
 					<PeersCta locale={locale} />
 				</main>
