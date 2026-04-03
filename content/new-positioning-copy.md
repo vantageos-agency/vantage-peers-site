@@ -22,7 +22,7 @@
 ## 2. Hero Section
 
 ### Badge
-`Open Source — MIT License`
+`Open Source — FSL License`
 
 ### Headline
 **The operating system for AI agent teams.**
@@ -35,7 +35,7 @@ VantagePeers is the open-source backend that gives your Claude Code agents share
 |-------|-------|
 | 10 | Database Tables |
 | 37 | MCP Tools |
-| Free | MIT License |
+| Free | FSL License |
 | <10 min | Setup Time |
 
 ### Primary CTA
@@ -138,7 +138,7 @@ VantagePeers replaces the stack you were going to build. One backend. One deploy
 | Capability | Build It Yourself | Existing Tools | VantagePeers |
 |---|---|---|---|
 | **Category** | DIY Stack | mem0 / Zep / etc. | Agent Operating System |
-| Semantic memory | Custom vector DB setup | mem0: $249/mo, Zep: $475/mo | Included (MIT) |
+| Semantic memory | Custom vector DB setup | mem0: $249/mo, Zep: $475/mo | Included (FSL) |
 | Graph relations | Manual schema + queries | mem0 Enterprise only | Included |
 | Cross-machine messaging | Custom pub/sub + infra | Not available | Included |
 | Read receipts | Custom implementation | Not available | Included |
@@ -152,7 +152,7 @@ VantagePeers replaces the stack you were going to build. One backend. One deploy
 | Component registry | File system + README | Not available | Included |
 | MCP native | Custom tool wrappers | Partial (mem0 only) | 64 tools, 12 categories |
 | Self-hosted | Your responsibility | Cloud-only or abandoned | Convex (free tier) |
-| Open source | N/A | Partial or closed | MIT License |
+| Open source | N/A | Partial or closed | FSL License |
 | **Setup time** | Weeks | Hours + $$$ | < 10 minutes |
 | **Monthly cost** | Infrastructure + time | $249-475+ /month | $0 |
 
@@ -194,7 +194,7 @@ Powered by Convex — real-time database with built-in vector search, serverless
 **Your agents. Your infrastructure. Zero monthly bill.**
 
 ### Subtitle
-Open source. MIT license. Deploy in under 10 minutes. Start coordinating.
+Open source. FSL license. Deploy in under 10 minutes. Start coordinating.
 
 ### Primary CTA
 **Star on GitHub**
@@ -216,7 +216,7 @@ A: It started as one. Now it is a complete agent operating system — memory is 
 A: mem0 and Zep are memory-only tools. VantagePeers is an agent OS. They give you memory storage and retrieval. VantagePeers gives you memory + messaging + task coordination + mission planning + recurring automation + session diary + briefing notes + agent profiles + a component registry — all in one backend, all via MCP, all open source.
 
 **Q: Is VantagePeers really free?**
-A: Yes. MIT license. Clone the repo, deploy to your Convex account (generous free tier), and you are running. No subscription. No usage fees. No enterprise tier required for any feature.
+A: Yes. FSL license. Clone the repo, deploy to your Convex account (generous free tier), and you are running. No subscription. No usage fees. No enterprise tier required for any feature.
 
 **Q: Can I use this with agents other than Claude?**
 A: VantagePeers exposes 37 MCP tools. Any MCP-compatible agent can use them. Claude Code is the primary use case because of its native MCP support, but the protocol is open.
@@ -242,7 +242,7 @@ A: Convex is a real-time backend platform — database, serverless functions, ve
 
 ### Key Messages (priority order)
 1. **Complete, not partial.** 10 tables, 64 tools, 12 categories. Not just memory — the full stack.
-2. **Open source, zero cost.** MIT license. Self-hosted on Convex free tier. No SaaS pricing trap.
+2. **Open source, zero cost.** FSL license. Self-hosted on Convex free tier. No SaaS pricing trap.
 3. **Built for multi-agent teams.** Messaging with receipts. Tasks with dependencies. Missions with lifecycle. Not single-agent memory.
 4. **10-minute setup.** One deploy command. One MCP config. Production-ready.
 5. **No lock-in.** Open schema. Exportable data. Documented protocol. Switch backends if you want.

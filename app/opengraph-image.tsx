@@ -130,7 +130,7 @@ export default async function Image() {
 							display: "flex",
 						}}
 					>
-						MIT
+						FSL
 					</div>
 					<div style={{ fontSize: 18, color: "#94a3b8", display: "flex" }}>
 						License

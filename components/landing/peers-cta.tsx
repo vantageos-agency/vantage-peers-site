@@ -5,14 +5,14 @@ import { motion } from "framer-motion";
 const content = {
 	en: {
 		title: "Your agents. Your infrastructure. Zero monthly bill.",
-		subtitle: "Free forever. MIT license. Deploy in 10 minutes.",
+		subtitle: "Free forever. FSL license. Deploy in 10 minutes.",
 		cta: "Star on GitHub",
 		secondary: "Read the docs",
 		note: "No account required. No credit card. Just clone and deploy.",
 	},
 	fr: {
 		title: "Vos agents. Votre infrastructure. Zéro facture mensuelle.",
-		subtitle: "Gratuit pour toujours. Licence MIT. Déployé en 10 minutes.",
+		subtitle: "Gratuit pour toujours. Licence FSL. Déployé en 10 minutes.",
 		cta: "Étoiler sur GitHub",
 		secondary: "Lire la documentation",
 		note: "Pas de compte requis. Pas de carte bancaire. Juste cloner et déployer.",

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 
 const content = {
 	en: {
-		badge: "Open-source — MIT License",
+		badge: "Open-source — FSL License",
 		headline: "Persistent memory for AI agents.",
 		headlineSub: "Finally free.",
 		subheadline:
@@ -16,12 +16,12 @@ const content = {
 		stats: [
 			{ value: "13", label: "DB Tables", icon: Database },
 			{ value: "45", label: "MCP Tools", icon: Wrench },
-			{ value: "Free", label: "MIT License", icon: CircleDollarSign },
+			{ value: "Free", label: "FSL License", icon: CircleDollarSign },
 			{ value: "<10 min", label: "Setup", icon: Clock },
 		],
 	},
 	fr: {
-		badge: "Open-source — Licence MIT",
+		badge: "Open-source — Licence FSL",
 		headline: "Mémoire persistante pour agents IA.",
 		headlineSub: "Enfin gratuite.",
 		subheadline:
@@ -31,7 +31,7 @@ const content = {
 		stats: [
 			{ value: "13", label: "Tables BD", icon: Database },
 			{ value: "45", label: "Outils MCP", icon: Wrench },
-			{ value: "Gratuit", label: "Licence MIT", icon: CircleDollarSign },
+			{ value: "Gratuit", label: "Licence FSL", icon: CircleDollarSign },
 			{ value: "<10 min", label: "Installation", icon: Clock },
 		],
 	},

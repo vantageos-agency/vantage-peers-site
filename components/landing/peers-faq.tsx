@@ -15,7 +15,7 @@ const faqs = {
 		{
 			question: "Is VantagePeers really free?",
 			answer:
-				"Yes. MIT license. You clone the repo, deploy to your own Convex account (generous free tier), and that is it. No subscription, no usage fees, no enterprise tier required.",
+				"Yes. FSL license. You clone the repo, deploy to your own Convex account (generous free tier), and that is it. No subscription, no usage fees, no enterprise tier required.",
 		},
 		{
 			question: "What is Convex and do I need to manage it?",
@@ -42,7 +42,7 @@ const faqs = {
 		{
 			question: "VantagePeers est-il vraiment gratuit ?",
 			answer:
-				"Oui. Licence MIT. Vous clonez le repo, déployez sur votre propre compte Convex (généreux niveau gratuit), et c'est tout. Pas d'abonnement, pas de frais d'utilisation, pas de niveau enterprise requis.",
+				"Oui. Licence FSL. Vous clonez le repo, déployez sur votre propre compte Convex (généreux niveau gratuit), et c'est tout. Pas d'abonnement, pas de frais d'utilisation, pas de niveau enterprise requis.",
 		},
 		{
 			question: "Qu'est-ce que Convex et dois-je le gérer ?",

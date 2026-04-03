@@ -14,7 +14,7 @@ const content = {
 				mem0: "$249/mo (graph)",
 				zep: "$475/mo + overages",
 				claudePeers: "Free",
-				vantagePeers: "Free (MIT)",
+				vantagePeers: "Free (FSL)",
 			},
 			{
 				feature: "Graph memory",
@@ -92,7 +92,7 @@ const content = {
 				mem0: "249$/mois (graphe)",
 				zep: "475$/mois + dépassements",
 				claudePeers: "Gratuit",
-				vantagePeers: "Gratuit (MIT)",
+				vantagePeers: "Gratuit (FSL)",
 			},
 			{
 				feature: "Mémoire graphe",

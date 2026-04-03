@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 
 const content = {
 	en: {
-		tagline: "Open-source agent memory coordination. MIT License.",
+		tagline: "Open-source agent memory coordination. FSL License.",
 		copyright: "Perello Consulting / ElPi Corp. All rights reserved.",
 		links: [
 			{ label: "Features", href: "#features" },
@@ -23,7 +23,7 @@ const content = {
 		lastUpdated: "Last updated: March 2026",
 	},
 	fr: {
-		tagline: "Coordination de mémoire d’agents open-source. Licence MIT.",
+		tagline: "Coordination de mémoire d’agents open-source. Licence FSL.",
 		copyright: "Perello Consulting / ElPi Corp. Tous droits réservés.",
 		links: [
 			{ label: "Fonctionnalités", href: "#features" },
