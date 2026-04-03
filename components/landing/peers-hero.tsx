@@ -14,8 +14,8 @@ const content = {
 		cta1: "View on GitHub",
 		cta2: "See How It Works",
 		stats: [
-			{ value: "13", label: "DB Tables", icon: Database },
-			{ value: "45", label: "MCP Tools", icon: Wrench },
+			{ value: "16", label: "DB Tables", icon: Database },
+			{ value: "64", label: "MCP Tools", icon: Wrench },
 			{ value: "Free", label: "FSL License", icon: CircleDollarSign },
 			{ value: "<10 min", label: "Setup", icon: Clock },
 		],
@@ -29,8 +29,8 @@ const content = {
 		cta1: "Voir sur GitHub",
 		cta2: "Comment ça marche",
 		stats: [
-			{ value: "13", label: "Tables BD", icon: Database },
-			{ value: "45", label: "Outils MCP", icon: Wrench },
+			{ value: "16", label: "Tables BD", icon: Database },
+			{ value: "64", label: "Outils MCP", icon: Wrench },
 			{ value: "Gratuit", label: "Licence FSL", icon: CircleDollarSign },
 			{ value: "<10 min", label: "Installation", icon: Clock },
 		],
