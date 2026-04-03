@@ -10,15 +10,26 @@ function getOrganizationSchema(locale: string) {
 		"@type": "Organization",
 		"@id": `${BASE_URL}/#organization`,
 		name: "ElPi Corp",
-		url: "https://elpi.co",
+		url: BASE_URL,
 		logo: {
 			"@type": "ImageObject",
 			url: `${BASE_URL}/opengraph-image`,
 		},
 		description: locale === "fr"
-			? "Serveur MCP open source pour la mémoire partagée, la messagerie et la gestion de tâches multi-agents Claude Code. 16 tables, 64 outils. Gratuit, auto-hébergé sur Convex."
+			? "Serveur MCP open source pour la m\u00e9moire partag\u00e9e, la messagerie et la gestion de t\u00e2ches multi-agents Claude Code. 16 tables, 64 outils. Gratuit, auto-h\u00e9berg\u00e9 sur Convex."
 			: "Open source shared memory, messaging, and task management MCP server for multi-agent Claude Code. 16 database tables, 64 MCP tools. Free, self-hosted on Convex.",
-		sameAs: ["https://github.com/vantageos", "https://x.com/PerelloLaurent"],
+		sameAs: [
+			"https://github.com/vantageos",
+			"https://x.com/PerelloLaurent",
+			"https://github.com/elpiarthera",
+			"https://www.linkedin.com/company/elpi-corp",
+		],
+		foundingDate: "2025",
+		contactPoint: {
+			"@type": "ContactPoint",
+			contactType: "technical support",
+			url: "https://github.com/vantageos/vantage-peers/issues",
+		},
 	};
 }
 
@@ -111,9 +122,46 @@ function getSoftwareApplicationSchema(locale: string) {
 			priceCurrency: "USD",
 			description: locale === "fr" ? "Gratuit, open source, auto-hébergé" : "Free, open source, self-hosted",
 		},
+		featureList: [
+			"Shared semantic memory across agents",
+			"Inter-agent messaging with read receipts",
+			"Task management with dependencies and missions",
+			"Vector embedding search via @convex-dev/rag",
+			"Cross-machine agent coordination",
+			"64 MCP tools across 16 database tables",
+			"Fix pattern knowledge base with semantic search",
+			"GitHub issue tracking integration",
+			"Agent diary and session management",
+			"Recurring task automation via cron",
+		],
 		author: {
 			"@id": `${BASE_URL}/#organization`,
 		},
+	};
+}
+
+function getPersonSchema() {
+	return {
+		"@context": "https://schema.org",
+		"@type": "Person",
+		"@id": `${BASE_URL}/#founder`,
+		name: "Laurent Perello",
+		jobTitle: "Founder & CEO",
+		worksFor: {
+			"@id": `${BASE_URL}/#organization`,
+		},
+		sameAs: [
+			"https://x.com/PerelloLaurent",
+			"https://github.com/elpiarthera",
+			"https://www.linkedin.com/in/laurentperello",
+		],
+		knowsAbout: [
+			"Multi-agent AI systems",
+			"Model Context Protocol",
+			"Claude Code",
+			"Convex database",
+			"Open source software",
+		],
 	};
 }
 
@@ -151,6 +199,7 @@ export function LandingStructuredData({ locale = "en" }: { locale?: string }) {
 			<JsonLd data={webSiteSchema} />
 			<JsonLd data={getWebPageSchema(locale)} />
 			<JsonLd data={getSoftwareApplicationSchema(locale)} />
+			<JsonLd data={getPersonSchema()} />
 			<JsonLd data={getFaqPageSchema(locale)} />
 		</>
 	);
