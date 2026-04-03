@@ -88,7 +88,7 @@ export default async function Image() {
 							display: "flex",
 						}}
 					>
-						35
+						64
 					</div>
 					<div style={{ fontSize: 18, color: "#94a3b8", display: "flex" }}>
 						MCP Tools
@@ -109,7 +109,7 @@ export default async function Image() {
 							display: "flex",
 						}}
 					>
-						10
+						16
 					</div>
 					<div style={{ fontSize: 18, color: "#94a3b8", display: "flex" }}>
 						DB Tables
