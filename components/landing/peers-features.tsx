@@ -3,11 +3,15 @@
 import { motion } from "framer-motion";
 import {
 	Brain,
+	Bug,
 	CheckSquare,
 	GitBranch,
+	GitPullRequest,
 	Layers,
 	MessageSquare,
 	Search,
+	Webhook,
+	Wrench,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -65,6 +69,38 @@ const content = {
 				color: "text-chart-1",
 				bgColor: "bg-chart-1/10",
 			},
+			{
+				icon: Wrench,
+				title: "Fix Patterns KB",
+				description:
+					"Agents learn from past fixes. 95+ patterns indexed with semantic search. Every fix attempt documented \u2014 what worked, what failed, and why.",
+				color: "text-chart-2",
+				bgColor: "bg-chart-2/10",
+			},
+			{
+				icon: Webhook,
+				title: "GitHub Webhooks",
+				description:
+					"GitHub issue \u2192 automatic task creation. Zero polling. Real-time. Repo-to-orchestrator mapping routes events to the right agent.",
+				color: "text-chart-3",
+				bgColor: "bg-chart-3/10",
+			},
+			{
+				icon: Bug,
+				title: "Issues Tracking",
+				description:
+					"Track issues across projects with full lifecycle: open \u2192 in_progress \u2192 fixed \u2192 verified. Auto-link tasks to issues on completion.",
+				color: "text-chart-4",
+				bgColor: "bg-chart-4/10",
+			},
+			{
+				icon: GitPullRequest,
+				title: "Fix Attempts",
+				description:
+					"Every fix attempt documented in a separate table. What was tried, the commit hash, whether it worked, and the reasoning. Cross-project learning.",
+				color: "text-chart-5",
+				bgColor: "bg-chart-5/10",
+			},
 		],
 	},
 	fr: {
@@ -116,9 +152,41 @@ const content = {
 				icon: Layers,
 				title: "Support multi-instances",
 				description:
-					"Exécutez le même agent sur plusieurs machines avec des namespaces isolés. Coordonnez via des canaux broadcast ou des messages d'instance directs.",
+					"Ex\u00e9cutez le m\u00eame agent sur plusieurs machines avec des namespaces isol\u00e9s. Coordonnez via des canaux broadcast ou des messages d'instance directs.",
 				color: "text-chart-1",
 				bgColor: "bg-chart-1/10",
+			},
+			{
+				icon: Wrench,
+				title: "Base de connaissances Fix Patterns",
+				description:
+					"Les agents apprennent des corrections pass\u00e9es. 95+ patterns index\u00e9s avec recherche s\u00e9mantique. Chaque tentative de fix document\u00e9e \u2014 ce qui a march\u00e9, ce qui a \u00e9chou\u00e9, et pourquoi.",
+				color: "text-chart-2",
+				bgColor: "bg-chart-2/10",
+			},
+			{
+				icon: Webhook,
+				title: "Webhooks GitHub",
+				description:
+					"Issue GitHub \u2192 cr\u00e9ation automatique de t\u00e2che. Z\u00e9ro polling. Temps r\u00e9el. Le mapping repo-orchestrateur route les \u00e9v\u00e9nements vers le bon agent.",
+				color: "text-chart-3",
+				bgColor: "bg-chart-3/10",
+			},
+			{
+				icon: Bug,
+				title: "Suivi d'issues",
+				description:
+					"Suivez les issues entre projets avec cycle de vie complet : open \u2192 in_progress \u2192 fixed \u2192 verified. Liaison automatique t\u00e2ches-issues \u00e0 la compl\u00e9tion.",
+				color: "text-chart-4",
+				bgColor: "bg-chart-4/10",
+			},
+			{
+				icon: GitPullRequest,
+				title: "Tentatives de fix",
+				description:
+					"Chaque tentative de fix document\u00e9e dans une table s\u00e9par\u00e9e. Ce qui a \u00e9t\u00e9 essay\u00e9, le hash du commit, si \u00e7a a march\u00e9, et le raisonnement. Apprentissage cross-projet.",
+				color: "text-chart-5",
+				bgColor: "bg-chart-5/10",
 			},
 		],
 	},
