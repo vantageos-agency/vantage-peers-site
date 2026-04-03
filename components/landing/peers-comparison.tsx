@@ -4,21 +4,31 @@ import { motion } from "framer-motion";
 
 const content = {
 	en: {
-		title: "Why VantagePeers wins.",
-		subtitle: "The math is simple. The difference is structural.",
-		caption: "Comparison of AI agent memory solutions",
-		headers: ["", "mem0", "Zep", "claude-peers", "VantagePeers"],
+		title: "How VantagePeers compares.",
+		subtitle: "Honest comparison. Every checkmark verified.",
+		caption: "Comparison of AI agent coordination solutions",
+		headers: ["", "mem0", "supermemory", "Zep", "claude-peers", "VantagePeers"],
 		rows: [
 			{
-				feature: "Price",
-				mem0: "$249/mo (graph)",
-				zep: "$475/mo + overages",
+				feature: "Starting price",
+				mem0: "Free (limited)",
+				supermemory: "Free (1M tokens)",
+				zep: "$475/mo",
 				claudePeers: "Free",
 				vantagePeers: "Free (FSL)",
 			},
 			{
-				feature: "Graph memory",
+				feature: "Semantic memory",
 				mem0: true,
+				supermemory: true,
+				zep: true,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "Memory relations",
+				mem0: "Enterprise only",
+				supermemory: true,
 				zep: true,
 				claudePeers: false,
 				vantagePeers: true,
@@ -26,13 +36,7 @@ const content = {
 			{
 				feature: "Cross-machine messaging",
 				mem0: false,
-				zep: false,
-				claudePeers: false,
-				vantagePeers: true,
-			},
-			{
-				feature: "Read receipts",
-				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
@@ -40,63 +44,112 @@ const content = {
 			{
 				feature: "Task coordination",
 				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
-				feature: "Recurring tasks (cron)",
+				feature: "Mission planning",
 				mem0: false,
+				supermemory: false,
+				zep: false,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "Issues tracking",
+				mem0: false,
+				supermemory: false,
+				zep: false,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "Fix patterns KB",
+				mem0: false,
+				supermemory: false,
+				zep: false,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "GitHub webhooks",
+				mem0: false,
+				supermemory: false,
+				zep: false,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "Session diary",
+				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
 				feature: "Self-hostable",
-				mem0: false,
-				zep: "Community abandoned",
+				mem0: "Enterprise only",
+				supermemory: "Enterprise only",
+				zep: "Abandoned",
 				claudePeers: "Local only",
 				vantagePeers: true,
 			},
 			{
 				feature: "MCP native",
 				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: true,
 				vantagePeers: true,
 			},
 			{
 				feature: "Open source",
-				mem0: false,
+				mem0: "Apache-2.0",
+				supermemory: "MIT",
 				zep: "Partial",
 				claudePeers: true,
-				vantagePeers: true,
+				vantagePeers: "FSL-1.1",
 			},
 		],
 		notes: [
-			"mem0: graph memory requires Enterprise at $249/mo.",
+			"mem0: free tier limited to 10K add requests/mo. Graph memory requires Pro ($249/mo) or Enterprise.",
+			"supermemory: free tier limited to 1M tokens/mo. Enterprise for VPC deployment.",
 			"Zep: Community Edition no longer maintained as of 2024.",
 			"claude-peers: local SQLite only, no cross-machine coordination.",
+			"VantagePeers: FSL-1.1 converts to Apache 2.0 after 2 years. Self-hosted on your own Convex deployment.",
 		],
 		available: "Available",
 		notAvailable: "Not available",
 	},
 	fr: {
-		title: "Pourquoi VantagePeers gagne.",
-		subtitle: "Le calcul est simple. La différence est structurelle.",
-		caption: "Comparaison des solutions de mémoire pour agents IA",
-		headers: ["", "mem0", "Zep", "claude-peers", "VantagePeers"],
+		title: "Comment VantagePeers se compare.",
+		subtitle: "Comparaison honn\u00eate. Chaque case v\u00e9rifi\u00e9e.",
+		caption: "Comparaison des solutions de coordination pour agents IA",
+		headers: ["", "mem0", "supermemory", "Zep", "claude-peers", "VantagePeers"],
 		rows: [
 			{
-				feature: "Prix",
-				mem0: "249$/mois (graphe)",
-				zep: "475$/mois + dépassements",
+				feature: "Prix de d\u00e9part",
+				mem0: "Gratuit (limit\u00e9)",
+				supermemory: "Gratuit (1M tokens)",
+				zep: "475$/mois",
 				claudePeers: "Gratuit",
 				vantagePeers: "Gratuit (FSL)",
 			},
 			{
-				feature: "Mémoire graphe",
+				feature: "M\u00e9moire s\u00e9mantique",
 				mem0: true,
+				supermemory: true,
+				zep: true,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "Relations m\u00e9moire",
+				mem0: "Enterprise uniquement",
+				supermemory: true,
 				zep: true,
 				claudePeers: false,
 				vantagePeers: true,
@@ -104,57 +157,90 @@ const content = {
 			{
 				feature: "Messagerie cross-machine",
 				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
-				feature: "Accusés de lecture",
+				feature: "Coordination de t\u00e2ches",
 				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
-				feature: "Coordination de tâches",
+				feature: "Planification de missions",
 				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
-				feature: "Tâches récurrentes (cron)",
+				feature: "Suivi d\u2019issues",
 				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: false,
 				vantagePeers: true,
 			},
 			{
-				feature: "Auto-hébergeable",
+				feature: "Base de fix patterns",
 				mem0: false,
-				zep: "Community abandonnée",
+				supermemory: false,
+				zep: false,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "Webhooks GitHub",
+				mem0: false,
+				supermemory: false,
+				zep: false,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "Journal de session",
+				mem0: false,
+				supermemory: false,
+				zep: false,
+				claudePeers: false,
+				vantagePeers: true,
+			},
+			{
+				feature: "Auto-h\u00e9bergeable",
+				mem0: "Enterprise uniquement",
+				supermemory: "Enterprise uniquement",
+				zep: "Abandonn\u00e9",
 				claudePeers: "Local seulement",
 				vantagePeers: true,
 			},
 			{
 				feature: "Natif MCP",
 				mem0: false,
+				supermemory: false,
 				zep: false,
 				claudePeers: true,
 				vantagePeers: true,
 			},
 			{
 				feature: "Open source",
-				mem0: false,
+				mem0: "Apache-2.0",
+				supermemory: "MIT",
 				zep: "Partiel",
 				claudePeers: true,
-				vantagePeers: true,
+				vantagePeers: "FSL-1.1",
 			},
 		],
 		notes: [
-			"mem0 : la mémoire graphe nécessite l'Enterprise à 249$/mois.",
-			"Zep : la Community Edition n'est plus maintenue depuis 2024.",
+			"mem0 : tier gratuit limit\u00e9 \u00e0 10K requ\u00eates d\u2019ajout/mois. M\u00e9moire graphe n\u00e9cessite Pro (249$/mois) ou Enterprise.",
+			"supermemory : tier gratuit limit\u00e9 \u00e0 1M tokens/mois. Enterprise pour d\u00e9ploiement VPC.",
+			"Zep : la Community Edition n\u2019est plus maintenue depuis 2024.",
 			"claude-peers : SQLite local uniquement, pas de coordination cross-machine.",
+			"VantagePeers : FSL-1.1 se convertit en Apache 2.0 apr\u00e8s 2 ans. Auto-h\u00e9berg\u00e9 sur votre propre d\u00e9ploiement Convex.",
 		],
 		available: "Disponible",
 		notAvailable: "Non disponible",
@@ -224,7 +310,7 @@ export function PeersComparison({ locale }: PeersComparisonProps) {
 
 	return (
 		<section id="compare" className="py-16 md:py-24">
-			<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 				<motion.div
 					className="text-center max-w-3xl mx-auto mb-10"
 					initial={{ opacity: 0, y: 20 }}
@@ -254,13 +340,13 @@ export function PeersComparison({ locale }: PeersComparisonProps) {
 										<th
 											key={header || `h-${i}`}
 											scope="col"
-											className={`py-4 px-5 text-left font-semibold ${
-												i === 0 ? "w-1/3" : "text-center"
+											className={`py-4 px-4 text-left font-semibold ${
+												i === 0 ? "w-1/4" : "text-center"
 											} ${i === t.headers.length - 1 ? "text-chart-1" : "text-muted-foreground"}`}
 										>
 											{i === 0 ? (
 												<span className="sr-only">
-													{locale === "fr" ? "Fonctionnalité" : "Feature"}
+													{locale === "fr" ? "Fonctionnalit\u00e9" : "Feature"}
 												</span>
 											) : (
 												header
@@ -277,19 +363,22 @@ export function PeersComparison({ locale }: PeersComparisonProps) {
 											rowIndex % 2 === 0 ? "" : "bg-muted/10"
 										}`}
 									>
-										<th scope="row" className="py-3.5 px-5 font-medium text-foreground text-left">
+										<th scope="row" className="py-3 px-4 font-medium text-foreground text-left">
 											{row.feature}
 										</th>
-										<td className="py-3.5 px-5 text-center">
+										<td className="py-3 px-4 text-center">
 											<CellContent value={row.mem0} isVantage={false} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
 										</td>
-										<td className="py-3.5 px-5 text-center">
+										<td className="py-3 px-4 text-center">
+											<CellContent value={row.supermemory} isVantage={false} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
+										</td>
+										<td className="py-3 px-4 text-center">
 											<CellContent value={row.zep} isVantage={false} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
 										</td>
-										<td className="py-3.5 px-5 text-center">
+										<td className="py-3 px-4 text-center">
 											<CellContent value={row.claudePeers} isVantage={false} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
 										</td>
-										<td className="py-3.5 px-5 text-center bg-chart-1/5">
+										<td className="py-3 px-4 text-center bg-chart-1/5">
 											<CellContent value={row.vantagePeers} isVantage={true} availableLabel={t.available} notAvailableLabel={t.notAvailable} />
 										</td>
 									</tr>
