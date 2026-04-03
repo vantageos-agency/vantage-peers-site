@@ -25,7 +25,7 @@ const faqs = {
 		{
 			question: "How is this different from just using a SQLite file locally?",
 			answer:
-				"Three key differences: (1) Cross-machine — your agents on different computers can share memory. (2) Real-time — messages and task updates arrive instantly without polling. (3) Structured — 13 typed tables with relationships, not flat key-value storage. SQLite works until your second machine.",
+				"Three key differences: (1) Cross-machine — your agents on different computers can share memory. (2) Real-time — messages and task updates arrive instantly without polling. (3) Structured — 16 typed tables with relationships, not flat key-value storage. SQLite works until your second machine.",
 		},
 		{
 			question: "Can I use this with any AI agent, not just Claude?",
@@ -35,7 +35,42 @@ const faqs = {
 		{
 			question: "What happens to my data if Convex changes pricing?",
 			answer:
-				"You own your data. Convex has an export feature. VantagePeers is open source — the schema is documented and you can migrate to any Postgres or SQLite backend by rewriting the Convex functions. No lock-in.",
+				"You own your data. Convex has an export feature. VantagePeers is open source \u2014 the schema is documented and you can migrate to any Postgres or SQLite backend by rewriting the Convex functions. No lock-in.",
+		},
+		{
+			question: "What is the FSL license? How is it different from MIT?",
+			answer:
+				"FSL (Functional Source License) is source-available: you can read, modify, and self-host the code freely. The one restriction: you cannot use it to build a competing hosted service. After 2 years, it automatically converts to Apache 2.0 \u2014 fully open source. This is the same model used by Sentry and Convex.",
+		},
+		{
+			question: "Do you offer paid support or setup services?",
+			answer:
+				"Yes. Self-hosting is free forever. We offer setup packages (one-time configuration), priority support subscriptions, and custom consulting for integration and customization. See our pricing section for details.",
+		},
+		{
+			question: "How does VantagePeers compare to mem0 or supermemory?",
+			answer:
+				"mem0 and supermemory focus on memory only. VantagePeers is a full coordination layer: memory + messaging + task management + mission planning + issue tracking + fix patterns KB + GitHub webhooks + session diary. It is also self-hostable on the free tier \u2014 no Enterprise plan required.",
+		},
+		{
+			question: "What happens if you stop maintaining VantagePeers?",
+			answer:
+				"The FSL license converts to Apache 2.0 after 2 years automatically. The code is public, the schema is documented, and Convex deployments run independently. Your agents keep working regardless of our company\u2019s status.",
+		},
+		{
+			question: "How many agents can it handle?",
+			answer:
+				"Tested with 5 orchestrators running 100+ specialized agents across multiple machines. Convex handles the scaling \u2014 it is designed for real-time workloads. The free tier supports most team setups.",
+		},
+		{
+			question: "Is my data private?",
+			answer:
+				"Completely. VantagePeers is self-hosted on your own Convex deployment. Your data never touches our servers. You control the database, the API keys, and the access.",
+		},
+		{
+			question: "Do I need to know Convex to use VantagePeers?",
+			answer:
+				"No deep knowledge required. You run `npx convex dev` once to set up, then interact entirely via MCP tools from Claude Code. The schema and functions are pre-built \u2014 you just deploy and connect.",
 		},
 	],
 	fr: [
@@ -66,6 +101,41 @@ const faqs = {
 				"Que se passe-t-il avec mes données si Convex change ses prix ?",
 			answer:
 				"Vous possédez vos données. Convex a une fonctionnalité d'export. VantagePeers est open source — le schéma est documenté et vous pouvez migrer vers n'importe quel backend Postgres ou SQLite en réécrivant les fonctions Convex. Pas de dépendance.",
+		},
+		{
+			question: "Qu'est-ce que la licence FSL ? En quoi diffère-t-elle de MIT ?",
+			answer:
+				"La FSL (Functional Source License) est source-available : vous pouvez lire, modifier et auto-héberger le code librement. La seule restriction : vous ne pouvez pas l'utiliser pour construire un service hébergé concurrent. Après 2 ans, elle se convertit automatiquement en Apache 2.0 — entièrement open source. C'est le même modèle utilisé par Sentry et Convex.",
+		},
+		{
+			question: "Proposez-vous du support payant ou des services d'installation ?",
+			answer:
+				"Oui. L'auto-hébergement est gratuit pour toujours. Nous proposons des packages d'installation (configuration unique), des abonnements de support prioritaire, et du consulting personnalisé pour l'intégration et la personnalisation.",
+		},
+		{
+			question: "Comment VantagePeers se compare-t-il à mem0 ou supermemory ?",
+			answer:
+				"mem0 et supermemory se concentrent uniquement sur la mémoire. VantagePeers est une couche de coordination complète : mémoire + messagerie + gestion de tâches + planification de missions + suivi d'issues + base de fix patterns + webhooks GitHub + journal de session. Il est aussi auto-hébergeable sur le tier gratuit — pas de plan Enterprise requis.",
+		},
+		{
+			question: "Que se passe-t-il si vous arrêtez de maintenir VantagePeers ?",
+			answer:
+				"La licence FSL se convertit automatiquement en Apache 2.0 après 2 ans. Le code est public, le schéma est documenté, et les déploiements Convex fonctionnent indépendamment. Vos agents continuent de fonctionner quel que soit le statut de notre entreprise.",
+		},
+		{
+			question: "Combien d'agents peut-il gérer ?",
+			answer:
+				"Testé avec 5 orchestrateurs exécutant 100+ agents spécialisés sur plusieurs machines. Convex gère la mise à l'échelle — il est conçu pour les charges de travail temps réel. Le tier gratuit suffit pour la plupart des configurations d'équipe.",
+		},
+		{
+			question: "Mes données sont-elles privées ?",
+			answer:
+				"Entièrement. VantagePeers est auto-hébergé sur votre propre déploiement Convex. Vos données ne touchent jamais nos serveurs. Vous contrôlez la base de données, les clés API et les accès.",
+		},
+		{
+			question: "Dois-je connaître Convex pour utiliser VantagePeers ?",
+			answer:
+				"Pas de connaissance approfondie requise. Vous exécutez `npx convex dev` une fois pour configurer, puis interagissez entièrement via les outils MCP depuis Claude Code. Le schéma et les fonctions sont pré-construits — vous déployez et connectez, c'est tout.",
 		},
 	],
 };
