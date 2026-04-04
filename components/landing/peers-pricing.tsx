@@ -177,7 +177,7 @@ export function PeersPricing({ locale }: PeersPricingProps) {
 							<ul className="space-y-3 mb-8 flex-1">
 								{tier.features.map((feature) => (
 									<li key={feature} className="flex items-start gap-2 text-sm">
-										<Check className="size-4 text-chart-1 shrink-0 mt-0.5" />
+										<Check className="size-4 text-chart-1 shrink-0 mt-0.5" aria-hidden="true" />
 										<span>{feature}</span>
 									</li>
 								))}
@@ -208,7 +208,7 @@ export function PeersPricing({ locale }: PeersPricingProps) {
 						href="https://github.com/sponsors/vantageos"
 						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 					>
-						<Github className="size-4" />
+						<Github className="size-4" aria-hidden="true" />
 						{t.sponsor}
 					</a>
 				</motion.div>

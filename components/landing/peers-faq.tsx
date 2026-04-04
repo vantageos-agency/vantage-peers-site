@@ -185,6 +185,7 @@ export function PeersFaq({ locale }: PeersFaqProps) {
 								<CollapsibleTrigger className="w-full flex items-center justify-between p-4 text-left rounded-2xl bg-card border border-border hover:bg-muted/50 transition-colors">
 									<span className="font-medium pr-4">{faq.question}</span>
 									<ChevronDown
+										aria-hidden="true"
 										className={cn(
 											"size-5 text-muted-foreground shrink-0 transition-transform duration-200",
 											openIndex === index && "rotate-180",

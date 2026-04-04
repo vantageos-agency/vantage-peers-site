@@ -229,7 +229,7 @@ export function PeersFeatures({ locale }: PeersFeaturesProps) {
 									<div
 										className={`size-12 rounded-3xl ${feature.bgColor} flex items-center justify-center mb-4`}
 									>
-										<feature.icon className={`size-6 ${feature.color}`} />
+										<feature.icon className={`size-6 ${feature.color}`} aria-hidden="true" />
 									</div>
 									<h3 className="font-semibold text-lg mb-2">
 										{feature.title}

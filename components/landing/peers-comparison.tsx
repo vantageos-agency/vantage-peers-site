@@ -279,7 +279,7 @@ function CellContent({
 			<svg
 				aria-label={notAvailableLabel}
 				role="img"
-				className="size-4 mx-auto text-muted-foreground/40"
+				className="size-4 mx-auto text-muted-foreground/60"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"

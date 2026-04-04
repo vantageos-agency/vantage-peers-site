@@ -89,7 +89,7 @@ export function PeersFooter({ locale, onLocaleChange }: PeersFooterProps) {
 							rel="noopener noreferrer"
 							className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
 						>
-							<Github className="size-4" />
+							<Github className="size-4" aria-hidden="true" />
 							{t.github}
 						</a>
 					</div>
@@ -121,7 +121,7 @@ export function PeersFooter({ locale, onLocaleChange }: PeersFooterProps) {
 						onClick={() => onLocaleChange(locale === "en" ? "fr" : "en")}
 						className="gap-1.5"
 					>
-						<Globe className="size-4" />
+						<Globe className="size-4" aria-hidden="true" />
 						{t.switchLabel}
 					</Button>
 				</div>
