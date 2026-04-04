@@ -7,12 +7,27 @@ const withMDX = createMDX();
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    return [
-      {
-        source: "/docs/:path*.mdx",
-        destination: "/llms.mdx/docs/:path*",
-      },
-    ];
+    return {
+      beforeFiles: [
+        // Docs i18n: /docs → /docs/en (default locale)
+        {
+          source: "/docs",
+          destination: "/docs/en",
+        },
+        // /docs/fr/* stays as-is (matched by [lang])
+        // /docs/* (non-fr) → /docs/en/* for backwards compatibility
+        {
+          source: "/docs/:path((?!en|fr).*)",
+          destination: "/docs/en/:path*",
+        },
+      ],
+      afterFiles: [
+        {
+          source: "/docs/:path*.mdx",
+          destination: "/llms.mdx/docs/:path*",
+        },
+      ],
+    };
   },
   async headers() {
     return [
