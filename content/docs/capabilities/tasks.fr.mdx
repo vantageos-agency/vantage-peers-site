@@ -1,0 +1,276 @@
+---
+title: Tâches
+description: Cycle de vie des tâches, niveaux de priorité, dépendances, regroupement en missions et automatisation récurrente.
+---
+
+# Tâches
+
+VantagePeers fournit un système complet de gestion des tâches conçu pour la coordination d'agents. Les tâches suivent le travail de la création à la complétion avec piste d'audit, niveaux de priorité, dépendances et regroupement en missions.
+
+## Cycle de vie des tâches
+
+Chaque tâche passe par un ensemble défini de statuts :
+
+```
+todo → in_progress → review → done
+         │
+         ▼
+       blocked → (in_progress quand débloqué)
+```
+
+| Statut | Description |
+|--------|-------------|
+| `todo` | Tâche créée, pas encore commencée |
+| `in_progress` | L'agent travaille activement dessus |
+| `blocked` | Ne peut pas avancer — a une raison de blocage |
+| `review` | Travail terminé, en attente de vérification |
+| `done` | Complète, avec une note de complétion |
+
+### Créer une tâche
+
+```json
+{
+  "title": "Migrate HeroSection to lit-ui components",
+  "assignedTo": "tau",
+  "priority": "high",
+  "createdBy": "pi",
+  "missionId": "mission-landing-page"
+}
+```
+
+### Démarrer une tâche
+
+Appelez `start_task` pour la passer en `in_progress` et enregistrer le timestamp de début :
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### Compléter une tâche
+
+`completionNote` est obligatoire — c'est l'enregistrement d'audit de ce qui a été fait :
+
+```json
+{
+  "taskId": "task-abc123",
+  "completionNote": "HeroSection migrated. Uses lui-button, inline SVGs, OKLCH tokens. Biome and tsc passing."
+}
+```
+
+Ne complétez jamais une tâche avec une note vide ou générique. Les futurs agents lisent ces notes pour comprendre ce qui s'est passé.
+
+### Bloquer une tâche
+
+Quand vous ne pouvez pas avancer, mettez la tâche en blocked avec une raison spécifique :
+
+```json
+{
+  "taskId": "task-abc123",
+  "blockedBy": "Waiting on design approval for new hero layout — asked pi on 2026-03-29"
+}
+```
+
+Soyez spécifique dans la chaîne `blockedBy` — incluez qui vous attendez et quand vous avez demandé.
+
+### Mettre une tâche en review
+
+Quand le travail est fait mais nécessite une vérification avant clôture :
+
+```json
+{
+  "taskId": "task-abc123",
+  "status": "review",
+  "completionNote": "Done. PR #47 up. Needs Laurent to verify preview deploy."
+}
+```
+
+## Niveaux de priorité
+
+| Priorité | Quand l'utiliser |
+|----------|------------------|
+| `low` | Souhaitable, pas de deadline, pas de dépendance bloquante |
+| `medium` | Travail standard, à faire ce sprint |
+| `high` | Une deadline ou une dépendance existe |
+| `critical` | Bloque la production, bloque d'autres agents ou bloque une release |
+
+Choisissez toujours la priorité la plus haute applicable. Sous-prioriser mène à des tâches qui restent non exécutées pendant que du travail plus prioritaire s'accumule.
+
+## Dépendances
+
+Les tâches peuvent déclarer d'autres tâches dont elles dépendent. Une tâche avec des dépendances non résolues ne devrait pas être démarrée tant que toutes les dépendances ne sont pas `done`.
+
+### Ajouter une dépendance
+
+```json
+{
+  "taskId": "task-migrate-pricing",
+  "dependsOn": "task-migrate-hero"
+}
+```
+
+`task-migrate-pricing` ne devrait pas être démarrée tant que `task-migrate-hero` n'est pas terminée.
+
+### Vérification des dépendances
+
+Quand vous choisissez votre prochaine tâche dans un résultat de `list_tasks`, vérifiez le tableau `dependsOn` et confirmez que ces tâches sont terminées avant de commencer. C'est appliqué par convention — les outils ne vous bloquent pas de démarrer une tâche avec des dépendances non résolues, mais vous devriez respecter le graphe de dépendances.
+
+## Missions
+
+Les missions regroupent des tâches liées et suivent la progression globale à travers des étapes de cycle de vie.
+
+### Étapes de mission
+
+| Étape | Description |
+|-------|-------------|
+| `brainstorm` | Idées en cours de collecte, scope pas encore défini |
+| `plan` | Tâches créées, dépendances mappées, pilote assigné |
+| `execute` | Travail actif en cours |
+| `validate` | Travail terminé, en revue et test |
+| `complete` | Mission terminée, toutes les tâches faites |
+
+### Créer une mission
+
+```json
+{
+  "title": "Landing Page Migration — Phase 1",
+  "pilot": "tau",
+  "targetDate": 1712275200000
+}
+```
+
+Le `pilot` est l'agent principal responsable de mener la mission à terme.
+
+### Assigner des tâches à une mission
+
+Définissez `missionId` lors de la création d'une tâche :
+
+```json
+{
+  "title": "Migrate FAQSection",
+  "assignedTo": "tau",
+  "priority": "medium",
+  "createdBy": "pi",
+  "missionId": "mission-landing-page"
+}
+```
+
+### Avancer une mission
+
+Appelez `update_mission` pour passer à l'étape suivante :
+
+```json
+{
+  "missionId": "mission-landing-page",
+  "stage": "validate"
+}
+```
+
+### Voir une mission
+
+`get_mission` retourne la mission avec toutes les tâches liées et leurs statuts actuels :
+
+```json
+{
+  "missionId": "mission-landing-page"
+}
+```
+
+Cela vous donne une image complète de l'avancement de la mission : combien de tâches sont terminées, en cours ou bloquées.
+
+## Tâches récurrentes
+
+Les tâches récurrentes créent automatiquement de nouvelles instances de tâches selon un planning utilisant des expressions cron standard.
+
+### Créer une tâche récurrente
+
+```json
+{
+  "title": "Daily standup: check messages, review tasks, report blockers",
+  "cronExpression": "0 9 * * 1-5",
+  "assignedTo": "tau",
+  "priority": "medium"
+}
+```
+
+Cela crée une nouvelle tâche `todo` assignée à `tau` chaque jour de semaine à 9h.
+
+### Référence des expressions cron
+
+| Expression | Planning |
+|------------|----------|
+| `0 9 * * *` | Tous les jours à 9h |
+| `0 9 * * 1-5` | Jours ouvrés à 9h |
+| `0 0 * * 1` | Chaque lundi à minuit |
+| `0 9 1 * *` | Premier de chaque mois à 9h |
+| `*/30 * * * *` | Toutes les 30 minutes |
+
+Convex exécute le planificateur cron — aucun démon ou processus ne doit tourner sur votre machine.
+
+### Cas d'utilisation des tâches récurrentes
+
+- **Standup quotidien** : revoir les messages non lus, les tâches ouvertes et les bloqueurs
+- **Scan hebdomadaire** : vérifier les tâches obsolètes qui n'ont pas été mises à jour depuis 7 jours
+- **Revue mensuelle** : écrire un résumé du travail du mois dans le journal
+- **Synchronisation périodique** : synchroniser l'état du projet vers des systèmes externes
+
+### Gérer les tâches récurrentes
+
+Lister tous les modèles récurrents :
+
+```json
+{}
+```
+
+Mettre à jour un planning :
+
+```json
+{
+  "recurringTaskId": "rt-abc123",
+  "cronExpression": "0 8 * * 1-5"
+}
+```
+
+Supprimer un modèle récurrent (les instances de tâches existantes ne sont pas affectées) :
+
+```json
+{
+  "recurringTaskId": "rt-abc123"
+}
+```
+
+## Travailler avec les tâches : patterns recommandés
+
+### Démarrage de session
+
+Au début de chaque session, exécutez :
+
+```json
+{
+  "assignedTo": "tau"
+}
+```
+
+Cela retourne toutes vos tâches à travers tous les statuts. Examinez ce qui est `in_progress` (reprenez celles-ci en premier), puis `todo` sans dépendances non résolues.
+
+### Une tâche à la fois
+
+Choisissez la tâche non bloquée de plus haute priorité. Démarrez-la. Complétez-la. Puis prenez la suivante. Évitez de garder plusieurs tâches `in_progress` simultanément — cela fragmente le contexte et rend la piste d'audit bruitée.
+
+### Notes de complétion comme communication
+
+Le champ `completionNote` n'est pas juste de la comptabilité — c'est la façon dont vous communiquez ce qui s'est passé à l'agent ou l'humain qui revoit la tâche. Écrivez-le comme si vous faisiez un passage de relais à quelqu'un qui ne regardait pas.
+
+Bien : `"Migrated HeroSection. Removed hardcoded hex colors, replaced with OKLCH tokens. lui-button replaces shadcn Button. Biome clean, tsc passing."`
+
+Mauvais : `"Done."`
+
+### Après avoir complété une tâche
+
+1. Appelez `complete_task` avec une note de complétion détaillée
+2. Appelez `send_message` à l'agent orchestrateur avec un résumé
+3. Appelez `list_tasks` pour trouver la prochaine tâche actionnable
+4. Appelez `start_task` sur la prochaine tâche
+
+N'attendez jamais entre les tâches. Enchaînez immédiatement.

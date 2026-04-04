@@ -1,0 +1,198 @@
+---
+title: Architecture
+description: Concepts clés, schéma de base de données et intégration du protocole MCP dans VantagePeers.
+---
+
+# Architecture
+
+VantagePeers est un serveur MCP adossé à Convex. Convex fournit la base de données, les fonctions serverless, les index vectoriels et la planification. La couche MCP expose toutes les capacités comme des outils que les agents Claude Code appellent nativement.
+
+## Vue d'ensemble du système
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Votre équipe d'agents                  │
+│                                                          │
+│  Agent A (Machine 1)     Agent B (Machine 2)            │
+│  Claude Code + MCP       Claude Code + MCP              │
+└──────────────┬───────────────────┬──────────────────────┘
+               │  Protocole MCP    │
+               ▼                   ▼
+┌─────────────────────────────────────────────────────────┐
+│              Serveur MCP VantagePeers                    │
+│        (processus Node.js, tourne localement par agent)  │
+│                                                          │
+│  70 outils répartis en 13 catégories                     │
+└──────────────────────────┬──────────────────────────────┘
+                           │  SDK Convex
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│              Backend Cloud Convex                        │
+│                                                          │
+│  19 tables de BDD       Index vectoriels (mémoires)     │
+│  Fonctions serverless   Pipeline embeddings OpenAI      │
+│  Planificateur cron     Souscriptions temps réel        │
+└─────────────────────────────────────────────────────────┘
+```
+
+Chaque agent exécute son propre processus serveur MCP local. Tous les agents partagent le même déploiement Convex — c'est ainsi que la coordination inter-machines fonctionne. Le déploiement Convex est votre source unique de vérité.
+
+## Concepts clés
+
+### Orchestrateurs
+
+Un **orchestrateur** est un rôle nommé dans votre équipe d'agents. Exemples : `pi`, `tau`, `phi`. Un orchestrateur représente ce que l'agent *fait* — sa responsabilité dans le système. Les noms d'orchestrateurs sont utilisés comme identités pour les namespaces de mémoire, le routage de messages, l'assignation de tâches et les profils d'agents.
+
+Quand vous stockez une mémoire avec `createdBy: "tau"`, elle est attribuée à l'orchestrateur `tau`. Quand vous envoyez un message `from: "tau"` vers `channel: "pi"`, l'orchestrateur `pi` le reçoit.
+
+### Instances
+
+Une **instance** est une copie en cours d'exécution spécifique d'un orchestrateur. Si vous exécutez l'orchestrateur `tau` sur deux machines — un laptop et un serveur — ce sont deux instances : `tau-laptop` et `tau-server`.
+
+Les instances comptent pour le routage des messages. Vous pouvez envoyer un message à toutes les instances d'un orchestrateur (par rôle) ou à une instance spécifique (par ID d'instance). Cela vous permet de cibler une machine spécifique quand nécessaire.
+
+### Namespaces
+
+Les **namespaces** délimitent les mémoires et empêchent la contamination croisée entre projets. Un namespace est une chaîne de caractères comme `global`, `project/vantage-starter` ou `orchestrator/tau`.
+
+Utilisez `global` pour les connaissances qui s'appliquent partout. Utilisez `project/your-project` pour le contexte spécifique au projet. Utilisez `orchestrator/name` pour l'état spécifique à l'agent.
+
+Lors de l'appel à `recall`, les requêtes ne cherchent que dans le namespace spécifié par défaut. Vous pouvez chercher à travers les namespaces en omettant le filtre de namespace.
+
+## Schéma de base de données
+
+VantagePeers utilise 19 tables Convex. Chaque table a un schéma défini avec des validateurs typés et des index pour des requêtes efficaces.
+
+### memories
+
+Le store de mémoire principal. Chaque document contient :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `namespace` | string | Chemin de délimitation (ex : `global`, `project/foo`) |
+| `type` | string | `user`, `feedback`, `project`, `reference` ou `episode` |
+| `content` | string | Le contenu textuel de la mémoire |
+| `createdBy` | string | Orchestrateur qui a créé la mémoire |
+| `embedding` | float64[] | Embedding vectoriel (OpenAI text-embedding-3-small) |
+| `archived` | boolean | Si remplacée par une mémoire plus récente |
+| `relatedTo` | string[] | IDs des mémoires liées |
+
+L'index vectoriel sur `embedding` permet la recherche par similarité sémantique.
+
+### messages
+
+Store de messages persistant pour la communication inter-agents :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `from` | string | ID de l'orchestrateur expéditeur |
+| `channel` | string | Canal ou rôle cible |
+| `content` | string | Texte du message |
+| `instanceId` | string? | Cible d'instance spécifique optionnelle |
+| `createdAt` | number | Timestamp Unix |
+
+### messageReceipts
+
+Suivi de lecture par destinataire :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `messageId` | string | Référence au message |
+| `recipient` | string | ID de l'orchestrateur destinataire |
+| `recipientInstanceId` | string? | Instance spécifique, si ciblée |
+| `readAt` | number? | Timestamp de lecture, null si non lu |
+
+### tasks
+
+Table de coordination des tâches :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `title` | string | Titre de la tâche |
+| `assignedTo` | string | Orchestrateur responsable |
+| `status` | string | `todo`, `in_progress`, `review`, `blocked`, `done` |
+| `priority` | string | `low`, `medium`, `high`, `critical` |
+| `missionId` | string? | Mission parente, si regroupée |
+| `dependsOn` | string[] | IDs des tâches qui doivent être terminées d'abord |
+| `blockedBy` | string | Description du bloqueur, si bloquée |
+| `completionNote` | string? | Ce qui a été fait, défini à la complétion |
+| `dueDate` | number? | Deadline en timestamp Unix |
+
+### missions
+
+Groupes de tâches liées avec suivi du cycle de vie :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `title` | string | Nom de la mission |
+| `stage` | string | `brainstorm`, `plan`, `execute`, `validate`, `complete` |
+| `pilot` | string | Orchestrateur principal |
+| `targetDate` | number? | Timestamp de complétion cible |
+
+### recurringTasks
+
+Modèles de tâches basés sur cron :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `title` | string | Modèle de titre de tâche |
+| `cronExpression` | string | Expression cron standard |
+| `assignedTo` | string | Assigné par défaut |
+| `lastTriggered` | number? | Timestamp de dernière création |
+
+### profiles
+
+Identité statique et état dynamique par instance d'orchestrateur :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `orchestratorId` | string | Nom du rôle |
+| `instanceId` | string | Identifiant d'instance |
+| `capabilities` | string[] | Ce que cet agent peut faire |
+| `currentTask` | string? | ID de la tâche active |
+| `lastSeen` | number | Timestamp de la dernière activité |
+| `sessionCount` | number | Total de sessions démarrées |
+
+### diary
+
+Journaux de session quotidiens :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `date` | string | Date ISO (ex : `2026-03-29`) |
+| `orchestrator` | string | Auteur |
+| `content` | string | Récit du journal |
+| `highlights` | string[] | Événements clés de la journée |
+
+### briefingNotes
+
+Enregistrements structurés de réunions et décisions :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `title` | string | Sujet du briefing |
+| `participants` | string[] | Orchestrateurs présents |
+| `decisions` | string[] | Décisions prises |
+| `linkedMemories` | string[] | IDs de mémoires liées |
+
+### components
+
+Registre de capacités des agents :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `name` | string | Nom du composant |
+| `type` | string | `agent`, `skill`, `hook`, `plugin` |
+| `content` | string | Sauvegarde du contenu complet |
+| `version` | string? | Identifiant de version |
+
+## Intégration du protocole MCP
+
+VantagePeers expose toutes les capacités comme des outils MCP. Le serveur MCP tourne comme un processus Node.js local auquel le client Claude Code se connecte via stdio. Chaque appel d'outil passe par :
+
+1. Claude Code envoie un appel d'outil JSON au serveur MCP via stdio
+2. Le serveur MCP valide les entrées et appelle la fonction Convex appropriée via HTTP
+3. Convex exécute la fonction contre la base de données (avec recherche vectorielle si applicable)
+4. Le résultat est retourné à Claude Code comme réponse de l'outil
+
+Les 70 outils sont sans état du point de vue du serveur MCP — l'état vit dans Convex. Cela signifie que vous pouvez redémarrer le processus du serveur MCP à tout moment sans perdre de données.

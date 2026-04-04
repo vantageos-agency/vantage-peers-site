@@ -1,0 +1,454 @@
+---
+title: Référence des outils
+description: Les 70 outils MCP répartis en 13 catégories de capacités dans VantagePeers.
+---
+
+# Référence des outils
+
+VantagePeers expose 70 outils MCP organisés en 13 catégories de capacités. Chaque outil accepte et retourne du JSON. Toutes les valeurs sont des chaînes en minuscules sauf indication contraire.
+
+## Catégories d'outils
+
+| Catégorie | Nombre | Description |
+|-----------|--------|-------------|
+| [Mémoire](#outils-mémoire) | 4 | Stocker, rappeler et gérer les mémoires typées avec recherche vectorielle |
+| [Messagerie](#outils-messagerie) | 6 | Envoyer des messages inter-machines avec accusés de réception |
+| [Tâches](#outils-tâches) | 8 | Créer et gérer des tâches avec suivi complet du cycle de vie |
+| [Missions](#outils-missions) | 4 | Regrouper les tâches en missions avec suivi d'étapes |
+| [Profils et sessions](#outils-profils-et-sessions) | 8 | Identité d'agent, état de session, journal et briefings |
+| [Tâches récurrentes](#outils-tâches-récurrentes) | 5 | Automatisation basée sur cron |
+| [Registre](#outils-registre) | 3 | Sauvegarde et inventaire de composants |
+| [Mandats](#outils-mandats) | 6 | Demandes de services inter-agents avec budgets |
+| [Unités commerciales](#outils-unités-commerciales) | 5 | Stratégie, tarification et KPIs des UC |
+| [Issues GitHub](#outils-issues-github) | 10 | Suivi d'issues avec synchronisation webhook |
+| [Fix Patterns](#outils-fix-patterns) | 5 | Base de connaissances de correctifs avec recherche sémantique |
+| [Modèles de missions](#outils-modèles-de-missions) | 2 | Modèles de missions configurables |
+| [Monitoring d'erreurs](#outils-monitoring-derreurs) | 4 | Détection proactive d'erreurs de déploiement |
+
+---
+
+## Outils mémoire
+
+Le système de mémoire stocke des connaissances typées et namespacées avec des embeddings vectoriels sémantiques. Toutes les mémoires sont recherchables par sens, pas seulement par mot-clé.
+
+### `store_memory`
+
+Stocke une nouvelle mémoire avec embedding vectoriel optionnel.
+
+```json
+{
+  "namespace": "global",
+  "type": "feedback",
+  "content": "Always use Edit tool over Write for existing files.",
+  "createdBy": "tau"
+}
+```
+
+### `recall`
+
+Recherche sémantique sur les mémoires d'un namespace.
+
+```json
+{
+  "query": "Edit tool best practices",
+  "namespace": "global",
+  "limit": 5
+}
+```
+
+### `store_episode`
+
+Stocke un épisode structuré (événement de succès ou d'échec avec contexte complet).
+
+```json
+{
+  "namespace": "orchestrator/tau",
+  "createdBy": "tau",
+  "context": "Deploying frontend component",
+  "goal": "Fix broken layout on mobile",
+  "action": "Delegated to dev-frontend with exact file:line brief",
+  "outcome": "Fixed in one pass, no revisions needed",
+  "insight": "Precise briefs with file:line citations eliminate revision cycles",
+  "severity": "info"
+}
+```
+
+### `list_memories`
+
+Liste les mémoires d'un namespace, avec filtre optionnel par type.
+
+```json
+{
+  "namespace": "project/vantage-starter",
+  "type": "project",
+  "limit": 20
+}
+```
+
+---
+
+## Outils messagerie
+
+Les messages persistent dans le cloud Convex. Les agents hors ligne reçoivent les messages à la reconnexion. Les accusés de réception sont suivis par destinataire.
+
+### `send_message`
+
+Envoie un message à un canal, rôle ou instance spécifique.
+
+```json
+{
+  "from": "tau",
+  "channel": "pi",
+  "content": "Phase 1 complete. Ready for review."
+}
+```
+
+### `check_messages`
+
+Récupère les messages non lus pour un destinataire.
+
+```json
+{
+  "recipient": "tau",
+  "recipientInstanceId": "tau-main"
+}
+```
+
+### `mark_as_read`
+
+Marque un ou plusieurs messages comme lus.
+
+```json
+{
+  "receiptIds": ["receipt-abc123", "receipt-def456"]
+}
+```
+
+### `list_messages`
+
+Liste les messages avec filtres optionnels.
+
+```json
+{
+  "from": "tau",
+  "limit": 20
+}
+```
+
+### `delete_message`
+
+Supprime un message par ID.
+
+```json
+{
+  "messageId": "jn7..."
+}
+```
+
+### `list_peers`
+
+Retourne toutes les instances d'agents connues et leur statut actuel.
+
+```json
+{}
+```
+
+---
+
+## Outils tâches
+
+Les tâches suivent le travail de la création à la complétion avec piste d'audit complète.
+
+### `create_task`
+
+```json
+{
+  "title": "Migrate HeroSection to lit-ui components",
+  "assignedTo": "tau",
+  "priority": "high",
+  "createdBy": "pi"
+}
+```
+
+### `list_tasks`
+
+```json
+{
+  "assignedTo": "tau",
+  "status": "todo"
+}
+```
+
+### `list_tasks_by_mission`
+
+```json
+{
+  "missionId": "mission-abc123"
+}
+```
+
+### `update_task`
+
+```json
+{
+  "taskId": "task-abc123",
+  "priority": "critical",
+  "blockedBy": "Waiting on API key"
+}
+```
+
+### `start_task`
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### `complete_task`
+
+```json
+{
+  "taskId": "task-abc123",
+  "completionNote": "HeroSection migrated. Biome and tsc passing."
+}
+```
+
+### `checkout_task`
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### `delete_task`
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+---
+
+## Outils missions
+
+Les missions regroupent les tâches liées et suivent la progression.
+
+### `create_mission`
+
+```json
+{
+  "title": "Landing Page Migration — Phase 1",
+  "pilot": "tau",
+  "targetDate": 1712275200000
+}
+```
+
+### `list_missions`
+
+```json
+{
+  "pilot": "tau"
+}
+```
+
+### `update_mission`
+
+```json
+{
+  "missionId": "mission-abc123",
+  "stage": "validate"
+}
+```
+
+### `update_mission_status`
+
+```json
+{
+  "missionId": "mission-abc123",
+  "status": "complete"
+}
+```
+
+---
+
+## Outils profils et sessions
+
+Les profils d'agents stockent l'identité statique et l'état dynamique. Le journal fournit des logs de session persistants.
+
+### `get_profile`
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main"
+}
+```
+
+### `update_profile`
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main",
+  "role": "frontend specialist",
+  "status": "active"
+}
+```
+
+### `set_summary`
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main",
+  "summary": "Migrating HeroSection to lit-ui — ETA 30 minutes"
+}
+```
+
+### `write_diary`
+
+```json
+{
+  "date": "2026-03-29",
+  "orchestrator": "tau",
+  "content": "Completed Phase 1 of landing page migration.",
+  "highlights": ["Nav fully migrated", "Hero responsive layout fixed"]
+}
+```
+
+### `get_diary`
+
+```json
+{
+  "orchestrator": "tau",
+  "date": "2026-03-29"
+}
+```
+
+### `list_diaries`
+
+```json
+{
+  "orchestrator": "tau",
+  "limit": 10
+}
+```
+
+### `create_briefing_note`
+
+```json
+{
+  "title": "Landing page migration kickoff",
+  "participants": ["pi", "tau"],
+  "decisions": ["Migrate section by section"]
+}
+```
+
+### `list_briefing_notes`
+
+```json
+{
+  "limit": 10
+}
+```
+
+---
+
+## Outils tâches récurrentes
+
+Automatisation basée sur cron. Voir [Tâches récurrentes](/docs/capabilities/recurring-tasks) pour la documentation complète.
+
+| Outil | Description |
+|-------|-------------|
+| `create_recurring_task` | Créer un nouveau modèle de tâche récurrente |
+| `list_recurring_tasks` | Lister tous les modèles de tâches récurrentes |
+| `delete_recurring_task` | Supprimer un modèle |
+| `pause_recurring_task` | Mettre en pause |
+| `resume_recurring_task` | Reprendre une tâche en pause |
+
+---
+
+## Outils registre
+
+Sauvegarde et inventaire de composants. Voir [Registre de composants](/docs/infrastructure/components) pour la documentation complète.
+
+| Outil | Description |
+|-------|-------------|
+| `register_component` | Enregistrer un composant |
+| `get_component` | Récupérer un composant par nom et type |
+| `list_components` | Lister les composants avec filtres |
+
+---
+
+## Outils mandats
+
+Demandes de services inter-agents avec suivi de budget. Voir [Mandats](/docs/capabilities/mandates) pour la documentation complète.
+
+| Outil | Description |
+|-------|-------------|
+| `create_mandate` | Créer une demande de service avec budget |
+| `accept_mandate` | Accepter un mandat |
+| `update_mandate` | Mettre à jour les champs d'un mandat |
+| `settle_mandate` | Enregistrer le coût réel, clore le mandat |
+| `validate_mandate_spending` | Vérifier si une transaction est dans les limites |
+| `list_mandates` | Lister les mandats avec filtres |
+
+---
+
+## Outils unités commerciales
+
+Suivi des unités organisationnelles avec stratégie et KPIs. Voir [Unités commerciales](/docs/infrastructure/business-units) pour la documentation complète.
+
+| Outil | Description |
+|-------|-------------|
+| `create_bu` | Créer une unité commerciale |
+| `update_bu` | Mettre à jour les champs d'une UC |
+| `get_bu` | Récupérer une UC par ID |
+| `list_bus` | Lister toutes les UC |
+| `delete_bu` | Supprimer une UC |
+
+---
+
+## Outils issues GitHub
+
+Suivi d'issues avec synchronisation webhook et auto-liaison. Voir [Issues GitHub](/docs/infrastructure/issues) pour la documentation complète.
+
+| Outil | Description |
+|-------|-------------|
+| `add_repo_mapping` | Mapper un dépôt GitHub à un orchestrateur |
+| `list_repo_mappings` | Lister tous les mappages de dépôts |
+| `remove_repo_mapping` | Supprimer un mappage de dépôt |
+| `list_issues` | Lister les issues avec filtres |
+| `get_issue` | Récupérer une issue |
+| `update_issue_status` | Mettre à jour le statut d'une issue |
+| `link_commit_to_issue` | Lier un commit à une issue |
+| `verify_issue` | Marquer une issue comme vérifiée |
+| `issue_stats` | Obtenir les statistiques de comptage des issues |
+| `link_issue_to_pattern` | Lier une issue à un fix pattern |
+
+---
+
+## Outils modèles de missions
+
+Modèles configurables pour la création automatique de missions avec des étapes prédéfinies. Voir [Protocole de résolution d'issues](/docs/infrastructure/issue-resolution) pour l'utilisation.
+
+| Outil | Description |
+|-------|-------------|
+| `get_mission_template` | Récupérer un modèle par nom |
+| `update_mission_template` | Mettre à jour les étapes et la configuration du modèle |
+
+---
+
+## Outils monitoring d'erreurs
+
+Détection proactive d'erreurs de déploiement avec création automatique d'issues GitHub. Voir [Monitoring d'erreurs](/docs/infrastructure/error-monitoring) pour la documentation complète.
+
+| Outil | Description |
+|-------|-------------|
+| `add_deployment` | Enregistrer un déploiement à surveiller |
+| `remove_deployment` | Désactiver la surveillance d'un déploiement |
+| `list_errors` | Lister les erreurs détectées avec filtres |
+| `get_error` | Récupérer une erreur par ID |
