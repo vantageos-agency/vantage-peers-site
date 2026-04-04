@@ -22,7 +22,7 @@ export default async function Page(props: {
           <MarkdownCopyButton markdownUrl={markdownUrl} />
           <ViewOptionsPopover
             markdownUrl={markdownUrl}
-            githubUrl={`https://github.com/elpiarthera/vantage-peers-site/blob/main/content/docs/${(params.slug ?? []).join('/')}.mdx`}
+            githubUrl={`https://github.com/elpiarthera/vantage-peers-site/tree/main/content/docs`}
           />
         </div>
         <DocsTitle>{page.data.title}</DocsTitle>

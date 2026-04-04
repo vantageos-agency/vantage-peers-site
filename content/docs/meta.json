@@ -2,22 +2,11 @@
   "title": "Documentation",
   "pages": [
     "index",
-    "---Setup---",
     "getting-started",
-    "---Core Concepts---",
-    "architecture",
-    "---Capabilities---",
-    "tools",
-    "memory",
-    "messaging",
-    "tasks",
-    "fix-patterns",
-    "issues",
-    "issue-resolution",
-    "error-monitoring",
-    "mandates",
-    "recurring-tasks",
-    "components",
-    "business-units"
+    "core-concepts",
+    "capabilities",
+    "infrastructure",
+    "---Reference---",
+    "tools"
   ]
 }
