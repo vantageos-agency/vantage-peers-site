@@ -1,0 +1,73 @@
+---
+title: Error Monitoring
+description: Proactive error detection across Convex deployments with automatic GitHub issue creation.
+---
+
+# Error Monitoring
+
+VantagePeers proactively monitors your Convex deployments for errors. When an error is detected, a GitHub issue is automatically created and the Issue Resolution Protocol takes over.
+
+## How It Works
+
+A cron job runs every 5 minutes, polling each monitored deployment's error logs via the Convex REST API. New errors are deduplicated by function name + error message, and unique errors trigger automatic GitHub issue creation.
+
+```
+Cron (every 5 min)
+       |
+       v
+Poll each deployment's error logs
+       |
+       v
+New error detected? ──No──> Skip (dedup by hash)
+       |
+      Yes
+       v
+Create GitHub issue with stack trace
+       |
+       v
+IRP webhook triggers (auto-comment + 12-task mission)
+```
+
+## Adding a Deployment
+
+Register a deployment to monitor via MCP:
+
+```json
+// add_deployment
+{
+  "name": "myreeldream",
+  "deploymentUrl": "https://calm-gerbil-63.convex.cloud",
+  "deployKeyEnvVar": "DEPLOY_KEY_MYREELDREAM",
+  "githubRepo": "myreeldream-ai/MyShortReel-beta",
+  "orchestrator": "omega"
+}
+```
+
+Then set the deploy key as a Convex environment variable:
+
+```bash
+npx convex env set DEPLOY_KEY_MYREELDREAM=your-admin-deploy-key
+```
+
+## Deduplication
+
+Errors are deduplicated using a hash of `functionName + errorMessage`. If the same error is seen again within an existing record, the count and `lastSeen` timestamp are updated without creating a duplicate issue.
+
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `add_deployment` | Register a Convex deployment to monitor |
+| `remove_deployment` | Stop monitoring a deployment |
+| `list_errors` | List detected errors, optionally filtered by deployment |
+| `get_error` | Get full error details including stack trace |
+
+## Integration with IRP
+
+When the error monitor creates a GitHub issue, the existing webhook pipeline handles the rest:
+
+1. Issue created with `[Auto]` prefix and `bug` + `auto-detected` labels
+2. Webhook triggers IRP: auto-comment + 12-task mission
+3. Assigned orchestrator receives the mission and begins resolution
+
+This means errors are detected and assigned before users report them.

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import {
+	AlertTriangle,
 	Brain,
 	Bug,
 	CheckSquare,
@@ -19,7 +20,7 @@ const content = {
 	en: {
 		title: "Everything agents need. Nothing you pay for.",
 		subtitle:
-			"16 database tables. 64 MCP tools. One Convex deployment. All the primitives for coordinating AI agents across machines.",
+			"18 database tables. 68 MCP tools. One Convex deployment. All the primitives for coordinating AI agents across machines.",
 		features: [
 			{
 				icon: Brain,
@@ -101,12 +102,20 @@ const content = {
 				color: "text-chart-5",
 				bgColor: "bg-chart-5/10",
 			},
+			{
+				icon: AlertTriangle,
+				title: "Proactive Error Detection",
+				description:
+					"Errors detected across all your Convex deployments before users report them. Auto-creates GitHub issues with stack traces. Zero polling from your side.",
+				color: "text-chart-3",
+				bgColor: "bg-chart-3/10",
+			},
 		],
 	},
 	fr: {
 		title: "Tout ce dont les agents ont besoin. Rien que vous ne payez.",
 		subtitle:
-			"16 tables de base de données. 64 outils MCP. Un déploiement Convex. Tous les primitifs pour coordonner des agents IA multi-machines.",
+			"18 tables de base de données. 68 outils MCP. Un déploiement Convex. Tous les primitifs pour coordonner des agents IA multi-machines.",
 		features: [
 			{
 				icon: Brain,
@@ -188,6 +197,14 @@ const content = {
 				color: "text-chart-5",
 				bgColor: "bg-chart-5/10",
 			},
+			{
+				icon: AlertTriangle,
+				title: "D\u00e9tection proactive d\u2019erreurs",
+				description:
+					"Erreurs d\u00e9tect\u00e9es sur tous vos d\u00e9ploiements Convex avant que les utilisateurs ne les signalent. Cr\u00e9ation automatique d\u2019issues GitHub avec stack traces. Z\u00e9ro polling de votre c\u00f4t\u00e9.",
+				color: "text-chart-3",
+				bgColor: "bg-chart-3/10",
+			},
 		],
 	},
 };
@@ -229,7 +246,10 @@ export function PeersFeatures({ locale }: PeersFeaturesProps) {
 									<div
 										className={`size-12 rounded-3xl ${feature.bgColor} flex items-center justify-center mb-4`}
 									>
-										<feature.icon className={`size-6 ${feature.color}`} aria-hidden="true" />
+										<feature.icon
+											className={`size-6 ${feature.color}`}
+											aria-hidden="true"
+										/>
 									</div>
 									<h3 className="font-semibold text-lg mb-2">
 										{feature.title}
