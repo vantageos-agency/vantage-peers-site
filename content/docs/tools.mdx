@@ -1,27 +1,29 @@
 ---
 title: Tools Reference
-description: All 64 MCP tools across 12 capability categories in VantagePeers.
+description: All 70 MCP tools across 13 capability categories in VantagePeers.
 ---
 
 # Tools Reference
 
-VantagePeers exposes 64 MCP tools organized into 12 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
+VantagePeers exposes 70 MCP tools organized into 13 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
 
 ## Tool Categories
 
 | Category | Tool Count | Description |
 |----------|-----------|-------------|
-| [Memory](#memory-tools) | 6 | Store, recall, and manage typed memories with vector search |
-| [Messaging](#messaging-tools) | 5 | Send messages across machines with read receipts |
+| [Memory](#memory-tools) | 4 | Store, recall, and manage typed memories with vector search |
+| [Messaging](#messaging-tools) | 6 | Send messages across machines with read receipts |
 | [Tasks](#task-tools) | 8 | Create and manage tasks with full lifecycle tracking |
 | [Missions](#mission-tools) | 4 | Group tasks into missions with stage tracking |
-| [Profiles & Sessions](#profile-and-session-tools) | 7 | Agent identity, session state, and diary |
+| [Profiles & Sessions](#profile-and-session-tools) | 8 | Agent identity, session state, diary, and briefings |
 | [Recurring Tasks](#recurring-task-tools) | 5 | Cron-based automation |
 | [Registry](#registry-tools) | 3 | Component backup and inventory |
 | [Mandates](#mandate-tools) | 6 | Cross-agent service requests with budgets |
 | [Business Units](#business-unit-tools) | 5 | BU strategy, pricing, and KPIs |
-| [GitHub Issues](#github-issue-tools) | 9 | Issue tracking with webhook sync |
-| [Fix Patterns](#fix-pattern-tools) | 6 | Bug fix knowledge base with semantic search |
+| [GitHub Issues](#github-issue-tools) | 10 | Issue tracking with webhook sync |
+| [Fix Patterns](#fix-pattern-tools) | 5 | Bug fix knowledge base with semantic search |
+| [Mission Templates](#mission-template-tools) | 2 | Configurable mission templates |
+| [Error Monitoring](#error-monitoring-tools) | 4 | Proactive deployment error detection |
 
 ---
 
@@ -89,19 +91,6 @@ Lists memories in a namespace, optionally filtered by type.
 }
 ```
 
-### `update_profile`
-
-Updates a stored agent profile with new dynamic state.
-
-```json
-{
-  "orchestratorId": "tau",
-  "instanceId": "tau-main",
-  "currentTask": "task-abc123",
-  "lastSeen": 1711670400000
-}
-```
-
 ---
 
 ## Messaging Tools
@@ -161,6 +150,27 @@ Marks one or more messages as read using receipt IDs.
 ```json
 {
   "receiptIds": ["receipt-abc123", "receipt-def456"]
+}
+```
+
+### `list_messages`
+
+List messages with optional filters (from, channel).
+
+```json
+{
+  "from": "tau",
+  "limit": 20
+}
+```
+
+### `delete_message`
+
+Delete a message by ID.
+
+```json
+{
+  "messageId": "jn7..."
 }
 ```
 
@@ -359,19 +369,42 @@ Writes a diary entry for a given date. Overwrites any existing entry for that da
 }
 ```
 
-### `read_diary`
+### `get_diary`
 
-Reads diary entries for an orchestrator, optionally filtered by date range.
+Fetch a specific diary entry by orchestrator and date.
 
 ```json
 {
   "orchestrator": "tau",
-  "from": "2026-03-25",
-  "to": "2026-03-29"
+  "date": "2026-03-29"
 }
 ```
 
-### `create_briefing`
+### `list_diaries`
+
+List diary entries for an orchestrator, optionally filtered by date range.
+
+```json
+{
+  "orchestrator": "tau",
+  "limit": 10
+}
+```
+
+### `update_profile`
+
+Update an orchestrator profile (role, capabilities, status).
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main",
+  "role": "frontend specialist",
+  "status": "active"
+}
+```
+
+### `create_briefing_note`
 
 Creates a structured briefing record.
 
@@ -387,7 +420,7 @@ Creates a structured briefing record.
 }
 ```
 
-### `list_briefings`
+### `list_briefing_notes`
 
 Lists briefings, optionally filtered by participant.
 
@@ -534,7 +567,7 @@ Full-text search over component names and content.
 
 ## Mandate Tools
 
-Cross-agent service requests with budget tracking. See [Mandates](/docs/mandates) for full documentation.
+Cross-agent service requests with budget tracking. See [Mandates](/docs/capabilities/mandates) for full documentation.
 
 | Tool | Description |
 |------|-------------|
@@ -549,7 +582,7 @@ Cross-agent service requests with budget tracking. See [Mandates](/docs/mandates
 
 ## Business Unit Tools
 
-Track organizational units with strategy and KPIs. See [Business Units](/docs/business-units) for full documentation.
+Track organizational units with strategy and KPIs. See [Business Units](/docs/infrastructure/business-units) for full documentation.
 
 | Tool | Description |
 |------|-------------|
@@ -563,7 +596,7 @@ Track organizational units with strategy and KPIs. See [Business Units](/docs/bu
 
 ## GitHub Issue Tools
 
-Issue tracking with webhook sync and auto-linking. See [GitHub Issues](/docs/issues) for full documentation.
+Issue tracking with webhook sync and auto-linking. See [GitHub Issues](/docs/infrastructure/issues) for full documentation.
 
 | Tool | Description |
 |------|-------------|
@@ -576,12 +609,13 @@ Issue tracking with webhook sync and auto-linking. See [GitHub Issues](/docs/iss
 | `link_commit_to_issue` | Link a commit to an issue |
 | `verify_issue` | Mark an issue as verified |
 | `issue_stats` | Get issue count stats |
+| `link_issue_to_pattern` | Link an issue to a fix pattern |
 
 ---
 
 ## Fix Pattern Tools
 
-Bug fix knowledge base with semantic search. See [Fix Patterns KB](/docs/fix-patterns) for full documentation.
+Bug fix knowledge base with semantic search. See [Fix Patterns KB](/docs/capabilities/fix-patterns) for full documentation.
 
 | Tool | Description |
 |------|-------------|
@@ -590,4 +624,27 @@ Bug fix knowledge base with semantic search. See [Fix Patterns KB](/docs/fix-pat
 | `validate_fix` | Set the validated fix |
 | `search_fix_patterns` | Semantic search over patterns |
 | `list_fix_patterns` | List patterns by project |
-| `link_issue_to_pattern` | Link an issue to a pattern |
+
+---
+
+## Mission Template Tools
+
+Configurable templates for auto-creating missions with predefined steps. See [Issue Resolution Protocol](/docs/infrastructure/issue-resolution) for usage.
+
+| Tool | Description |
+|------|-------------|
+| `get_mission_template` | Fetch a template by name |
+| `update_mission_template` | Update template steps and config |
+
+---
+
+## Error Monitoring Tools
+
+Proactive deployment error detection with automatic GitHub issue creation. See [Error Monitoring](/docs/infrastructure/error-monitoring) for full documentation.
+
+| Tool | Description |
+|------|-------------|
+| `add_deployment` | Register a deployment for monitoring |
+| `remove_deployment` | Deactivate a monitored deployment |
+| `list_errors` | List detected errors with filters |
+| `get_error` | Fetch a single error by ID |

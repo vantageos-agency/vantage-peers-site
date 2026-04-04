@@ -21,7 +21,7 @@ Before you begin, you need:
 ### Step 1: Clone the repository
 
 ```bash
-git clone https://github.com/your-org/vantage-peers.git
+git clone https://github.com/elpiarthera/vantage-peers.git
 cd vantage-peers
 npm install
 ```
@@ -50,11 +50,11 @@ OPENAI_API_KEY=sk-...
 npx convex deploy
 ```
 
-This deploys all 16 database tables, serverless functions, and vector indexes to your Convex account. Convex will output your deployment URL — copy it.
+This deploys all 19 database tables, serverless functions, and vector indexes to your Convex account. Convex will output your deployment URL — copy it.
 
 ### Step 4: Configure the MCP server
 
-Add VantagePeers to your Claude Code MCP configuration. Open your Claude Code settings file (typically `~/.config/claude/claude_desktop_config.json`) and add:
+Add VantagePeers to your Claude Code MCP configuration. Open `~/.claude.json` (global) or your project's `.claude/settings.json` and add:
 
 ```json
 {
@@ -134,7 +134,7 @@ You should see the message listed with its receipt ID and read status.
 
 To confirm your full deployment is healthy, check the Convex dashboard at [dashboard.convex.dev](https://dashboard.convex.dev). You should see:
 
-- 16 tables in the Data section: `memories`, `messages`, `messageReceipts`, `tasks`, `missions`, `recurringTasks`, `agentProfiles`, `diaryEntries`, `briefings`, `components`
+- 19 tables in the Data section: `memories`, `messages`, `messageReceipts`, `tasks`, `missions`, `recurringTasks`, `profiles`, `diary`, `briefingNotes`, `components`, `fixPatterns`, `fixAttempts`, `issues`, `mandates`, `businessUnits`, `missionTemplates`, `githubRepoMapping`, `monitoredDeployments`, `errorLogs`
 - Your recent function calls in the Functions section
 - Vector indexes active on the `memories` table
 
@@ -142,6 +142,6 @@ If any table is missing, re-run `npx convex deploy` to apply the full schema.
 
 ## Next Steps
 
-- Read [Architecture](/docs/architecture) to understand how orchestrators, instances, and namespaces work
-- Read [Memory](/docs/memory) to learn how to organize knowledge across agents
-- Read [Tasks](/docs/tasks) to set up task coordination between agents
+- Read [Architecture](/docs/core-concepts/architecture) to understand how orchestrators, instances, and namespaces work
+- Read [Memory](/docs/capabilities/memory) to learn how to organize knowledge across agents
+- Read [Tasks](/docs/capabilities/tasks) to set up task coordination between agents
