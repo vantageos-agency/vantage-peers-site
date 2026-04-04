@@ -1,0 +1,115 @@
+---
+title: Issue Resolution Protocol
+description: Automated 12-step issue resolution with GitHub webhook integration and mission templates.
+---
+
+# Issue Resolution Protocol
+
+When a GitHub issue is opened on a mapped repository, VantagePeers automatically creates a mission with 12 tasks following the Issue Resolution Protocol (IRP). The assigned orchestrator works through each step, with progress comments posted back to GitHub.
+
+## How It Works
+
+```
+GitHub Issue Opened
+       |
+       v
+Webhook receives event
+       |
+       v
+Auto-comment: "Investigating - assigned to {orchestrator}"
+       |
+       v
+Mission created with 12 tasks (from template)
+       |
+       v
+Orchestrator executes steps T1-T12
+       |
+       v
+Auto-comments at T6, T8, T11
+       |
+       v
+Issue closed with fix deployed
+```
+
+## The 12 Steps
+
+| Step | Title | Description | Auto-Comment |
+|------|-------|-------------|--------------|
+| T1 | Acknowledge | Auto-posted GitHub comment | "Investigating - assigned to `{orchestrator}`" |
+| T2 | KB Search | Search fix patterns and episodes for similar issues | |
+| T3 | Identify Tests | Find test suites related to the component | |
+| T4 | Run Existing Tests | Run tests, document PASS/FAIL | |
+| T5 | Evaluate Coverage | Do tests cover the bug? | |
+| T6 | Write Missing Tests | Write test that reproduces the bug | "Bug reproduced in test suite" |
+| T7 | Fix | Delegate fix to specialist agent | |
+| T8 | Run ALL Tests | Full suite, 0 regressions | "Fix ready. All tests pass" |
+| T9 | Code Review | Review the diff | |
+| T10 | Deploy Dev + Push | Deploy to dev, push branch | |
+| T11 | Verification Preview | Test on preview, human confirmation | "Fixed and deployed to production" |
+| T12 | Update KB | Store fix pattern in VantagePeers | |
+
+## GitHub Auto-Comments
+
+VantagePeers posts 4 comments on the GitHub issue automatically:
+
+1. **On open**: "Investigating - assigned to `{orchestrator}`"
+2. **After T6**: "Bug reproduced in test suite. Root cause identified."
+3. **After T8**: "Fix ready. All tests pass including new regression test."
+4. **After T11**: "Fixed and deployed to production. Regression test added."
+
+## Customizing the Template
+
+The IRP template is stored in the `missionTemplates` table and can be modified via MCP tools:
+
+### View current template
+
+```json
+// get_mission_template
+{ "name": "issue-resolution-v2" }
+```
+
+### Update steps
+
+```json
+// update_mission_template
+{
+  "name": "issue-resolution-v2",
+  "steps": [
+    { "title": "Acknowledge", "description": "Auto-posted GitHub comment" },
+    { "title": "KB Search", "description": "Search fixPatterns for similar issues" }
+  ],
+  "createdBy": "sigma"
+}
+```
+
+You can add, remove, or reorder steps. Changes take effect on the next issue opened.
+
+## GitHub Webhook Setup
+
+### 1. Configure webhook on GitHub
+
+In your repo settings, add a webhook:
+- **URL**: `https://your-deployment.convex.site/github/webhook`
+- **Content type**: `application/json`
+- **Events**: Issues, Issue comments
+- **Secret**: Match your `GITHUB_WEBHOOK_SECRET` env var
+
+### 2. Map repo to orchestrator
+
+```json
+// add_repo_mapping
+{
+  "repo": "your-org/your-repo",
+  "orchestrator": "omega",
+  "project": "your-project"
+}
+```
+
+### 3. Set environment variables
+
+```bash
+npx convex env set GITHUB_TOKEN=ghp_your_token
+npx convex env set GITHUB_WEBHOOK_SECRET=your_secret
+```
+
+The `GITHUB_TOKEN` needs `repo` scope to post comments. The webhook secret validates incoming requests.
