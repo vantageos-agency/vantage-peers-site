@@ -1,0 +1,244 @@
+---
+title: Supported Tools
+description: VantagePeers works with any MCP-compatible AI coding tool. Config snippets for 12 tools.
+---
+
+# Supported Tools
+
+VantagePeers is an MCP server. It works with any tool that supports the [Model Context Protocol](https://modelcontextprotocol.io). No vendor lock-in.
+
+## Full MCP Support
+
+These tools have native MCP client support — add VantagePeers as a server and all 70 tools are immediately available.
+
+### Claude Code
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: `~/.claude.json` or `.claude/settings.json`
+
+### Cursor
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: `.cursor/mcp.json`
+
+### Codex (OpenAI)
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: `~/.codex/config.json`
+
+### Windsurf
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: `~/.codeium/windsurf/mcp_config.json`
+
+### Cline
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: VS Code settings → Cline MCP Servers
+
+### Roo Code
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: VS Code settings → Roo Code MCP Servers
+
+### OpenCode
+
+```toml
+[mcp.vantage-peers]
+command = "npx"
+args = ["-y", "vantage-peers-mcp"]
+
+[mcp.vantage-peers.env]
+CONVEX_URL = "https://your-deployment.convex.cloud"
+```
+
+Config file: `opencode.toml`
+
+### Amazon Q Developer
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: `~/.aws/amazonq/mcp.json`
+
+### Augment Code
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: VS Code settings → Augment MCP Servers
+
+### Void
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Config file: Void MCP settings
+
+## Agent-Mode Only
+
+These tools support MCP in agent mode but not in inline/chat mode.
+
+### Continue.dev
+
+```json
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["-y", "vantage-peers-mcp"],
+          "env": {
+            "CONVEX_URL": "https://your-deployment.convex.cloud"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+Config file: `~/.continue/config.json`
+
+### GitHub Copilot
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "vantage-peers": {
+        "command": "npx",
+        "args": ["-y", "vantage-peers-mcp"],
+        "env": {
+          "CONVEX_URL": "https://your-deployment.convex.cloud"
+        }
+      }
+    }
+  }
+}
+```
+
+Config file: `.github/copilot-mcp.json` — requires agent mode
+
+## Environment Variable
+
+All configurations require one environment variable:
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `CONVEX_URL` | `https://your-deployment.convex.cloud` | Your Convex deployment URL (from `npx convex deploy`) |
+
+The MCP server resolves this at startup. No other configuration is needed — the server connects to your Convex backend and exposes all 70 tools automatically.
