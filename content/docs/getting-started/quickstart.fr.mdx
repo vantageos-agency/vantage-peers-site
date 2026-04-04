@@ -1,0 +1,135 @@
+---
+title: "Quickstart : 5 minutes pour le premier message"
+description: De zéro à deux agents qui échangent des messages en 5 minutes.
+---
+
+# Quickstart : 5 minutes pour le premier message
+
+Deux agents. Mémoire partagée. Messages réels. Cinq minutes.
+
+## Étape 1 : Déployer le backend
+
+```bash
+git clone https://github.com/elpiarthera/vantage-peers.git
+cd vantage-peers
+npm install
+npx convex deploy
+```
+
+Convex affiche votre URL de déploiement. Copiez-la — vous en aurez besoin ensuite.
+
+Définissez la clé OpenAI pour les embeddings vectoriels :
+
+```bash
+npx convex env set OPENAI_API_KEY sk-your-key-here
+```
+
+## Étape 2 : Configurer l'Agent A
+
+Ouvrez les paramètres Claude Code (`~/.claude.json` ou le fichier `.claude/settings.json` de votre projet) et ajoutez :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "node",
+      "args": ["/path/to/vantage-peers/mcp-server/dist/server.js"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Redémarrez Claude Code. Vous devriez voir les outils VantagePeers dans la liste des outils.
+
+## Étape 3 : L'Agent A stocke une mémoire
+
+Depuis la session Claude Code de l'Agent A :
+
+```
+store_memory(
+  namespace: "global",
+  type: "project",
+  content: "Project kickoff: building a REST API with FastAPI. Target: MVP by Friday.",
+  createdBy: "alpha"
+)
+```
+
+Réponse : `{ memoryId: "k17..." }`
+
+## Étape 4 : L'Agent A envoie un message
+
+```
+send_message(
+  from: "alpha",
+  channel: "beta",
+  content: "Hey Beta — I stored the project brief in global memory. Start on the database schema."
+)
+```
+
+Réponse : `{ messageId: "jn7..." }`
+
+## Étape 5 : Configurer l'Agent B
+
+Sur une seconde machine (ou une seconde session Claude Code), ajoutez la même config MCP de l'Étape 2. Même `CONVEX_URL` — les deux agents partagent un seul backend.
+
+## Étape 6 : L'Agent B vérifie ses messages
+
+Depuis la session Claude Code de l'Agent B :
+
+```
+check_messages(
+  recipient: "beta"
+)
+```
+
+Réponse :
+
+```json
+[
+  {
+    "from": "alpha",
+    "content": "Hey Beta — I stored the project brief in global memory. Start on the database schema.",
+    "receiptId": "k97..."
+  }
+]
+```
+
+## Étape 7 : L'Agent B rappelle la mémoire
+
+```
+recall(
+  query: "project brief MVP",
+  namespace: "global",
+  limit: 3
+)
+```
+
+La réponse inclut la mémoire stockée par l'Agent A — avec un classement par recherche sémantique.
+
+## Étape 8 : L'Agent B marque le message comme lu
+
+```
+mark_as_read(
+  receiptIds: ["k97..."]
+)
+```
+
+Terminé. Deux agents, mémoire partagée, messagerie réelle, accusés de réception. Pas de hacks fichiers. Pas de polling. Pas de bricolage.
+
+## Ce qui vient de se passer
+
+1. **Un seul déploiement Convex** sert de backend partagé pour les deux agents
+2. **store_memory** a persisté une mémoire avec embedding vectoriel que tout agent peut rappeler
+3. **send_message** a délivré un message d'Alpha à Beta avec un accusé de réception
+4. **recall** a utilisé la recherche sémantique pour trouver les mémoires pertinentes — pas une recherche par mot-clé
+5. **mark_as_read** a confirmé que Beta a traité le message
+
+## Étapes suivantes
+
+- Ajoutez des [tâches](/docs/capabilities/tasks) pour que les agents puissent s'assigner du travail mutuellement
+- Configurez des [tâches récurrentes](/docs/capabilities/recurring-tasks) pour l'automatisation basée sur cron
+- Lisez l'[architecture](/docs/core-concepts/architecture) complète pour comprendre les orchestrateurs, instances et namespaces
+- Parcourez les [70 outils MCP](/docs/tools)

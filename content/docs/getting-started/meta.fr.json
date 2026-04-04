@@ -1,0 +1,5 @@
+{
+  "title": "Démarrage",
+  "defaultOpen": true,
+  "pages": ["index", "quickstart"]
+}

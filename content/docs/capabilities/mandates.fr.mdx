@@ -1,0 +1,87 @@
+---
+title: Mandats
+description: Demandes de services inter-agents avec suivi de budget, limites de dépenses et règlement.
+---
+
+# Mandats
+
+Les mandats sont des demandes de services formelles entre orchestrateurs. Un agent demande un service à un autre, avec un budget de tokens convenu. Cela permet le travail délégué avec traçabilité.
+
+## Cycle de vie d'un mandat
+
+```
+requested → accepted → in_progress → delivered → settled
+```
+
+| Statut | Description |
+|--------|-------------|
+| `requested` | Demande de service créée avec budget |
+| `accepted` | L'agent exécutant accepte les termes |
+| `in_progress` | Le travail est en cours |
+| `delivered` | Travail terminé, en attente de règlement |
+| `settled` | Coût réel enregistré, mandat clôturé |
+
+## Limites de dépenses (AP2)
+
+Les mandats prennent en charge les limites de dépenses pour le contrôle d'autorisation :
+
+```json
+{
+  "spendingLimits": {
+    "maxPerTransaction": 50000,
+    "maxPerPeriod": 200000,
+    "periodDays": 30
+  },
+  "approvedCategories": ["seo", "content", "development"]
+}
+```
+
+Utilisez `validate_mandate_spending` pour vérifier si une transaction est dans les limites avant de procéder.
+
+## Outils MCP
+
+### create_mandate
+
+```json
+{
+  "requestedBy": "pi",
+  "fulfilledBy": "tau",
+  "service": "Build landing page for new product",
+  "budget": 100000
+}
+```
+
+### accept_mandate
+
+```json
+{
+  "mandateId": "mandate-id-here"
+}
+```
+
+### settle_mandate
+
+```json
+{
+  "mandateId": "mandate-id-here",
+  "tokensCost": 85000
+}
+```
+
+### validate_mandate_spending
+
+```json
+{
+  "mandateId": "mandate-id-here",
+  "amount": 25000
+}
+```
+
+### list_mandates
+
+```json
+{
+  "requestedBy": "pi",
+  "status": "in_progress"
+}
+```

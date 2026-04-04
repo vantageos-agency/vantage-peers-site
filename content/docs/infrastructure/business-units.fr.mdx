@@ -1,0 +1,36 @@
+---
+title: Unités commerciales
+description: Suivi des unités commerciales avec stratégie, tarification, KPIs et frais de gestion.
+---
+
+# Unités commerciales
+
+La table des unités commerciales suit les entités organisationnelles avec leur stratégie, services, tarification, projections de revenus et KPIs.
+
+## Schéma
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `name` | string | Nom de l'UC (ex : « VantagePeers ») |
+| `description` | string | Ce qu'elle fait |
+| `purpose` | string | Pourquoi elle existe |
+| `domain` | string? | Domaine du site web |
+| `orchestratorId` | string | Orchestrateur principal |
+| `status` | `idea` \| `building` \| `live` \| `revenue` | Étape actuelle |
+| `businessModel` | string | Comment elle génère des revenus |
+| `targetCustomers` | string | Qui elle sert |
+| `services` | string[] | Ce qu'elle offre |
+| `pricing` | string | Stratégie de tarification |
+| `revenueProjections` | object | Objectifs de revenus A1, A2, A3 |
+| `coreTeam` | object | Agents, skills, hooks, plugins |
+| `managementFee` | number | Pourcentage de commission (10 % par défaut) |
+
+## Outils MCP
+
+| Outil | Description |
+|-------|-------------|
+| `create_bu` | Créer une unité commerciale avec stratégie complète |
+| `update_bu` | Mettre à jour les champs d'une unité commerciale |
+| `get_bu` | Récupérer une unité commerciale par ID |
+| `list_bus` | Lister toutes les UC avec filtres optionnels |
+| `delete_bu` | Supprimer une unité commerciale |

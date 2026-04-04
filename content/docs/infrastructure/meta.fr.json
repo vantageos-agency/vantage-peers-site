@@ -1,0 +1,11 @@
+{
+  "title": "Infrastructure",
+  "defaultOpen": false,
+  "pages": [
+    "issues",
+    "issue-resolution",
+    "error-monitoring",
+    "components",
+    "business-units"
+  ]
+}

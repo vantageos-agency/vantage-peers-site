@@ -1,0 +1,115 @@
+---
+title: Protocole de résolution d'issues
+description: Résolution automatisée en 12 étapes avec intégration webhook GitHub et modèles de missions.
+---
+
+# Protocole de résolution d'issues
+
+Quand une issue GitHub est ouverte sur un dépôt mappé, VantagePeers crée automatiquement une mission avec 12 tâches suivant le Protocole de Résolution d'Issues (IRP). L'orchestrateur assigné exécute chaque étape, avec des commentaires de progression postés automatiquement sur GitHub.
+
+## Fonctionnement
+
+```
+Issue GitHub ouverte
+       |
+       v
+Le webhook reçoit l'événement
+       |
+       v
+Auto-commentaire : "Investigating - assigned to {orchestrator}"
+       |
+       v
+Mission créée avec 12 tâches (depuis le modèle)
+       |
+       v
+L'orchestrateur exécute les étapes T1-T12
+       |
+       v
+Auto-commentaires aux étapes T6, T8, T11
+       |
+       v
+Issue fermée avec le correctif déployé
+```
+
+## Les 12 étapes
+
+| Étape | Titre | Description | Auto-commentaire |
+|-------|-------|-------------|------------------|
+| T1 | Acknowledge | Commentaire GitHub auto-posté | « Investigating - assigned to `{orchestrator}` » |
+| T2 | KB Search | Rechercher les patterns de fix et épisodes similaires | |
+| T3 | Identify Tests | Trouver les suites de tests liées au composant | |
+| T4 | Run Existing Tests | Exécuter les tests, documenter PASS/FAIL | |
+| T5 | Evaluate Coverage | Les tests couvrent-ils le bug ? | |
+| T6 | Write Missing Tests | Écrire un test qui reproduit le bug | « Bug reproduced in test suite » |
+| T7 | Fix | Déléguer le correctif à un agent spécialiste | |
+| T8 | Run ALL Tests | Suite complète, 0 régression | « Fix ready. All tests pass » |
+| T9 | Code Review | Revue du diff | |
+| T10 | Deploy Dev + Push | Déployer en dev, pousser la branche | |
+| T11 | Verification Preview | Tester sur la preview, confirmation humaine | « Fixed and deployed to production » |
+| T12 | Update KB | Stocker le pattern de fix dans VantagePeers | |
+
+## Auto-commentaires GitHub
+
+VantagePeers poste 4 commentaires sur l'issue GitHub automatiquement :
+
+1. **À l'ouverture** : « Investigating - assigned to `{orchestrator}` »
+2. **Après T6** : « Bug reproduced in test suite. Root cause identified. »
+3. **Après T8** : « Fix ready. All tests pass including new regression test. »
+4. **Après T11** : « Fixed and deployed to production. Regression test added. »
+
+## Personnaliser le modèle
+
+Le modèle IRP est stocké dans la table `missionTemplates` et peut être modifié via les outils MCP :
+
+### Voir le modèle actuel
+
+```json
+// get_mission_template
+{ "name": "issue-resolution-v2" }
+```
+
+### Mettre à jour les étapes
+
+```json
+// update_mission_template
+{
+  "name": "issue-resolution-v2",
+  "steps": [
+    { "title": "Acknowledge", "description": "Auto-posted GitHub comment" },
+    { "title": "KB Search", "description": "Search fixPatterns for similar issues" }
+  ],
+  "createdBy": "sigma"
+}
+```
+
+Vous pouvez ajouter, supprimer ou réordonner les étapes. Les modifications prennent effet à la prochaine issue ouverte.
+
+## Configuration du webhook GitHub
+
+### 1. Configurer le webhook sur GitHub
+
+Dans les paramètres de votre dépôt, ajoutez un webhook :
+- **URL** : `https://your-deployment.convex.site/github/webhook`
+- **Content type** : `application/json`
+- **Événements** : Issues, Issue comments
+- **Secret** : Doit correspondre à votre variable d'environnement `GITHUB_WEBHOOK_SECRET`
+
+### 2. Mapper le dépôt à un orchestrateur
+
+```json
+// add_repo_mapping
+{
+  "repo": "your-org/your-repo",
+  "orchestrator": "omega",
+  "project": "your-project"
+}
+```
+
+### 3. Définir les variables d'environnement
+
+```bash
+npx convex env set GITHUB_TOKEN=ghp_your_token
+npx convex env set GITHUB_WEBHOOK_SECRET=your_secret
+```
+
+Le `GITHUB_TOKEN` nécessite le scope `repo` pour poster des commentaires. Le secret du webhook valide les requêtes entrantes.

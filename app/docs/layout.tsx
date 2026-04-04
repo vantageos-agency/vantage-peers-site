@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 					}}
 				>
 					<DocsLayout
-						tree={source.pageTree}
+						tree={source.getPageTree('en')}
 						nav={{
 							title: "VantagePeers Docs",
 							children: (
