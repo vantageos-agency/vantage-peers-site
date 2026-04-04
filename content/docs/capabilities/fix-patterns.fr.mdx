@@ -1,0 +1,142 @@
+---
+title: Base de connaissances Fix Patterns
+description: Base de connaissances des bugs, causes racines, tentatives de correction et correctifs validés avec recherche sémantique.
+---
+
+# Base de connaissances Fix Patterns
+
+La base de connaissances Fix Patterns documente les bugs, leurs causes racines, ce qui a été essayé (y compris les échecs) et ce qui a finalement résolu le problème. Les agents la consultent **avant** toute tentative de correction pour éviter de répéter les erreurs passées.
+
+## Fonctionnement
+
+```
+L'agent rencontre un bug
+        │
+        ▼
+search_fix_patterns("message d'erreur ou symptôme")
+        │
+        ▼
+  Correspondance trouvée ? ──Oui──▶ Appliquer le correctif validé
+        │
+       Non
+        ▼
+  Corriger le bug manuellement
+        │
+        ▼
+create_fix_pattern + add_fix_attempt
+```
+
+## Schéma
+
+### fixPatterns
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `symptom` | string | À quoi ressemble le bug (recherchable via RAG) |
+| `rootCause` | string | Pourquoi le bug se produit |
+| `validatedFix` | string? | Le correctif qui a fonctionné |
+| `files` | string[]? | Fichiers impliqués |
+| `tags` | string[] | Catégories comme `react-hydration`, `credit-system` |
+| `stack` | string[] | Stack technique comme `next.js`, `convex`, `clerk` |
+| `sourceProject` | string | Dans quel projet cela a été découvert |
+| `linkedIssueIds` | string[]? | IDs d'issues VantagePeers liées |
+| `severity` | `critical` \| `major` \| `minor` | Niveau d'impact |
+
+### fixAttempts
+
+Les tentatives de correction sont stockées dans une table séparée (selon les recommandations Convex pour les tableaux non bornés) :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `patternId` | Id | Référence au fixPattern parent |
+| `description` | string | Ce qui a été essayé |
+| `commit` | string? | Hash du commit Git |
+| `worked` | boolean | Si cette tentative a résolu le problème |
+| `why` | string | Pourquoi ça a fonctionné ou non |
+
+## Outils MCP
+
+### search_fix_patterns
+
+L'outil le plus important. Utilisez-le **avant de corriger tout bug**.
+
+```json
+{
+  "query": "message disappears after sending in chat",
+  "limit": 5
+}
+```
+
+Retourne les patterns classés par similarité sémantique avec des scores.
+
+### create_fix_pattern
+
+Créer un nouveau pattern quand vous découvrez un bug :
+
+```json
+{
+  "symptom": "Credits not deducted after video generation",
+  "rootCause": "Race condition in credit validation mutation",
+  "tags": ["credit-system", "race-condition"],
+  "stack": ["convex"],
+  "sourceProject": "myreeldream",
+  "createdBy": "omega",
+  "severity": "critical"
+}
+```
+
+### add_fix_attempt
+
+Documenter ce que vous avez essayé :
+
+```json
+{
+  "patternId": "pattern-id-here",
+  "description": "Added optimistic locking to credit mutation",
+  "worked": true,
+  "why": "Prevents concurrent mutations from reading stale credit balance",
+  "createdBy": "omega",
+  "commit": "abc1234"
+}
+```
+
+Si `worked` est `true` et que le pattern n'a pas de `validatedFix`, il est auto-défini.
+
+### validate_fix
+
+Définir explicitement le correctif validé :
+
+```json
+{
+  "patternId": "pattern-id-here",
+  "validatedFix": "Use optimistic locking in credit mutation with retry on conflict"
+}
+```
+
+### list_fix_patterns
+
+Lister les patterns par projet :
+
+```json
+{
+  "project": "myreeldream",
+  "limit": 20
+}
+```
+
+### link_issue_to_pattern
+
+Connecter une issue GitHub à un fix pattern :
+
+```json
+{
+  "patternId": "pattern-id-here",
+  "issueId": "myreeldream-ai/MyShortReel-beta#282"
+}
+```
+
+## Apprentissage inter-projets
+
+Les fix patterns ne sont **pas limités à un seul projet**. Un pattern de bug découvert dans un projet est recherchable depuis n'importe quel autre. Le champ `sourceProject` indique où il a été trouvé, mais `search_fix_patterns` cherche dans tous les projets par défaut.
+
+Cela signifie : corrigez un bug une fois, ne le corrigez plus jamais — même dans une base de code différente.

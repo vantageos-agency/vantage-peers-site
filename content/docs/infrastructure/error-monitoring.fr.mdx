@@ -1,0 +1,73 @@
+---
+title: Monitoring d'erreurs
+description: Détection proactive d'erreurs sur les déploiements Convex avec création automatique d'issues GitHub.
+---
+
+# Monitoring d'erreurs
+
+VantagePeers surveille proactivement vos déploiements Convex pour détecter les erreurs. Quand une erreur est détectée, une issue GitHub est automatiquement créée et le Protocole de Résolution d'Issues prend le relais.
+
+## Fonctionnement
+
+Un cron job s'exécute toutes les 5 minutes, interrogeant les logs d'erreurs de chaque déploiement surveillé via l'API REST Convex. Les nouvelles erreurs sont dédupliquées par nom de fonction + message d'erreur, et les erreurs uniques déclenchent la création automatique d'issues GitHub.
+
+```
+Cron (toutes les 5 min)
+       |
+       v
+Interroger les logs d'erreurs de chaque déploiement
+       |
+       v
+Nouvelle erreur détectée ? ──Non──> Ignorer (dédup par hash)
+       |
+      Oui
+       v
+Créer une issue GitHub avec la stack trace
+       |
+       v
+Le webhook IRP se déclenche (auto-commentaire + mission 12 tâches)
+```
+
+## Ajouter un déploiement
+
+Enregistrez un déploiement à surveiller via MCP :
+
+```json
+// add_deployment
+{
+  "name": "myreeldream",
+  "deploymentUrl": "https://calm-gerbil-63.convex.cloud",
+  "deployKeyEnvVar": "DEPLOY_KEY_MYREELDREAM",
+  "githubRepo": "myreeldream-ai/MyShortReel-beta",
+  "orchestrator": "omega"
+}
+```
+
+Puis définissez la clé de déploiement comme variable d'environnement Convex :
+
+```bash
+npx convex env set DEPLOY_KEY_MYREELDREAM=your-admin-deploy-key
+```
+
+## Déduplication
+
+Les erreurs sont dédupliquées à l'aide d'un hash de `functionName + errorMessage`. Si la même erreur est revue dans un enregistrement existant, le compteur et le timestamp `lastSeen` sont mis à jour sans créer d'issue en double.
+
+## Outils MCP
+
+| Outil | Description |
+|-------|-------------|
+| `add_deployment` | Enregistrer un déploiement Convex à surveiller |
+| `remove_deployment` | Arrêter la surveillance d'un déploiement |
+| `list_errors` | Lister les erreurs détectées, filtrage optionnel par déploiement |
+| `get_error` | Obtenir les détails complets d'une erreur incluant la stack trace |
+
+## Intégration avec l'IRP
+
+Quand le moniteur d'erreurs crée une issue GitHub, le pipeline webhook existant gère la suite :
+
+1. Issue créée avec le préfixe `[Auto]` et les labels `bug` + `auto-detected`
+2. Le webhook déclenche l'IRP : auto-commentaire + mission 12 tâches
+3. L'orchestrateur assigné reçoit la mission et commence la résolution
+
+Cela signifie que les erreurs sont détectées et assignées avant que les utilisateurs ne les signalent.

@@ -4,12 +4,13 @@ import { notFound } from 'next/navigation';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { Metadata } from 'next';
 import { MarkdownCopyButton, ViewOptionsPopover } from '@/components/ai/page-actions';
+import { i18n } from '@/lib/i18n';
 
 export default async function Page(props: {
-  params: Promise<{ slug?: string[] }>;
+  params: Promise<{ lang: string; slug?: string[] }>;
 }) {
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const page = source.getPage(params.slug, params.lang);
   if (!page) notFound();
 
   const MDX = page.data.body;
@@ -22,7 +23,7 @@ export default async function Page(props: {
           <MarkdownCopyButton markdownUrl={markdownUrl} />
           <ViewOptionsPopover
             markdownUrl={markdownUrl}
-            githubUrl={`https://github.com/elpiarthera/vantage-peers-site/blob/main/content/docs/${(params.slug ?? []).join('/')}.mdx`}
+            githubUrl={`https://github.com/elpiarthera/vantage-peers-site/tree/main/content/docs`}
           />
         </div>
         <DocsTitle>{page.data.title}</DocsTitle>
@@ -35,15 +36,15 @@ export default async function Page(props: {
   );
 }
 
-export async function generateStaticParams() {
-  return source.generateParams();
+export function generateStaticParams() {
+  return source.generateParams('slug', 'lang');
 }
 
 export async function generateMetadata(props: {
-  params: Promise<{ slug?: string[] }>;
+  params: Promise<{ lang: string; slug?: string[] }>;
 }): Promise<Metadata> {
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const page = source.getPage(params.slug, params.lang);
   if (!page) notFound();
 
   return {

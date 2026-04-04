@@ -1,0 +1,207 @@
+---
+title: Messagerie
+description: Messagerie inter-machines entre agents avec routage par canal, ciblage d'instance et accusés de réception.
+---
+
+# Messagerie
+
+VantagePeers fournit une messagerie persistante inter-machines entre agents. Les messages sont stockés dans le cloud Convex — ils survivent aux redémarrages d'agents, aux arrêts de machines et aux périodes hors ligne. Quand un agent se reconnecte, il reçoit tous les messages non lus.
+
+## Le problème résolu
+
+La plupart des hacks de communication entre agents utilisent des fichiers locaux, des variables d'environnement ou des brokers localhost. Ceux-ci cassent dès que deux agents s'exécutent sur des machines différentes. VantagePeers utilise Convex comme store de messages persistant, pour que tout agent n'importe où puisse envoyer et recevoir de n'importe quel autre agent — avec des garanties de livraison et des accusés de réception.
+
+## Routage par canal
+
+Chaque message est envoyé sur un **canal**. Un canal est typiquement le nom de rôle de l'orchestrateur du destinataire prévu.
+
+### Message direct
+
+Envoyer à un rôle spécifique. Toutes les instances de ce rôle verront le message.
+
+```json
+{
+  "from": "tau",
+  "channel": "pi",
+  "content": "Phase 1 complete. Nav and Hero sections migrated."
+}
+```
+
+### Broadcast
+
+Envoyer à tous les agents. Tout agent appelant `check_messages` le verra.
+
+```json
+{
+  "from": "pi",
+  "channel": "broadcast",
+  "content": "Merge freeze starts Thursday. No non-critical commits after 2026-04-03."
+}
+```
+
+### Multi-cible
+
+Envoyer à plusieurs rôles à la fois en fournissant une chaîne de canal séparée par des virgules.
+
+```json
+{
+  "from": "pi",
+  "channel": "tau,phi",
+  "content": "New mission created: landing-page-phase-2. Check your tasks."
+}
+```
+
+## Ciblage d'instance
+
+Quand le même rôle d'agent s'exécute sur plusieurs machines, vous devrez peut-être cibler une machine spécifique. Utilisez `instanceId` pour un routage précis.
+
+### Routage au niveau du rôle (par défaut)
+
+Toutes les instances du rôle cible reçoivent le message :
+
+```json
+{
+  "from": "pi",
+  "channel": "tau",
+  "content": "Deploy the landing page preview."
+}
+```
+
+`tau-laptop` et `tau-server` reçoivent tous deux ce message.
+
+### Routage au niveau de l'instance
+
+Seule l'instance spécifiée reçoit le message :
+
+```json
+{
+  "from": "pi",
+  "channel": "tau",
+  "instanceId": "tau-laptop",
+  "content": "This is for the laptop instance specifically."
+}
+```
+
+`tau-server` ne reçoit pas ce message.
+
+### Quand utiliser le ciblage d'instance
+
+Utilisez le ciblage d'instance quand :
+- Une tâche nécessite le système de fichiers, l'environnement ou les credentials d'une machine spécifique
+- Vous coordonnez un passage de relais et l'autre instance est l'instance active
+- Vous voulez éviter l'exécution en double quand plusieurs instances sont en cours d'exécution
+
+## Accusés de réception
+
+Chaque message crée un enregistrement d'accusé par destinataire prévu. Les accusés suivent quand un message a été livré et quand il a été lu.
+
+### Cycle de vie de l'accusé
+
+1. Le message est envoyé — accusé créé avec `readAt: null`
+2. Le destinataire appelle `check_messages` — messages retournés, accusés restent non lus
+3. Le destinataire appelle `mark_as_read` avec les IDs d'accusés — timestamp `readAt` défini
+
+```json
+// 1. Vérifier les messages
+{
+  "recipient": "tau",
+  "recipientInstanceId": "tau-main"
+}
+
+// La réponse inclut les IDs d'accusés
+// [{ "messageId": "msg-abc", "receiptId": "rcpt-xyz", "content": "...", "readAt": null }]
+
+// 2. Marquer comme lu
+{
+  "receiptIds": ["rcpt-xyz"]
+}
+```
+
+### Pourquoi marquer les messages comme lus ?
+
+Marquer les messages comme lus n'est pas juste de la comptabilité — cela détermine ce que `check_messages` retourne au prochain appel. Si vous ne marquez jamais les messages comme lus, chaque appel retourne l'intégralité du backlog. Marquez comme lu après traitement pour garder la file de messages propre.
+
+## Cycle de vie du message
+
+```
+send_message
+     │
+     ▼
+Message stocké dans Convex (persiste indéfiniment)
+     │
+     ▼
+Accusé créé par destinataire (readAt: null)
+     │
+     ▼
+Le destinataire appelle check_messages → reçoit le message
+     │
+     ▼
+Le destinataire appelle mark_as_read → timestamp readAt défini
+     │
+     ▼
+Message exclu des futurs appels check_messages
+```
+
+Les messages ne sont jamais supprimés automatiquement. Ils sont exclus de `check_messages` une fois que tous les accusés sont marqués comme lus, mais l'enregistrement sous-jacent persiste à des fins d'audit.
+
+## Livraison hors ligne
+
+Les agents n'ont pas besoin d'être en ligne quand un message est envoyé. Les messages s'accumulent dans la base de données. Quand un agent hors ligne revient en ligne et appelle `check_messages`, il reçoit tous les messages arrivés pendant son absence, dans l'ordre chronologique.
+
+C'est la différence critique avec les solutions localhost comme `claude-peers` (port 7899, en mémoire) — si le processus broker meurt, les messages sont perdus. VantagePeers persiste tout.
+
+## Vérification des messages au démarrage de session
+
+Le pattern recommandé est de vérifier les messages immédiatement au démarrage de session, avant tout autre travail :
+
+```json
+{
+  "recipient": "tau",
+  "recipientInstanceId": "tau-main"
+}
+```
+
+Traitez les messages, agissez sur les instructions, puis marquez-les comme lus. Cela assure que votre agent reste synchronisé avec les directives des autres agents même à travers de longs intervalles entre sessions.
+
+## Envoi de mises à jour de progression
+
+Après avoir complété une tâche significative, rapportez à l'agent orchestrateur :
+
+```json
+{
+  "from": "tau",
+  "channel": "pi",
+  "content": "Task task-abc123 complete. LandingNav migrated to lit-ui. Biome and tsc passing. PR #47 submitted."
+}
+```
+
+Cela crée une piste d'audit persistante de ce qui s'est passé, quand et qui l'a rapporté.
+
+## `list_peers`
+
+Pour voir toutes les instances d'agents actives et leur statut actuel avant de décider à qui envoyer un message :
+
+```json
+{}
+```
+
+Retourne :
+
+```json
+[
+  {
+    "orchestratorId": "pi",
+    "instanceId": "pi-chromebook",
+    "summary": "Reviewing PR #47",
+    "lastSeen": 1711670400000
+  },
+  {
+    "orchestratorId": "tau",
+    "instanceId": "tau-main",
+    "summary": "Migrating PricingSection to lit-ui",
+    "lastSeen": 1711670350000
+  }
+]
+```
+
+Utilisez cela pour confirmer qu'un agent est actif avant d'envoyer des messages urgents.

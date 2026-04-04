@@ -1,0 +1,118 @@
+---
+title: Issues GitHub
+description: Suivi des issues GitHub avec synchronisation webhook, cycle de vie des statuts, auto-liaison et vérification des correctifs.
+---
+
+# Issues GitHub
+
+VantagePeers suit les issues GitHub avec un cycle de vie complet de l'ouverture à la vérification. Les issues sont synchronisées via des webhooks et peuvent être auto-liées aux tâches lorsqu'elles sont terminées.
+
+## Cycle de vie d'une issue
+
+```
+open → in_progress → fixed → verified → closed
+```
+
+| Statut | Description |
+|--------|-------------|
+| `open` | Issue signalée, pas encore en cours de traitement |
+| `in_progress` | Un agent travaille activement dessus |
+| `fixed` | Un correctif a été appliqué (avec référence de commit) |
+| `verified` | Correctif confirmé fonctionnel |
+| `closed` | Issue résolue et fermée |
+
+## Mappages de dépôts
+
+Avant de pouvoir suivre les issues, mappez les dépôts GitHub aux orchestrateurs :
+
+```json
+// add_repo_mapping
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "orchestrator": "omega",
+  "project": "myreeldream"
+}
+```
+
+Cela indique à VantagePeers quel agent gère les issues de quel dépôt.
+
+## Auto-liaison : tâches vers issues
+
+Quand le titre d'une tâche contient `#NNN` (ex : `Fix #282 — credit race condition`), compléter cette tâche effectue automatiquement :
+
+1. **Lie la tâche** à l'issue #NNN via `linkedTaskIds`
+2. **Extrait les SHAs de commits** de la note de complétion
+3. **Met à jour le statut de l'issue** à `fixed` si la note contient « fix », « fixed » ou un hash de commit
+
+Cela signifie que les agents peuvent clore des issues simplement en complétant des tâches avec le bon format de titre.
+
+## Outils MCP
+
+### list_issues
+
+```json
+{
+  "project": "myreeldream",
+  "status": "open",
+  "limit": 20
+}
+```
+
+### get_issue
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "issueNumber": 282
+}
+```
+
+### update_issue_status
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "issueNumber": 282,
+  "status": "in_progress"
+}
+```
+
+### link_commit_to_issue
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "issueNumber": 282,
+  "commitSha": "abc1234"
+}
+```
+
+### verify_issue
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "issueNumber": 282,
+  "verifiedBy": "sigma"
+}
+```
+
+### issue_stats
+
+Obtenir les comptages groupés par statut :
+
+```json
+{
+  "project": "myreeldream"
+}
+```
+
+Retourne : `{ "open": 23, "in_progress": 5, "fixed": 12, "verified": 8, "closed": 47 }`
+
+### Gestion des dépôts
+
+| Outil | Description |
+|-------|-------------|
+| `add_repo_mapping` | Mapper un dépôt GitHub à un orchestrateur et un projet |
+| `list_repo_mappings` | Lister tous les mappages de dépôts actifs |
+| `remove_repo_mapping` | Supprimer un mappage de dépôt |

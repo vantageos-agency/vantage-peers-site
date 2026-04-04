@@ -1,0 +1,147 @@
+---
+title: Démarrage
+description: Déployez VantagePeers et connectez votre premier agent en moins de 10 minutes.
+---
+
+# Démarrage
+
+VantagePeers se déploie en quatre étapes : cloner, installer, déployer, configurer. Aucune infrastructure à gérer au-delà d'un compte Convex.
+
+## Prérequis
+
+Avant de commencer, vous avez besoin de :
+
+- **Node.js 18+** — pour exécuter le CLI Convex
+- **Un compte Convex** — tier gratuit sur [convex.dev](https://convex.dev). Pas de carte bancaire requise.
+- **Claude Code** — le client MCP principal pour lequel VantagePeers est conçu
+- **Une clé API OpenAI** — utilisée exclusivement pour générer les embeddings vectoriels (`text-embedding-3-small`). Coût d'environ 0,02 $ par 1M de tokens.
+
+## Installation
+
+### Étape 1 : Cloner le dépôt
+
+```bash
+git clone https://github.com/elpiarthera/vantage-peers.git
+cd vantage-peers
+npm install
+```
+
+### Étape 2 : Configurer les variables d'environnement
+
+Copiez le fichier d'environnement exemple et remplissez vos valeurs :
+
+```bash
+cp .env.example .env.local
+```
+
+Ouvrez `.env.local` et définissez :
+
+```bash
+# Votre URL de déploiement Convex (assignée après le deploy)
+CONVEX_URL=https://your-deployment.convex.cloud
+
+# Clé API OpenAI pour les embeddings vectoriels
+OPENAI_API_KEY=sk-...
+```
+
+### Étape 3 : Déployer sur Convex
+
+```bash
+npx convex deploy
+```
+
+Cela déploie les 19 tables de base de données, les fonctions serverless et les index vectoriels sur votre compte Convex. Convex affichera votre URL de déploiement — copiez-la.
+
+### Étape 4 : Configurer le serveur MCP
+
+Ajoutez VantagePeers à votre configuration MCP Claude Code. Ouvrez `~/.claude.json` (global) ou le fichier `.claude/settings.json` de votre projet et ajoutez :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "node",
+      "args": ["/path/to/vantage-peers/mcp-server/index.js"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud",
+        "OPENAI_API_KEY": "sk-..."
+      }
+    }
+  }
+}
+```
+
+Redémarrez Claude Code. Les outils VantagePeers apparaîtront dans la liste des outils.
+
+## Démarrage rapide
+
+Une fois connecté, vérifiez que tout fonctionne en exécutant ces deux opérations depuis Claude Code.
+
+### Stocker votre première mémoire
+
+Appelez `store_memory` avec :
+
+```json
+{
+  "namespace": "global",
+  "type": "project",
+  "content": "VantagePeers is now connected and operational.",
+  "createdBy": "my-agent"
+}
+```
+
+Vous devriez recevoir un ID de mémoire en réponse.
+
+### La rappeler
+
+Appelez `recall` avec :
+
+```json
+{
+  "query": "VantagePeers connected",
+  "namespace": "global",
+  "limit": 5
+}
+```
+
+Vous devriez voir la mémoire que vous venez de stocker apparaître comme premier résultat.
+
+### Envoyer votre premier message
+
+Appelez `send_message` avec :
+
+```json
+{
+  "from": "my-agent",
+  "channel": "broadcast",
+  "content": "Agent online and ready."
+}
+```
+
+### Vérifier les messages
+
+Appelez `check_messages` avec :
+
+```json
+{
+  "recipient": "my-agent"
+}
+```
+
+Vous devriez voir le message listé avec son ID de réception et son statut de lecture.
+
+## Vérification
+
+Pour confirmer que votre déploiement est sain, consultez le tableau de bord Convex sur [dashboard.convex.dev](https://dashboard.convex.dev). Vous devriez voir :
+
+- 19 tables dans la section Data : `memories`, `messages`, `messageReceipts`, `tasks`, `missions`, `recurringTasks`, `profiles`, `diary`, `briefingNotes`, `components`, `fixPatterns`, `fixAttempts`, `issues`, `mandates`, `businessUnits`, `missionTemplates`, `githubRepoMapping`, `monitoredDeployments`, `errorLogs`
+- Vos appels de fonctions récents dans la section Functions
+- Les index vectoriels actifs sur la table `memories`
+
+Si une table manque, relancez `npx convex deploy` pour appliquer le schéma complet.
+
+## Étapes suivantes
+
+- Lisez [Architecture](/docs/core-concepts/architecture) pour comprendre comment les orchestrateurs, instances et namespaces fonctionnent
+- Lisez [Mémoire](/docs/capabilities/memory) pour apprendre à organiser les connaissances entre agents
+- Lisez [Tâches](/docs/capabilities/tasks) pour mettre en place la coordination des tâches entre agents

@@ -1,0 +1,12 @@
+{
+  "title": "Capabilities",
+  "defaultOpen": true,
+  "pages": [
+    "memory",
+    "messaging",
+    "tasks",
+    "fix-patterns",
+    "recurring-tasks",
+    "mandates"
+  ]
+}

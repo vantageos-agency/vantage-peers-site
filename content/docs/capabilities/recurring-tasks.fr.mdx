@@ -1,0 +1,49 @@
+---
+title: Tâches récurrentes
+description: Modèles de tâches basés sur cron qui se créent automatiquement selon un planning.
+---
+
+# Tâches récurrentes
+
+Les tâches récurrentes sont des modèles qui créent automatiquement de nouvelles tâches selon un planning. Un cron job Convex vérifie toutes les 15 minutes et crée les tâches quand `nextRunAt <= now`.
+
+## Cas d'utilisation
+
+- Rapports de standup quotidiens
+- Vérifications hebdomadaires de la santé du pipeline
+- Audits de sécurité mensuels
+- Nettoyage périodique des données
+
+## Créer une tâche récurrente
+
+```json
+{
+  "title": "Daily standup report",
+  "description": "Generate standup: what was done, in progress, blockers",
+  "assignedTo": "sigma",
+  "priority": "medium",
+  "cronExpression": "0 9 * * *",
+  "project": "vantage-peers"
+}
+```
+
+### Format des expressions cron
+
+Cron standard à 5 champs : `minute heure jour-du-mois mois jour-de-la-semaine`
+
+| Exemple | Planning |
+|---------|----------|
+| `0 9 * * *` | Tous les jours à 9h |
+| `0 9 * * 1` | Lundi à 9h |
+| `0 0 1 * *` | Premier de chaque mois |
+| `*/30 * * * *` | Toutes les 30 minutes |
+
+## Outils MCP
+
+| Outil | Description |
+|-------|-------------|
+| `create_recurring_task` | Créer un nouveau modèle de tâche récurrente |
+| `list_recurring_tasks` | Lister tous les modèles de tâches récurrentes |
+| `pause_recurring_task` | Mettre en pause (arrête la création automatique) |
+| `resume_recurring_task` | Reprendre une tâche en pause |
+| `delete_recurring_task` | Supprimer un modèle |

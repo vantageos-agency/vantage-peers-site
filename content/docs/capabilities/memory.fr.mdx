@@ -1,0 +1,189 @@
+---
+title: Mémoire
+description: Mémoire sémantique avec embeddings vectoriels, namespaces, épisodes et relations de graphe de connaissances.
+---
+
+# Mémoire
+
+VantagePeers fournit un système de mémoire typé et namespacé avec recherche vectorielle sémantique. Les agents stockent les connaissances une seule fois et les rappellent par sens — pas par mot-clé exact — à travers les sessions et les machines.
+
+## Types de mémoire
+
+Chaque mémoire a un champ `type` qui déclare sa catégorie sémantique. Les types aident les agents à comprendre ce que représente une mémoire et à filtrer les rappels de manière appropriée.
+
+| Type | Objectif | Exemple |
+|------|----------|---------|
+| `user` | Faits sur le rôle, les préférences ou les connaissances d'une personne | « Laurent est un ingénieur senior. Préfère les réponses concises, pas de résumés en fin de message. » |
+| `feedback` | Orientations sur l'approche du travail — corrections et confirmations | « Ne jamais utiliser l'outil Write sur des fichiers existants sans les lire d'abord. A causé une perte de données. » |
+| `project` | Décisions d'architecture, choix techniques, changements de configuration | « La landing page utilise exclusivement les composants lit-ui. Pas d'imports shadcn/ui. » |
+| `reference` | Pointeurs vers des ressources externes et leur utilité | « Les bugs du pipeline sont suivis dans le projet Linear INGEST. » |
+| `episode` | Enregistrements structurés d'événements avec contexte/objectif/action/résultat | Voir la section Épisodes ci-dessous. |
+
+### Choisir le bon type
+
+Utilisez `feedback` pour toute orientation qui doit changer votre comportement dans le travail futur. Utilisez `project` pour les décisions qui expliquent *pourquoi* la base de code a cette forme. Utilisez `reference` pour les ressources externes qui nécessiteraient sinon de demander à l'utilisateur de les localiser. Utilisez `user` pour construire un profil de la personne avec qui vous travaillez.
+
+`episode` est différent des autres — il a son propre outil (`store_episode`) et un schéma structuré.
+
+## Namespaces
+
+Les namespaces délimitent les mémoires à un contexte. Un namespace est une chaîne de caractères. Utilisez des barres obliques pour la hiérarchie.
+
+### Conventions de nommage
+
+| Namespace | Quoi stocker |
+|-----------|--------------|
+| `global` | Connaissances inter-projets, conventions universelles, patterns d'outils |
+| `project/your-project-name` | Architecture spécifique au projet, décisions, configuration |
+| `orchestrator/name` | État spécifique à l'agent, préférences de rôle, contexte actif |
+
+Quand vous appelez `recall`, les résultats proviennent du namespace spécifié. Interroger `global` ne retourne pas les mémoires de `project/foo` — les namespaces sont isolés.
+
+### Stratégie de namespaces
+
+Pour une équipe d'agents multi-projets typique, vous pourriez avoir :
+
+```
+global                          ← leçons et patterns universels
+project/vantage-starter         ← contexte spécifique à VantageStarter
+project/vantage-peers           ← contexte spécifique à VantagePeers
+orchestrator/tau                ← état personnel de l'agent Tau
+orchestrator/pi                 ← état personnel de l'agent Pi
+```
+
+Les agents devraient écrire le contexte projet dans le namespace du projet et le rappeler avant de commencer à travailler sur ce projet.
+
+## Recherche vectorielle et rappel
+
+Chaque mémoire est encodée avec OpenAI `text-embedding-3-small` au moment de l'écriture. L'embedding est stocké aux côtés du contenu de la mémoire dans la table `memories`.
+
+Quand vous appelez `recall`, VantagePeers :
+
+1. Génère un embedding pour votre chaîne de requête
+2. Exécute une recherche par similarité vectorielle sur le namespace
+3. Applique des filtres optionnels par mots-clés (BM25)
+4. Retourne les `limit` meilleurs résultats classés par score combiné
+
+Cela signifie que vous pouvez rappeler des mémoires en utilisant des descriptions en langage naturel, pas seulement des phrases exactes. Une requête comme `"best practices for Convex mutations"` fera remonter des mémoires sur les patterns de mutations même si ces mots exacts n'apparaissent pas dans le contenu de la mémoire.
+
+### Appel recall
+
+```json
+{
+  "query": "how to handle auth in middleware",
+  "namespace": "project/vantage-starter",
+  "limit": 10
+}
+```
+
+Retourne les mémoires triées par pertinence. Chaque résultat inclut l'ID de la mémoire, le type, le contenu, le namespace et un score de similarité.
+
+### Bonnes pratiques pour le rappel
+
+- **Soyez spécifique dans vos requêtes.** « auth middleware Clerk route protection » donne de meilleurs résultats que « auth ».
+- **Utilisez le bon namespace.** Si vous connaissez le contexte, délimitez la requête. Les namespaces plus larges retournent des résultats plus bruités.
+- **Utilisez limit 3-5 pour les questions ciblées.** Utilisez limit 10-20 pour un chargement de contexte large au démarrage de session.
+
+## Épisodes
+
+Les épisodes sont des enregistrements structurés d'événements — l'équivalent d'une entrée de log structurée pour les choses significatives qui se sont produites pendant le travail d'un agent.
+
+### Schéma d'épisode
+
+```json
+{
+  "namespace": "orchestrator/tau",
+  "createdBy": "tau",
+  "context": "Deploying Convex schema changes",
+  "goal": "Add vector index to memories table",
+  "action": "Ran npx convex deploy after editing schema.ts",
+  "outcome": "Deploy failed — vector index requires embedding field to exist first",
+  "insight": "Vector indexes must be added in the same deploy as the embedding field. Order matters.",
+  "severity": "major"
+}
+```
+
+### Niveaux de sévérité
+
+| Sévérité | Quand l'utiliser |
+|----------|------------------|
+| `info` | Événements routiniers, patterns réussis qui méritent d'être enregistrés |
+| `minor` | Petits problèmes, facilement récupérables, faible impact |
+| `major` | Échecs significatifs, temps perdu, corrigible avec un insight |
+| `critical` | Risque de perte de données, incidents de production, bloqueurs |
+
+### Quand stocker des épisodes
+
+Stockez un épisode :
+- Après tout échec, pour que les futurs agents puissent l'éviter
+- Après avoir découvert un piège non évident (particularité de bibliothèque, comportement d'API, ordre de déploiement)
+- Après un pattern réussi qui n'était pas évident à l'avance
+
+Rappelez les épisodes avant de répéter une tâche où vous avez déjà échoué :
+
+```json
+{
+  "query": "Convex deploy schema vector index",
+  "namespace": "orchestrator/tau",
+  "limit": 5
+}
+```
+
+## Relations du graphe de mémoire
+
+Les mémoires peuvent être liées avec des relations typées pour construire un graphe de connaissances évolutif.
+
+### Types de relations
+
+| Relation | Signification |
+|----------|---------------|
+| `updates` | La nouvelle mémoire remplace l'ancienne. L'ancienne mémoire est auto-archivée. |
+| `extends` | La nouvelle mémoire ajoute du détail à une existante sans la remplacer. |
+| `derives` | La nouvelle mémoire a été inférée ou conclue à partir de la mémoire référencée. |
+
+### Utiliser les relations
+
+Lors du stockage d'une mémoire qui remplace des informations obsolètes :
+
+```json
+{
+  "namespace": "project/vantage-starter",
+  "type": "project",
+  "content": "Landing page now uses OKLCH tokens exclusively. All hex/HSL removed.",
+  "createdBy": "tau",
+  "relationType": "updates",
+  "relatedToId": "memory-old-color-convention-id"
+}
+```
+
+L'ancienne mémoire est archivée automatiquement — elle n'apparaîtra pas dans les résultats de rappel par défaut.
+
+### Pourquoi les relations sont importantes
+
+Sans relations, vous accumulez des mémoires contradictoires. Une mémoire feedback disant « utiliser shadcn » suivie d'une mémoire ultérieure disant « ne jamais utiliser shadcn » laisse les agents incertains sur ce qui est actuel. La relation `updates` résout cela : la mémoire ultérieure remplace explicitement la précédente, et la précédente est archivée.
+
+## Cycle de vie de la mémoire
+
+1. **Créée** — mémoire stockée avec embedding, apparaît dans les rappels
+2. **Active** — état par défaut, retournée dans toutes les requêtes
+3. **Archivée** — remplacée via la relation `updates`, exclue des rappels par défaut
+4. **Supprimée** — suppression définitive, uniquement pour les données véritablement incorrectes
+
+Les mémoires archivées ne sont pas supprimées — elles sont conservées pour la piste d'audit. Si vous avez besoin de voir l'historique complet incluant les mémoires archivées, passez `includeArchived: true` à recall.
+
+## Pattern de démarrage de session
+
+Le pattern recommandé pour charger le contexte au début d'une session :
+
+```json
+// 1. Charger les leçons globales
+{ "query": "conventions and patterns", "namespace": "global", "limit": 10 }
+
+// 2. Charger le contexte projet
+{ "query": "architecture decisions", "namespace": "project/vantage-starter", "limit": 10 }
+
+// 3. Charger l'état spécifique à l'agent
+{ "query": "current work and priorities", "namespace": "orchestrator/tau", "limit": 5 }
+```
+
+Cela donne à l'agent le contexte dont il a besoin sans nécessiter de briefing humain.

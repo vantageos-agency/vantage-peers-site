@@ -1,0 +1,51 @@
+---
+title: Registre de composants
+description: Sauvegarde et inventaire des agents, skills, hooks et plugins.
+---
+
+# Registre de composants
+
+Le registre de composants stocke une sauvegarde de tous les agents, skills, hooks et plugins. Chaque entrée inclut le contenu complet du fichier, afin que rien ne soit perdu si le système de fichiers est détruit.
+
+## Types de composants
+
+| Type | Description |
+|------|-------------|
+| `agent` | Définitions d'agents autonomes |
+| `skill` | Skills de commandes slash |
+| `hook` | Hooks événementiels |
+| `plugin` | Bundles de plugins |
+
+## Outils MCP
+
+### register_component
+
+```json
+{
+  "name": "dev-convex-expert",
+  "type": "agent",
+  "team": "development",
+  "content": "Contenu complet du fichier agent ici...",
+  "version": "1.0.0",
+  "project": "vantage-peers",
+  "createdBy": "sigma"
+}
+```
+
+### list_components
+
+```json
+{
+  "type": "agent",
+  "team": "development"
+}
+```
+
+### get_component
+
+```json
+{
+  "name": "dev-convex-expert",
+  "type": "agent"
+}
+```
