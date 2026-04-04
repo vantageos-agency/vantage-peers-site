@@ -8,6 +8,30 @@ export default function robots(): MetadataRoute.Robots {
 				allow: "/",
 				disallow: ["/api/", "/_next/", "/preview/"],
 			},
+			{
+				userAgent: "GPTBot",
+				allow: "/",
+			},
+			{
+				userAgent: "OAI-SearchBot",
+				allow: "/",
+			},
+			{
+				userAgent: "ChatGPT-User",
+				allow: "/",
+			},
+			{
+				userAgent: "ClaudeBot",
+				allow: "/",
+			},
+			{
+				userAgent: "PerplexityBot",
+				allow: "/",
+			},
+			{
+				userAgent: "Google-Extended",
+				allow: "/",
+			},
 		],
 		sitemap: "https://vantagepeers.com/sitemap.xml",
 	};
