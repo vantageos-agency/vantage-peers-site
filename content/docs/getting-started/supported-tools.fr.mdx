@@ -1,0 +1,130 @@
+---
+title: Outils compatibles
+description: VantagePeers fonctionne avec tout outil compatible MCP. Configurations pour 12 outils.
+---
+
+# Outils compatibles
+
+VantagePeers est un serveur MCP. Il fonctionne avec tout outil qui supporte le [Model Context Protocol](https://modelcontextprotocol.io). Aucun verrouillage fournisseur.
+
+## Support MCP complet
+
+Ces outils ont un support natif du client MCP — ajoutez VantagePeers comme serveur et les 70 outils sont immédiatement disponibles.
+
+### Claude Code
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Fichier de config : `~/.claude.json` ou `.claude/settings.json`
+
+### Cursor
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Fichier de config : `.cursor/mcp.json`
+
+### Codex (OpenAI)
+
+Fichier de config : `~/.codex/config.json`
+
+### Windsurf
+
+Fichier de config : `~/.codeium/windsurf/mcp_config.json`
+
+### Cline
+
+Fichier de config : Paramètres VS Code → Cline MCP Servers
+
+### Roo Code
+
+Fichier de config : Paramètres VS Code → Roo Code MCP Servers
+
+### OpenCode
+
+```toml
+[mcp.vantage-peers]
+command = "npx"
+args = ["-y", "vantage-peers-mcp"]
+
+[mcp.vantage-peers.env]
+CONVEX_URL = "https://your-deployment.convex.cloud"
+```
+
+Fichier de config : `opencode.toml`
+
+### Amazon Q Developer
+
+Fichier de config : `~/.aws/amazonq/mcp.json`
+
+### Augment Code
+
+Fichier de config : Paramètres VS Code → Augment MCP Servers
+
+### Void
+
+Fichier de config : Paramètres Void
+
+## Mode Agent uniquement
+
+Ces outils supportent MCP en mode agent mais pas en mode inline/chat.
+
+### Continue.dev
+
+```json
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["-y", "vantage-peers-mcp"],
+          "env": {
+            "CONVEX_URL": "https://your-deployment.convex.cloud"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+Fichier de config : `~/.continue/config.json`
+
+### GitHub Copilot
+
+Fichier de config : `.github/copilot-mcp.json` — nécessite le mode agent
+
+## Variable d'environnement
+
+Toutes les configurations nécessitent une seule variable d'environnement :
+
+| Variable | Valeur | Description |
+|----------|--------|-------------|
+| `CONVEX_URL` | `https://your-deployment.convex.cloud` | URL de votre déploiement Convex (depuis `npx convex deploy`) |
+
+Le serveur MCP la résout au démarrage. Aucune autre configuration n'est nécessaire — le serveur se connecte à votre backend Convex et expose automatiquement les 70 outils.
