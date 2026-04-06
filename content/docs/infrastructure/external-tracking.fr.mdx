@@ -1,0 +1,67 @@
+---
+title: Suivi d'issues externes
+description: Suivi des issues sur des dépôts tiers, monitoring de PRs et coordination des contributions open-source.
+---
+
+# Suivi d'issues externes
+
+VantagePeers suit les issues et PRs sur des dépôts GitHub externes. Cela permet des contributions open-source coordonnées — un orchestrateur (Zeta) corrige des bugs sur des projets tiers pendant que Pi surveille le statut des PRs.
+
+## Workflow
+
+```
+Pi identifie une issue sur un dépôt externe
+       |
+       v
+/track-external-issue {repo} {number}
+       |
+       v
+Issue créée dans VantagePeers (avec champs externes)
+       |
+       v
+Mission créée depuis le template repo-fix-v1 (10 tâches)
+       |
+       v
+Zeta reçoit la notification + commence à travailler
+       |
+       v
+Zeta soumet une PR → prStatus mis à jour
+       |
+       v
+Le cron PR Monitor vérifie toutes les heures → notifie Pi au merge/close
+```
+
+## Champs d'issue externe
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `externalRepo` | string | Dépôt tiers (ex : `get-convex/better-auth`) |
+| `externalIssueNumber` | number | Numéro d'issue sur le dépôt externe |
+| `externalIssueUrl` | string | URL complète de l'issue |
+| `prUrl` | string | URL de la PR soumise |
+| `prStatus` | `draft` \| `open` \| `merged` \| `closed` | État actuel de la PR |
+| `forkRepo` | string | Notre fork (ex : `elpiarthera/better-auth`) |
+
+## Cron PR Monitor
+
+Un cron s'exécute toutes les heures et vérifie toutes les issues externes avec `prStatus = open` ou `draft`. Pour chacune :
+
+1. Récupère l'état de la PR depuis l'API GitHub
+2. Si mergée → met à jour `prStatus` en `merged`, notifie Pi
+3. Si fermée sans merge → met à jour en `closed`, notifie Pi
+
+Aucune vérification manuelle nécessaire — Pi reçoit un message quand une PR change d'état.
+
+## Outils MCP
+
+| Outil | Description |
+|-------|-------------|
+| `createExternal` | Créer une issue externe dans VantagePeers |
+| `updatePrStatus` | Mettre à jour l'URL et le statut de la PR |
+| `listExternalOpen` | Lister toutes les issues externes avec des PRs ouvertes |
+
+## Skill : /track-external-issue
+
+Usage : `/track-external-issue {owner/repo} {issue_number}`
+
+Le skill automatise le workflow complet : récupère l'issue depuis GitHub, la crée dans VantagePeers, crée une mission depuis le template repo-fix-v1 et notifie Zeta.

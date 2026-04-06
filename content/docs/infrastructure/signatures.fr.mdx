@@ -1,0 +1,66 @@
+---
+title: Signatures d'orchestrateur
+description: Branding automatisé sur les commits, PRs et commentaires GitHub pour l'équipe VantageOS.
+---
+
+# Signatures d'orchestrateur
+
+Chaque commit, PR et commentaire GitHub de l'équipe VantageOS inclut une signature standardisée. Cela est appliqué mécaniquement via des hooks git et des hooks Claude Code.
+
+## Format de signature
+
+```
+Orchestrator: Sigma — VantageOS Team Infra | 2026-04-06 14:32
+```
+
+| Composant | Description |
+|-----------|-------------|
+| `Orchestrator: {Nom}` | Nom de l'orchestrateur en majuscule |
+| `VantageOS Team {Rôle}` | Suffixe d'équipe selon le rôle |
+| `AAAA-MM-JJ HH:MM` | Date et heure du commit/action |
+
+## Rôles d'équipe
+
+| Orchestrateur | Suffixe d'équipe |
+|---------------|------------------|
+| Pi | VantageOS Team Lead |
+| Sigma | VantageOS Team Infra |
+| Omega | VantageOS Team Dev |
+| Tau | VantageOS Team Frontend |
+| Phi | VantageOS Team Product |
+| Zeta | VantageOS Team Dev |
+
+## Hook de commit
+
+Un hook git `commit-msg` automatiquement :
+
+1. Remplace `Co-Authored-By: Claude...` par la signature VantageOS
+2. Supprime les lignes `Generated with Claude Code` et l'emoji robot
+3. Détecte l'orchestrateur depuis le chemin du workspace
+
+Installé sur tous les dépôts via `scripts/install-commit-hook.sh`.
+
+## Hook de description PR
+
+Un hook PreToolUse sur `Bash` intercepte les commandes `gh pr create` et supprime le branding Claude Code du body de la PR avant l'envoi à GitHub.
+
+## Auto-commentaires GitHub
+
+Le webhook poste des commentaires signés sur les issues GitHub aux étapes clés de l'IRP :
+
+- **T1 (Acknowledge) :** « Investigating — assigned to `{orchestrator}` »
+- **T6 (Bug reproduit) :** « Bug reproduced in test suite »
+- **T8 (Fix prêt) :** « Fix ready. All tests pass »
+- **T11 (Déployé) :** « Fixed and deployed to production »
+
+Chaque commentaire se termine par la signature VantageOS.
+
+## Installation
+
+Le hook de commit est installé automatiquement lors du setup du workspace. Pour installer manuellement :
+
+```bash
+bash scripts/install-commit-hook.sh
+```
+
+Cela installe le hook sur tous les dépôts du VPS. Le hook détecte automatiquement l'orchestrateur depuis le chemin du workspace.

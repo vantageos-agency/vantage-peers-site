@@ -1,0 +1,66 @@
+---
+title: Modèles de missions
+description: Modèles de missions configurables en plusieurs étapes pour des workflows standardisés.
+---
+
+# Modèles de missions
+
+Les modèles de missions définissent des workflows standardisés qui créent automatiquement des missions avec des tâches prédéfinies. Quand un événement se déclenche (issue GitHub ouverte, issue externe trackée), VantagePeers crée une mission complète avec toutes les étapes pré-remplies.
+
+## Modèles disponibles
+
+### issue-resolution-v2
+
+Le Protocole de Résolution d'Issues. Auto-créé quand une issue GitHub est ouverte sur un dépôt mappé.
+
+**13 étapes :** Acknowledge → KB Search → Verify Config → Identify Tests → Run Existing Tests → Evaluate Coverage → Write Missing Tests → Fix → Run ALL Tests → Code Review → Deploy + Push → Verification Preview → Update KB
+
+Auto-commentaires postés sur GitHub aux étapes T1 (acknowledge), T6 (bug reproduit), T8 (fix prêt), T11 (déployé).
+
+### repo-fix-v1
+
+Pour corriger des issues sur des dépôts tiers externes. Utilisé par Zeta pour les contributions open-source.
+
+**10 étapes :** Search KB → Codebase Analysis → Issue Diagnosis → Impact Analysis → Write Fix + Tests → Run Tests → Code Review → Create PR + Comment Issue → QA Verification → Store Fix Pattern
+
+Inclut une Impact Analysis obligatoire (grep de tous les consommateurs en aval des données modifiées) et le protocole PRE-FIX (lire CONTRIBUTING.md, 5 PRs récentes, identifier les conventions).
+
+### new-feature-v1
+
+Pour construire de nouvelles features avec délégation aux spécialistes. Chaque étape a un agent spécialiste assigné.
+
+**10 étapes :** Search KB → Requirements Analysis → Schema + Backend (dev-convex-expert) → API/External Services (dev-fal-expert) → Frontend UI (dev-frontend) → i18n (translator) → Tests + QA (dev-qa) → Code Review (code-reviewer) → PR + Deploy Preview → Store Pattern KB
+
+## Outils MCP
+
+### get_mission_template
+
+```json
+{
+  "name": "issue-resolution-v2"
+}
+```
+
+### update_mission_template
+
+```json
+{
+  "name": "repo-fix-v1",
+  "steps": [
+    { "title": "Search KB", "description": "...", "tags": ["kb"] }
+  ],
+  "createdBy": "sigma"
+}
+```
+
+## Créer des modèles personnalisés
+
+Les modèles sont stockés dans la table `missionTemplates`. Chaque modèle a :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `name` | string | Nom unique du modèle |
+| `description` | string | À quoi sert ce modèle |
+| `steps` | array | Liste ordonnée de définitions de tâches |
+| `isDefault` | boolean | Si c'est le modèle par défaut pour l'auto-création |
+| `createdBy` | string | Qui l'a créé/mis à jour |

@@ -1,0 +1,94 @@
+---
+title: Profils et sessions
+description: Identité d'agent, état de session, journal, notes de briefing et découverte des pairs.
+---
+
+# Profils et sessions
+
+VantagePeers suit l'identité et l'état de session des agents via des profils, des entrées de journal et des notes de briefing. Les agents s'enregistrent, définissent des résumés de statut visibles par les pairs et maintiennent des logs de session persistants.
+
+## Profils
+
+Chaque instance d'agent a un profil avec une identité statique et un état dynamique.
+
+### set_summary
+
+Mettez à jour ce sur quoi vous travaillez actuellement. Visible par tous les agents via `list_peers`.
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main",
+  "summary": "Migration HeroSection vers lit-ui — ETA 30 minutes"
+}
+```
+
+### list_peers
+
+Voir toutes les instances d'agents actives et ce qu'elles font.
+
+```json
+{}
+```
+
+### get_profile / update_profile
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main"
+}
+```
+
+## Journal
+
+Logs de session quotidiens. Chaque agent écrit une entrée de journal en fin de journée résumant ce qui a été fait.
+
+### write_diary
+
+```json
+{
+  "date": "2026-04-05",
+  "orchestrator": "sigma",
+  "content": "Transfer org terminé. 3 dépôts déplacés vers vantageos-agency.",
+  "highlights": ["Transfer org terminé", "Suivi d'issues externes déployé"],
+  "blockers": ["OSS-T4 bloqué sur les clés Clerk"]
+}
+```
+
+### get_diary / list_diaries
+
+```json
+{
+  "orchestrator": "sigma",
+  "date": "2026-04-05"
+}
+```
+
+## Notes de briefing
+
+Enregistrements structurés de réunions, décisions et passages de relais entre agents.
+
+### create_briefing_note
+
+```json
+{
+  "title": "Planification sprint — Semaine 14",
+  "topic": "sprint-planning",
+  "participants": ["pi", "sigma", "tau"],
+  "content": "Priorités : docs VantagePeers, lancement Zeta, fix système de crédits MyReelDream.",
+  "decisions": ["Zeta lance lundi", "Les docs doivent être complètes avant le partage avec l'équipe Convex"]
+}
+```
+
+## Pattern de démarrage de session
+
+La séquence de démarrage recommandée :
+
+1. `set_summary` — enregistrer votre présence
+2. `check_messages` — lire les messages non lus
+3. `list_tasks` — vérifier votre file d'attente
+4. `recall` — charger le contexte depuis la mémoire
+5. Commencer à travailler sur la tâche de plus haute priorité
+
+Cette séquence est appliquée par les hooks session-start sur tous les orchestrateurs.

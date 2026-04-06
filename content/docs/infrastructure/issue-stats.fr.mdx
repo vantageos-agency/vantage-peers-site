@@ -1,0 +1,58 @@
+---
+title: Statistiques de résolution d'issues
+description: Calcul quotidien automatisé du MTTR avec comparaison avant/après l'ère VantageOS.
+---
+
+# Statistiques de résolution d'issues
+
+VantagePeers calcule les métriques de résolution d'issues quotidiennement via un cron job. Les statistiques alimentent la page de vente et suivent le temps moyen de résolution (MTTR) sur tous les dépôts surveillés.
+
+## Fonctionnement
+
+Un cron quotidien (6h UTC) récupère les issues depuis l'API GitHub pour chaque dépôt mappé, calcule le temps de première réponse et le temps de correction, et stocke les résultats dans la table `issueStats`.
+
+## Métriques clés
+
+| Métrique | Description |
+|----------|-------------|
+| `medianTimeToFirstResponse` | Minutes entre l'ouverture et le premier commentaire |
+| `medianTimeToFix` | Minutes entre l'ouverture et la fermeture |
+| `fastestResolution` | Correction la plus rapide (minutes) |
+| `slowestResolution` | Correction la plus lente (minutes) |
+| `avgTimeToFix` | Temps moyen de correction (minutes) |
+
+## Avant/Après l'ère VantageOS
+
+Les statistiques sont séparées à la date pivot (1er avril 2026) pour montrer l'impact de l'équipe VantageOS :
+
+```json
+{
+  "beforeVantageOS": {
+    "totalIssues": 19,
+    "resolvedIssues": 15,
+    "medianTimeToFix": 5792
+  },
+  "afterVantageOS": {
+    "totalIssues": 27,
+    "resolvedIssues": 25,
+    "medianTimeToFix": 28
+  }
+}
+```
+
+Avant : médiane 4 jours. Après : médiane 28 minutes. Amélioration de 207x.
+
+## Interroger les statistiques
+
+```json
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "limit": 7
+}
+```
+
+Retourne des instantanés quotidiens avec toutes les métriques. Utilisable pour les tableaux de bord, pages de vente ou monitoring interne.
+
+## Planning cron
+
+Le cron s'exécute tous les jours à 6h UTC. Il itère tous les mappages de dépôts actifs et calcule les statistiques pour chacun. Les résultats sont upsertés — une exécution manuelle met à jour l'entrée du même jour.

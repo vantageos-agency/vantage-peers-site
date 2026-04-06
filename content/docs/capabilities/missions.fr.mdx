@@ -1,0 +1,60 @@
+---
+title: Missions
+description: Regrouper les tâches en missions avec étapes de cycle de vie, assignation de pilote et automatisation par modèles.
+---
+
+# Missions
+
+Les missions regroupent des tâches liées et suivent la progression à travers des étapes de cycle de vie. Elles peuvent être créées manuellement ou auto-générées depuis des modèles quand des événements se produisent (issue GitHub ouverte, issue externe trackée).
+
+## Cycle de vie des missions
+
+| Étape | Description |
+|-------|-------------|
+| `brainstorm` | Idées en cours de collecte, scope pas encore défini |
+| `plan` | Tâches créées, dépendances mappées, pilote assigné |
+| `execute` | Travail actif en cours |
+| `validate` | Travail terminé, en revue et test |
+| `complete` | Mission terminée, toutes les tâches faites |
+
+## Créer une mission
+
+```json
+{
+  "title": "Fix #282 — credit race condition",
+  "project": "myreeldream",
+  "pilot": "omega",
+  "priority": "high",
+  "agents": ["omega"],
+  "status": "execute"
+}
+```
+
+Le `pilot` est l'orchestrateur principal responsable de mener la mission à terme.
+
+## Missions auto-créées
+
+Les missions sont auto-créées dans deux scénarios :
+
+1. **Issue GitHub ouverte** — le webhook crée une mission depuis le template `issue-resolution-v2` avec 13 tâches
+2. **Issue externe trackée** — `/track-external-issue` crée une mission depuis le template `repo-fix-v1` avec 10 tâches
+
+## Outils MCP
+
+| Outil | Description |
+|-------|-------------|
+| `create_mission` | Créer une mission avec pilote, projet, priorité |
+| `list_missions` | Lister les missions filtrées par projet, pilote ou statut |
+| `update_mission` | Mettre à jour les champs de mission |
+| `update_mission_status` | Avancer dans les étapes du cycle de vie |
+| `list_tasks_by_mission` | Obtenir toutes les tâches d'une mission |
+
+## Voir la progression d'une mission
+
+```json
+{
+  "missionId": "mission-abc123"
+}
+```
+
+Retourne la mission avec toutes les tâches liées et leurs statuts — une image complète du nombre terminées, en cours ou bloquées.
