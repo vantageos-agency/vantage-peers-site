@@ -44,20 +44,20 @@ export async function generateMetadata({
 		en: {
 			title: "VantagePeers \u2014 Shared Memory for Multi-Agent Claude Code",
 			description:
-				"Open source memory, messaging, and task management MCP server. 16 tables, 64 tools. Free, self-hosted on Convex.",
+				"Open source memory, messaging, and task management MCP server. 19 tables, 70 tools. Free, self-hosted on Convex.",
 			ogTitle: "VantagePeers \u2014 Shared Memory for Multi-Agent Claude Code",
 			ogDesc:
-				"Open source MCP server. 64 tools, 16 tables. Semantic memory, inter-agent messaging, task management. Free, self-hosted.",
+				"Open source MCP server. 70 tools, 19 tables. Semantic memory, inter-agent messaging, task management. Free, self-hosted.",
 		},
 		fr: {
 			title:
 				"VantagePeers \u2014 M\u00e9moire partag\u00e9e pour agents Claude Code",
 			description:
-				"Serveur MCP open source pour la m\u00e9moire, la messagerie et la gestion de t\u00e2ches multi-agents. 16 tables, 64 outils. Gratuit, auto-h\u00e9berg\u00e9 sur Convex.",
+				"Serveur MCP open source pour la m\u00e9moire, la messagerie et la gestion de t\u00e2ches multi-agents. 19 tables, 70 outils. Gratuit, auto-h\u00e9berg\u00e9 sur Convex.",
 			ogTitle:
 				"VantagePeers \u2014 M\u00e9moire partag\u00e9e pour agents Claude Code",
 			ogDesc:
-				"Serveur MCP open source. 64 outils, 16 tables. M\u00e9moire s\u00e9mantique, messagerie inter-agents, gestion de t\u00e2ches. Gratuit.",
+				"Serveur MCP open source. 70 outils, 19 tables. M\u00e9moire s\u00e9mantique, messagerie inter-agents, gestion de t\u00e2ches. Gratuit.",
 		},
 	};
 

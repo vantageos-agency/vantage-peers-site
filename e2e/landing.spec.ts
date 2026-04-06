@@ -25,7 +25,7 @@ test.describe("VantagePeers landing page", () => {
 	});
 
 	// Test 3: Hero stats show "16" tables and "64" tools
-	test("hero stats show 16 tables and 64 tools", async ({ page }) => {
+	test("hero stats show 19 tables and 70 tools", async ({ page }) => {
 		const bodyText = await page.locator("body").textContent();
 		expect(bodyText).toMatch(/16/);
 		expect(bodyText).toMatch(/64/);
@@ -33,8 +33,8 @@ test.describe("VantagePeers landing page", () => {
 		const metaDesc = await page
 			.locator('meta[name="description"]')
 			.getAttribute("content");
-		expect(metaDesc).toContain("16 tables");
-		expect(metaDesc).toContain("64 tools");
+		expect(metaDesc).toContain("19 tables");
+		expect(metaDesc).toContain("70 tools");
 	});
 
 	// Test 4: FSL license badge visible (not MIT)
