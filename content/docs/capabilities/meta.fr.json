@@ -5,6 +5,8 @@
     "memory",
     "messaging",
     "tasks",
+    "missions",
+    "profiles",
     "fix-patterns",
     "recurring-tasks",
     "mandates"

@@ -1,0 +1,60 @@
+---
+title: Missions
+description: Group tasks into missions with lifecycle stages, pilot assignment, and template-driven automation.
+---
+
+# Missions
+
+Missions group related tasks and track progress through lifecycle stages. They can be created manually or auto-generated from templates when events occur (GitHub issue opened, external issue tracked).
+
+## Mission Lifecycle
+
+| Stage | Description |
+|-------|-------------|
+| `brainstorm` | Ideas being gathered, scope not yet defined |
+| `plan` | Tasks created, dependencies mapped, pilot assigned |
+| `execute` | Active work underway |
+| `validate` | Work complete, under review and testing |
+| `complete` | Mission finished, all tasks done |
+
+## Creating a Mission
+
+```json
+{
+  "title": "Fix #282 — credit race condition",
+  "project": "myreeldream",
+  "pilot": "omega",
+  "priority": "high",
+  "agents": ["omega"],
+  "status": "execute"
+}
+```
+
+The `pilot` is the lead orchestrator responsible for driving the mission to completion.
+
+## Auto-Created Missions
+
+Missions are auto-created in two scenarios:
+
+1. **GitHub issue opened** — the webhook creates a mission from the `issue-resolution-v2` template with 13 tasks
+2. **External issue tracked** — `/track-external-issue` creates a mission from the `repo-fix-v1` template with 10 tasks
+
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_mission` | Create a mission with pilot, project, priority |
+| `list_missions` | List missions filtered by project, pilot, or status |
+| `update_mission` | Update mission fields (description, brief, agents, dates) |
+| `update_mission_status` | Advance through lifecycle stages |
+| `list_tasks_by_mission` | Get all tasks belonging to a mission |
+
+## Viewing Mission Progress
+
+```json
+{
+  "missionId": "mission-abc123"
+}
+```
+
+Returns the mission with all linked tasks and their statuses — a complete picture of how many are done, in progress, or blocked.

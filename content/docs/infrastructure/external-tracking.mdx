@@ -1,0 +1,67 @@
+---
+title: External Issue Tracking
+description: Track issues on third-party repos, monitor PRs, and coordinate open-source contributions.
+---
+
+# External Issue Tracking
+
+VantagePeers tracks issues and PRs on external GitHub repos. This enables coordinated open-source contributions — an orchestrator (Zeta) fixes bugs on third-party projects while Pi monitors PR status.
+
+## Workflow
+
+```
+Pi identifies issue on external repo
+       |
+       v
+/track-external-issue {repo} {number}
+       |
+       v
+Issue created in VantagePeers (with external fields)
+       |
+       v
+Mission created from repo-fix-v1 template (10 tasks)
+       |
+       v
+Zeta receives notification + starts working
+       |
+       v
+Zeta submits PR → prStatus updated
+       |
+       v
+PR Monitor cron polls hourly → notifies Pi on merge/close
+```
+
+## External Issue Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `externalRepo` | string | Third-party repo (e.g., `get-convex/better-auth`) |
+| `externalIssueNumber` | number | Issue number on the external repo |
+| `externalIssueUrl` | string | Full URL to the issue |
+| `prUrl` | string | URL of the submitted PR |
+| `prStatus` | `draft` \| `open` \| `merged` \| `closed` | Current PR state |
+| `forkRepo` | string | Our fork (e.g., `elpiarthera/better-auth`) |
+
+## PR Monitor Cron
+
+A cron runs every hour and checks all external issues with `prStatus = open` or `draft`. For each:
+
+1. Fetches PR state from GitHub API
+2. If merged → updates `prStatus` to `merged`, notifies Pi
+3. If closed without merge → updates to `closed`, notifies Pi
+
+No manual checking needed — Pi gets a message when any PR changes state.
+
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `createExternal` | Create an external issue in VantagePeers |
+| `updatePrStatus` | Update PR URL and status |
+| `listExternalOpen` | List all external issues with open PRs |
+
+## Skill: /track-external-issue
+
+Usage: `/track-external-issue {owner/repo} {issue_number}`
+
+The skill automates the full workflow: fetches the issue from GitHub, creates it in VantagePeers, creates a mission from the repo-fix-v1 template, and notifies Zeta.

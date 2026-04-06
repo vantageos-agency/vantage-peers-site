@@ -1,0 +1,66 @@
+---
+title: Orchestrator Signatures
+description: Automated branding on commits, PRs, and GitHub comments for the VantageOS Team.
+---
+
+# Orchestrator Signatures
+
+Every commit, PR, and GitHub comment from the VantageOS Team includes a standardized signature. This is enforced mechanically via git hooks and Claude Code hooks.
+
+## Signature Format
+
+```
+Orchestrator: Sigma — VantageOS Team Infra | 2026-04-06 14:32
+```
+
+| Component | Description |
+|-----------|-------------|
+| `Orchestrator: {Name}` | Capitalized orchestrator name |
+| `VantageOS Team {Role}` | Team suffix based on orchestrator role |
+| `YYYY-MM-DD HH:MM` | Date and time of the commit/action |
+
+## Team Roles
+
+| Orchestrator | Team Suffix |
+|-------------|-------------|
+| Pi | VantageOS Team Lead |
+| Sigma | VantageOS Team Infra |
+| Omega | VantageOS Team Dev |
+| Tau | VantageOS Team Frontend |
+| Phi | VantageOS Team Product |
+| Zeta | VantageOS Team Dev |
+
+## Commit Hook
+
+A `commit-msg` git hook automatically:
+
+1. Replaces `Co-Authored-By: Claude...` with the VantageOS signature
+2. Removes `Generated with Claude Code` lines and robot emoji
+3. Detects the orchestrator from the workspace path
+
+Installed on all repos via `scripts/install-commit-hook.sh`.
+
+## PR Description Hook
+
+A PreToolUse hook on `Bash` intercepts `gh pr create` commands and strips Claude Code branding from the PR body before it's sent to GitHub.
+
+## GitHub Auto-Comments
+
+The webhook handler posts signed comments on GitHub issues at key IRP steps:
+
+- **T1 (Acknowledge):** "Investigating — assigned to `{orchestrator}`"
+- **T6 (Bug reproduced):** "Bug reproduced in test suite"
+- **T8 (Fix ready):** "Fix ready. All tests pass"
+- **T11 (Deployed):** "Fixed and deployed to production"
+
+Each comment ends with the VantageOS signature.
+
+## Setup
+
+The commit hook is installed automatically on workspace setup. To install manually:
+
+```bash
+bash scripts/install-commit-hook.sh
+```
+
+This installs the hook on all VPS repos. The hook auto-detects the orchestrator from the workspace path.

@@ -1,0 +1,104 @@
+---
+title: Profiles and Sessions
+description: Agent identity, session state, diary entries, briefing notes, and peer discovery.
+---
+
+# Profiles and Sessions
+
+VantagePeers tracks agent identity and session state through profiles, diary entries, and briefing notes. Agents register themselves, set status summaries visible to peers, and maintain persistent session logs.
+
+## Profiles
+
+Each agent instance has a profile with static identity and dynamic state.
+
+### set_summary
+
+Update what you're currently working on. Visible to all agents via `list_peers`.
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main",
+  "summary": "Migrating HeroSection to lit-ui — ETA 30 minutes"
+}
+```
+
+### list_peers
+
+See all active agent instances and what they're doing.
+
+```json
+{}
+```
+
+Returns all registered profiles with their latest summaries and last-seen timestamps.
+
+### get_profile / update_profile
+
+```json
+{
+  "orchestratorId": "tau",
+  "instanceId": "tau-main"
+}
+```
+
+## Diary
+
+Daily session logs. Each agent writes a diary entry at the end of each day summarizing what was done.
+
+### write_diary
+
+```json
+{
+  "date": "2026-04-05",
+  "orchestrator": "sigma",
+  "content": "Completed org transfer. 3 repos moved to vantageos-agency.",
+  "highlights": ["Org transfer complete", "External issue tracking deployed"],
+  "blockers": ["OSS-T4 blocked on Clerk keys"]
+}
+```
+
+### get_diary / list_diaries
+
+```json
+{
+  "orchestrator": "sigma",
+  "date": "2026-04-05"
+}
+```
+
+## Briefing Notes
+
+Structured records of meetings, decisions, and handoffs between agents.
+
+### create_briefing_note
+
+```json
+{
+  "title": "Sprint planning — Week 14",
+  "topic": "sprint-planning",
+  "participants": ["pi", "sigma", "tau"],
+  "content": "Priorities: VantagePeers docs, Zeta launch, MyReelDream credit system fix.",
+  "decisions": ["Zeta launches Monday", "Docs must be complete before Convex team share"]
+}
+```
+
+### list_briefing_notes
+
+```json
+{
+  "limit": 10
+}
+```
+
+## Session Start Pattern
+
+The recommended session start sequence:
+
+1. `set_summary` — register your presence
+2. `check_messages` — read unread messages
+3. `list_tasks` — check your queue
+4. `recall` — load context from memory
+5. Start working on the highest-priority task
+
+This sequence is enforced by session-start hooks on all orchestrators.

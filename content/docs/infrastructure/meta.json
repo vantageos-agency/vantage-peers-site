@@ -4,7 +4,11 @@
   "pages": [
     "issues",
     "issue-resolution",
+    "mission-templates",
     "error-monitoring",
+    "issue-stats",
+    "external-tracking",
+    "signatures",
     "components",
     "business-units"
   ]

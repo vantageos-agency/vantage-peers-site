@@ -1,0 +1,71 @@
+---
+title: Mission Templates
+description: Configurable multi-step mission templates for standardized workflows.
+---
+
+# Mission Templates
+
+Mission templates define standardized workflows that auto-create missions with predefined tasks. When an event triggers (GitHub issue opened, external issue tracked), VantagePeers creates a full mission with all steps pre-populated.
+
+## Available Templates
+
+### issue-resolution-v2
+
+The Issue Resolution Protocol. Auto-created when a GitHub issue is opened on a mapped repo.
+
+**13 steps:** Acknowledge → KB Search → Verify Config → Identify Tests → Run Existing Tests → Evaluate Coverage → Write Missing Tests → Fix → Run ALL Tests → Code Review → Deploy + Push → Verification Preview → Update KB
+
+Auto-comments posted to GitHub at steps T1 (acknowledge), T6 (bug reproduced), T8 (fix ready), T11 (deployed).
+
+### repo-fix-v1
+
+For fixing issues on external third-party repos. Used by Zeta for open-source contributions.
+
+**10 steps:** Search KB → Codebase Analysis → Issue Diagnosis → Impact Analysis → Write Fix + Tests → Run Tests → Code Review → Create PR + Comment Issue → QA Verification → Store Fix Pattern
+
+Includes mandatory Impact Analysis (grep all downstream consumers of changed data) and PRE-FIX protocol (read CONTRIBUTING.md, 5 recent PRs, identify conventions).
+
+### new-feature-v1
+
+For building new features with specialist delegation. Each step has an assigned specialist agent.
+
+**10 steps:** Search KB → Requirements Analysis → Schema + Backend (dev-convex-expert) → API/External Services (dev-fal-expert) → Frontend UI (dev-frontend) → i18n (translator) → Tests + QA (dev-qa) → Code Review (code-reviewer) → PR + Deploy Preview → Store Pattern KB
+
+## MCP Tools
+
+### get_mission_template
+
+```json
+{
+  "name": "issue-resolution-v2"
+}
+```
+
+Returns the full template with all steps, tags, and metadata.
+
+### update_mission_template
+
+```json
+{
+  "name": "repo-fix-v1",
+  "steps": [
+    { "title": "Search KB", "description": "...", "tags": ["kb"] },
+    { "title": "Codebase Analysis", "description": "...", "tags": ["research"] }
+  ],
+  "createdBy": "sigma"
+}
+```
+
+## Creating Custom Templates
+
+Templates are stored in the `missionTemplates` table. Each template has:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Unique template name |
+| `description` | string | What this template is for |
+| `steps` | array | Ordered list of task definitions |
+| `isDefault` | boolean | Whether this is the default for auto-creation |
+| `createdBy` | string | Who created/updated it |
+
+Each step has `title`, `description`, and optional `tags` array.

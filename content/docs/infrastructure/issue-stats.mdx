@@ -1,0 +1,59 @@
+---
+title: Issue Resolution Stats
+description: Automated daily MTTR calculation with before/after VantageOS era comparison.
+---
+
+# Issue Resolution Stats
+
+VantagePeers calculates issue resolution metrics daily via a cron job. The stats power the sales page and track Mean Time To Resolution (MTTR) across all monitored repos.
+
+## How It Works
+
+A daily cron (6am UTC) fetches issues from the GitHub API for each mapped repo, calculates time-to-first-response and time-to-fix, and stores the results in the `issueStats` table.
+
+## Key Metrics
+
+| Metric | Description |
+|--------|-------------|
+| `medianTimeToFirstResponse` | Minutes from issue opened to first comment |
+| `medianTimeToFix` | Minutes from issue opened to issue closed |
+| `fastestResolution` | Fastest fix across all issues (minutes) |
+| `slowestResolution` | Slowest fix (minutes) |
+| `avgTimeToFix` | Average fix time (minutes) |
+
+## Before/After VantageOS Era
+
+Stats are split at the pivot date (April 1, 2026) to show the impact of the VantageOS Team:
+
+```json
+{
+  "beforeVantageOS": {
+    "totalIssues": 19,
+    "resolvedIssues": 15,
+    "medianTimeToFix": 5792
+  },
+  "afterVantageOS": {
+    "totalIssues": 27,
+    "resolvedIssues": 25,
+    "medianTimeToFix": 28
+  }
+}
+```
+
+Before: median 4 days. After: median 28 minutes. 207x improvement.
+
+## Querying Stats
+
+```json
+// Get latest stats for a repo
+{
+  "repo": "myreeldream-ai/MyShortReel-beta",
+  "limit": 7
+}
+```
+
+Returns daily snapshots with all metrics. Use for dashboards, sales pages, or internal monitoring.
+
+## Cron Schedule
+
+The cron runs daily at 6am UTC. It iterates all active repo mappings and calculates stats for each. Results are upserted — running manually updates the same day's entry.
