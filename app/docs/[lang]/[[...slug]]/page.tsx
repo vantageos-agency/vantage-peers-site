@@ -23,7 +23,7 @@ export default async function Page(props: {
           <MarkdownCopyButton markdownUrl={markdownUrl} />
           <ViewOptionsPopover
             markdownUrl={markdownUrl}
-            githubUrl={`https://github.com/elpiarthera/vantage-peers-site/tree/main/content/docs`}
+            githubUrl={`https://github.com/vantageos-agency/vantage-peers-site/tree/main/content/docs`}
           />
         </div>
         <DocsTitle>{page.data.title}</DocsTitle>

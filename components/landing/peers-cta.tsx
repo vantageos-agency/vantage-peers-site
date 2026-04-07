@@ -49,7 +49,7 @@ export function PeersCta({ locale }: PeersCtaProps) {
 					transition={{ duration: 0.5, delay: 0.1 }}
 				>
 					<a
-						href="https://github.com/vantageos/vantage-peers"
+						href="https://github.com/vantageos-agency/vantage-peers"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-10 rounded-4xl font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group"
@@ -77,7 +77,7 @@ export function PeersCta({ locale }: PeersCtaProps) {
 						</svg>
 					</a>
 					<a
-						href="https://github.com/vantageos/vantage-peers#readme"
+						href="https://github.com/vantageos-agency/vantage-peers#readme"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-8 rounded-4xl font-medium border border-border bg-background text-foreground hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

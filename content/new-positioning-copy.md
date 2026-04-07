@@ -33,8 +33,8 @@ VantagePeers is the open-source backend that gives your Claude Code agents share
 ### Hero Stats (4 pills)
 | Value | Label |
 |-------|-------|
-| 10 | Database Tables |
-| 37 | MCP Tools |
+| 20 | Database Tables |
+| 75 | MCP Tools |
 | Free | FSL License |
 | <10 min | Setup Time |
 
@@ -79,7 +79,7 @@ You do not need another memory plugin. You need an agent OS.
 **Everything your agents need. One backend.**
 
 ### Section Subtitle
-10 database tables. 37 MCP tools. Seven capability categories. All the primitives for running a coordinated AI agent team across machines.
+20 database tables. 75 MCP tools. Thirteen capability categories. All the primitives for running a coordinated AI agent team across machines.
 
 ### Features
 
@@ -150,7 +150,7 @@ VantagePeers replaces the stack you were going to build. One backend. One deploy
 | Session diary | Custom logging | Not available | Included |
 | Briefing notes | Google Docs / Notion | Not available | Included |
 | Component registry | File system + README | Not available | Included |
-| MCP native | Custom tool wrappers | Partial (mem0 only) | 64 tools, 12 categories |
+| MCP native | Custom tool wrappers | Partial (mem0 only) | 75 tools, 13 categories |
 | Self-hosted | Your responsibility | Cloud-only or abandoned | Convex (free tier) |
 | Open source | N/A | Partial or closed | FSL License |
 | **Setup time** | Weeks | Hours + $$$ | < 10 minutes |
@@ -173,7 +173,7 @@ Three steps from zero to a fully coordinated agent operating system.
 
 ### Step 01: Deploy
 Icon: `Rocket` (lucide)
-Clone the repo. Run `npx convex deploy`. Your 10-table backend is live — memory, messaging, tasks, missions, diary, and more. One command. No infrastructure to manage.
+Clone the repo. Run `npx convex deploy`. Your 20-table backend is live — memory, messaging, tasks, missions, diary, and more. One command. No infrastructure to manage.
 
 ### Step 02: Connect
 Icon: `Plug` (lucide)
@@ -181,7 +181,7 @@ Add VantagePeers as an MCP server in your Claude Code config. Each agent gets an
 
 ### Step 03: Orchestrate
 Icon: `Network` (lucide)
-Your agents store memories, send messages, assign tasks, plan missions, and write diaries — all through 37 MCP tools. Works across machines. Across sessions. Across agent teams.
+Your agents store memories, send messages, assign tasks, plan missions, and write diaries — all through 75 MCP tools. Works across machines. Across sessions. Across agent teams.
 
 ### Emphasis Box
 Powered by Convex — real-time database with built-in vector search, serverless functions, and zero-config scaling. Your infrastructure, their uptime.
@@ -210,7 +210,7 @@ No account required. No credit card. Clone, deploy, orchestrate.
 ## 8. Updated FAQ Suggestions
 
 **Q: Is VantagePeers a memory tool?**
-A: It started as one. Now it is a complete agent operating system — memory is one of 10 capabilities. It also handles messaging, tasks, missions, recurring automation, diary, briefings, agent profiles, and a component registry. Memory is table 1 of 10.
+A: It started as one. Now it is a complete agent operating system — memory is one of many capabilities. It also handles messaging, tasks, missions, recurring automation, diary, briefings, agent profiles, fix patterns, issues, mandates, business units, and a component registry. 20 database tables, 75 MCP tools.
 
 **Q: What makes this different from mem0 or Zep?**
 A: mem0 and Zep are memory-only tools. VantagePeers is an agent OS. They give you memory storage and retrieval. VantagePeers gives you memory + messaging + task coordination + mission planning + recurring automation + session diary + briefing notes + agent profiles + a component registry — all in one backend, all via MCP, all open source.
@@ -219,7 +219,7 @@ A: mem0 and Zep are memory-only tools. VantagePeers is an agent OS. They give yo
 A: Yes. FSL license. Clone the repo, deploy to your Convex account (generous free tier), and you are running. No subscription. No usage fees. No enterprise tier required for any feature.
 
 **Q: Can I use this with agents other than Claude?**
-A: VantagePeers exposes 37 MCP tools. Any MCP-compatible agent can use them. Claude Code is the primary use case because of its native MCP support, but the protocol is open.
+A: VantagePeers exposes 75 MCP tools. Any MCP-compatible agent can use them. Claude Code is the primary use case because of its native MCP support, but the protocol is open.
 
 **Q: What is Convex?**
 A: Convex is a real-time backend platform — database, serverless functions, vector search, and scheduling in one service. VantagePeers uses it as its runtime. You deploy once with `npx convex deploy` and Convex handles scaling, backups, and uptime. The free tier covers most agent setups.
@@ -241,7 +241,7 @@ A: Convex is a real-time backend platform — database, serverless functions, ve
 - Angle: the only integrated backend for multi-agent orchestration — and it is free
 
 ### Key Messages (priority order)
-1. **Complete, not partial.** 10 tables, 64 tools, 12 categories. Not just memory — the full stack.
+1. **Complete, not partial.** 20 tables, 75 tools, 13 categories. Not just memory — the full stack.
 2. **Open source, zero cost.** FSL license. Self-hosted on Convex free tier. No SaaS pricing trap.
 3. **Built for multi-agent teams.** Messaging with receipts. Tasks with dependencies. Missions with lifecycle. Not single-agent memory.
 4. **10-minute setup.** One deploy command. One MCP config. Production-ready.
