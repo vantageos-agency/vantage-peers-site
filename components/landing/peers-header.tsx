@@ -148,7 +148,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 							{t.langLabel}
 						</Button>
 						<a
-							href="https://github.com/vantageos/vantage-peers"
+							href="https://github.com/vantageos-agency/vantage-peers"
 							target="_blank"
 							rel="noopener noreferrer"
 							aria-label={t.githubLabel}
@@ -234,7 +234,7 @@ export function PeersHeader({ locale, onLocaleChange }: PeersHeaderProps) {
 									{t.langLabel}
 								</Button>
 								<a
-									href="https://github.com/vantageos/vantage-peers"
+									href="https://github.com/vantageos-agency/vantage-peers"
 									target="_blank"
 									rel="noopener noreferrer"
 									aria-label={t.githubLabel}

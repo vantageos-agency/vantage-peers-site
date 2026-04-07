@@ -15,7 +15,7 @@ const content = {
 		],
 		snippets: {
 			install: `# Clone and deploy to Convex
-git clone https://github.com/vantageos/vantage-peers
+git clone https://github.com/vantageos-agency/vantage-peers
 cd vantage-peers
 npm install
 npx convex deploy
@@ -41,7 +41,7 @@ INSTANCE_ID=pi-vps   # or pi-chromebook, tau-desktop, etc.
 # Namespaces isolate memory per project
 # global   → shared across all projects
 # project/X → scoped to project X`,
-			use: `# Store memory (70 tools available via MCP)
+			use: `# Store memory (75 tools available via MCP)
 store_memory(
   namespace="project/myapp",
   type="feedback",
@@ -82,7 +82,7 @@ create_task(
 		],
 		snippets: {
 			install: `# Cloner et déployer sur Convex
-git clone https://github.com/vantageos/vantage-peers
+git clone https://github.com/vantageos-agency/vantage-peers
 cd vantage-peers
 npm install
 npx convex deploy
@@ -108,7 +108,7 @@ INSTANCE_ID=pi-vps   # ou pi-chromebook, tau-desktop, etc.
 # Les namespaces isolent la mémoire par projet
 # global   → partage entre tous les projets
 # project/X → scope au projet X`,
-			use: `# Stocker la mémoire (70 outils disponibles via MCP)
+			use: `# Stocker la mémoire (75 outils disponibles via MCP)
 store_memory(
   namespace="project/myapp",
   type="feedback",

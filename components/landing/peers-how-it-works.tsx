@@ -32,7 +32,7 @@ const content = {
 				icon: Network,
 				title: "Coordinate",
 				description:
-					"Agents store memory, send messages, assign tasks — all via the 70 MCP tools. Works across machines, across sessions, across agent instances.",
+					"Agents store memory, send messages, assign tasks — all via the 75 MCP tools. Works across machines, across sessions, across agent instances.",
 				color: "text-chart-4",
 				bgColor: "bg-chart-4/10",
 			},
@@ -68,7 +68,7 @@ const content = {
 				icon: Network,
 				title: "Coordonner",
 				description:
-					"Les agents stockent la mémoire, envoient des messages, assignent des tâches — le tout via les 35 outils MCP. Fonctionne entre machines, entre sessions, entre instances d'agents.",
+					"Les agents stockent la mémoire, envoient des messages, assignent des tâches — le tout via les 75 outils MCP. Fonctionne entre machines, entre sessions, entre instances d'agents.",
 				color: "text-chart-4",
 				bgColor: "bg-chart-4/10",
 			},

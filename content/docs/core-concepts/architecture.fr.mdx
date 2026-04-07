@@ -22,14 +22,14 @@ VantagePeers est un serveur MCP adossé à Convex. Convex fournit la base de don
 │              Serveur MCP VantagePeers                    │
 │        (processus Node.js, tourne localement par agent)  │
 │                                                          │
-│  70 outils répartis en 13 catégories                     │
+│  75 outils répartis en 13 catégories                     │
 └──────────────────────────┬──────────────────────────────┘
                            │  SDK Convex
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Backend Cloud Convex                        │
 │                                                          │
-│  19 tables de BDD       Index vectoriels (mémoires)     │
+│  20 tables de BDD       Index vectoriels (mémoires)     │
 │  Fonctions serverless   Pipeline embeddings OpenAI      │
 │  Planificateur cron     Souscriptions temps réel        │
 └─────────────────────────────────────────────────────────┘
@@ -61,7 +61,7 @@ Lors de l'appel à `recall`, les requêtes ne cherchent que dans le namespace sp
 
 ## Schéma de base de données
 
-VantagePeers utilise 19 tables Convex. Chaque table a un schéma défini avec des validateurs typés et des index pour des requêtes efficaces.
+VantagePeers utilise 20 tables Convex. Chaque table a un schéma défini avec des validateurs typés et des index pour des requêtes efficaces.
 
 ### memories
 
@@ -195,4 +195,4 @@ VantagePeers expose toutes les capacités comme des outils MCP. Le serveur MCP t
 3. Convex exécute la fonction contre la base de données (avec recherche vectorielle si applicable)
 4. Le résultat est retourné à Claude Code comme réponse de l'outil
 
-Les 70 outils sont sans état du point de vue du serveur MCP — l'état vit dans Convex. Cela signifie que vous pouvez redémarrer le processus du serveur MCP à tout moment sans perdre de données.
+Les 75 outils sont sans état du point de vue du serveur MCP — l'état vit dans Convex. Cela signifie que vous pouvez redémarrer le processus du serveur MCP à tout moment sans perdre de données.

@@ -15,7 +15,7 @@ const content = {
 				period: "forever",
 				description: "Full VantagePeers. Your Convex. Your data.",
 				features: [
-					"70 MCP tools, 19 tables",
+					"75 MCP tools, 20 tables",
 					"Semantic memory + RAG search",
 					"Cross-machine messaging",
 					"Task coordination + missions",
@@ -24,7 +24,7 @@ const content = {
 					"Community support (GitHub Issues)",
 				],
 				cta: "Get Started",
-				ctaHref: "https://github.com/vantageos/vantage-peers",
+				ctaHref: "https://github.com/vantageos-agency/vantage-peers",
 				highlight: false,
 			},
 			{
@@ -74,7 +74,7 @@ const content = {
 				period: "pour toujours",
 				description: "VantagePeers complet. Votre Convex. Vos donn\u00e9es.",
 				features: [
-					"70 outils MCP, 19 tables",
+					"75 outils MCP, 20 tables",
 					"M\u00e9moire s\u00e9mantique + recherche RAG",
 					"Messagerie cross-machine",
 					"Coordination de t\u00e2ches + missions",
@@ -83,7 +83,7 @@ const content = {
 					"Support communaut\u00e9 (GitHub Issues)",
 				],
 				cta: "Commencer",
-				ctaHref: "https://github.com/vantageos/vantage-peers",
+				ctaHref: "https://github.com/vantageos-agency/vantage-peers",
 				highlight: false,
 			},
 			{

@@ -14,8 +14,8 @@ const content = {
 		cta1: "View on GitHub",
 		cta2: "See How It Works",
 		stats: [
-			{ value: "16", label: "DB Tables", icon: Database },
-			{ value: "64", label: "MCP Tools", icon: Wrench },
+			{ value: "20", label: "DB Tables", icon: Database },
+			{ value: "75", label: "MCP Tools", icon: Wrench },
 			{ value: "Free", label: "FSL License", icon: CircleDollarSign },
 			{ value: "<10 min", label: "Setup", icon: Clock },
 		],
@@ -29,8 +29,8 @@ const content = {
 		cta1: "Voir sur GitHub",
 		cta2: "Comment ça marche",
 		stats: [
-			{ value: "16", label: "Tables BD", icon: Database },
-			{ value: "64", label: "Outils MCP", icon: Wrench },
+			{ value: "20", label: "Tables BD", icon: Database },
+			{ value: "75", label: "Outils MCP", icon: Wrench },
 			{ value: "Gratuit", label: "Licence FSL", icon: CircleDollarSign },
 			{ value: "<10 min", label: "Installation", icon: Clock },
 		],
@@ -113,7 +113,7 @@ export function PeersHero({ locale }: PeersHeroProps) {
 						transition={{ duration: 0.5, delay: 0.3 }}
 					>
 						<a
-							href="https://github.com/vantageos/vantage-peers"
+							href="https://github.com/vantageos-agency/vantage-peers"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="inline-flex items-center justify-center gap-2 min-h-touch text-base px-8 rounded-4xl font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring glow-on-hover group"

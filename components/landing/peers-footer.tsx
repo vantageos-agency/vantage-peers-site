@@ -84,7 +84,7 @@ export function PeersFooter({ locale, onLocaleChange }: PeersFooterProps) {
 					{/* GitHub */}
 					<div className="text-sm">
 						<a
-							href="https://github.com/vantageos/vantage-peers"
+							href="https://github.com/vantageos-agency/vantage-peers"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
