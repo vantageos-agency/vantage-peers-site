@@ -24,7 +24,7 @@ Définissez la clé OpenAI pour les embeddings vectoriels :
 npx convex env set OPENAI_API_KEY sk-your-key-here
 ```
 
-## Étape 2 : Configurer l'Agent A
+## Étape 2 : Configurer l'Agent A (Pi)
 
 Ouvrez les paramètres Claude Code (`~/.claude.json` ou le fichier `.claude/settings.json` de votre projet) et ajoutez :
 
@@ -44,44 +44,44 @@ Ouvrez les paramètres Claude Code (`~/.claude.json` ou le fichier `.claude/sett
 
 Redémarrez Claude Code. Vous devriez voir les outils VantagePeers dans la liste des outils.
 
-## Étape 3 : L'Agent A stocke une mémoire
+## Étape 3 : L'Agent A (Pi) stocke une mémoire
 
-Depuis la session Claude Code de l'Agent A :
+Depuis la session Claude Code de l'Agent A (Pi) :
 
 ```
 store_memory(
   namespace: "global",
   type: "project",
   content: "Project kickoff: building a REST API with FastAPI. Target: MVP by Friday.",
-  createdBy: "alpha"
+  createdBy: "pi"
 )
 ```
 
 Réponse : `{ memoryId: "k17..." }`
 
-## Étape 4 : L'Agent A envoie un message
+## Étape 4 : L'Agent A (Pi) envoie un message
 
 ```
 send_message(
-  from: "alpha",
-  channel: "beta",
-  content: "Hey Beta — I stored the project brief in global memory. Start on the database schema."
+  from: "pi",
+  channel: "tau",
+  content: "Hey Tau — I stored the project brief in global memory. Start on the database schema."
 )
 ```
 
 Réponse : `{ messageId: "jn7..." }`
 
-## Étape 5 : Configurer l'Agent B
+## Étape 5 : Configurer l'Agent B (Tau)
 
 Sur une seconde machine (ou une seconde session Claude Code), ajoutez la même config MCP de l'Étape 2. Même `CONVEX_URL` — les deux agents partagent un seul backend.
 
-## Étape 6 : L'Agent B vérifie ses messages
+## Étape 6 : L'Agent B (Tau) vérifie ses messages
 
-Depuis la session Claude Code de l'Agent B :
+Depuis la session Claude Code de l'Agent B (Tau) :
 
 ```
 check_messages(
-  recipient: "beta"
+  recipient: "tau"
 )
 ```
 
@@ -90,14 +90,14 @@ Réponse :
 ```json
 [
   {
-    "from": "alpha",
-    "content": "Hey Beta — I stored the project brief in global memory. Start on the database schema.",
+    "from": "pi",
+    "content": "Hey Tau — I stored the project brief in global memory. Start on the database schema.",
     "receiptId": "k97..."
   }
 ]
 ```
 
-## Étape 7 : L'Agent B rappelle la mémoire
+## Étape 7 : L'Agent B (Tau) rappelle la mémoire
 
 ```
 recall(
@@ -107,9 +107,9 @@ recall(
 )
 ```
 
-La réponse inclut la mémoire stockée par l'Agent A — avec un classement par recherche sémantique.
+La réponse inclut la mémoire stockée par l'Agent A (Pi) — avec un classement par recherche sémantique.
 
-## Étape 8 : L'Agent B marque le message comme lu
+## Étape 8 : L'Agent B (Tau) marque le message comme lu
 
 ```
 mark_as_read(
@@ -123,9 +123,9 @@ Terminé. Deux agents, mémoire partagée, messagerie réelle, accusés de réce
 
 1. **Un seul déploiement Convex** sert de backend partagé pour les deux agents
 2. **store_memory** a persisté une mémoire avec embedding vectoriel que tout agent peut rappeler
-3. **send_message** a délivré un message d'Alpha à Beta avec un accusé de réception
+3. **send_message** a délivré un message de Pi à Tau avec un accusé de réception
 4. **recall** a utilisé la recherche sémantique pour trouver les mémoires pertinentes — pas une recherche par mot-clé
-5. **mark_as_read** a confirmé que Beta a traité le message
+5. **mark_as_read** a confirmé que Tau a traité le message
 
 ## Étapes suivantes
 
