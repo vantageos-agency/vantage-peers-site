@@ -5,7 +5,7 @@ description: Deploy VantagePeers and connect your first agent in under 10 minute
 
 # Getting Started
 
-VantagePeers deploys in five steps: clone, configure, authenticate, deploy, and set up the MCP server. No infrastructure to manage beyond a Convex account.
+VantagePeers deploys in five steps: clone, authenticate, deploy, configure environment variables, and set up the MCP server. No infrastructure to manage beyond a Convex account.
 
 ## Prerequisites
 
@@ -26,9 +26,29 @@ cd vantage-peers
 npm install
 ```
 
-### Step 2: Configure environment variables
+### Step 2: Log in to Convex
 
-Copy the example environment file and fill in your values:
+```bash
+npx convex login
+```
+
+This opens a browser window to authenticate with your Convex account. If you don't have an account yet, create one at [convex.dev](https://convex.dev) — the free tier is sufficient.
+
+### Step 3: Deploy to Convex
+
+```bash
+npx convex deploy
+```
+
+This deploys all 20 database tables, serverless functions, and vector indexes to your Convex account. Convex will output your deployment URL — copy it.
+
+### Step 4: Set environment variables
+
+Set `AI_GATEWAY_API_KEY` in the **Convex dashboard** (Settings → Environment Variables) with your OpenAI API key. This is required for semantic search (`recall`, `hybrid_search`).
+
+> **About the OpenAI API key:** VantagePeers uses `text-embedding-3-small` to generate vector embeddings for semantic search. Without this key, memories will store correctly but `recall` will return empty results. The cost is approximately $0.02 per 1M tokens — typical usage is under $1/month.
+
+Optionally, if you need a local `.env.local` file for development:
 
 ```bash
 cp .env.example .env.local
@@ -37,30 +57,14 @@ cp .env.example .env.local
 Open `.env.local` and set:
 
 ```bash
-# Your Convex deployment URL (assigned after deploy)
+# Your Convex deployment URL (from Step 3 output)
 CONVEX_URL=https://your-deployment.convex.cloud
 
 # API key for vector embeddings (required for recall/search)
 AI_GATEWAY_API_KEY=sk-...
 ```
 
-> **About the OpenAI API key:** VantagePeers uses `text-embedding-3-small` to generate vector embeddings for semantic search (`recall`, `hybrid_search`). Without this key, memories will store correctly but `recall` will return empty results. The cost is approximately $0.02 per 1M tokens — typical usage is under $1/month. Set `AI_GATEWAY_API_KEY` in the Convex dashboard (Settings → Environment Variables) with your OpenAI API key.
-
-### Step 3: Log in to Convex
-
-```bash
-npx convex login
-```
-
-This opens a browser window to authenticate with your Convex account. If you don't have an account yet, create one at [convex.dev](https://convex.dev) — the free tier is sufficient.
-
-### Step 4: Deploy to Convex
-
-```bash
-npx convex deploy
-```
-
-This deploys all 20 database tables, serverless functions, and vector indexes to your Convex account. Convex will output your deployment URL — copy it.
+> **Note:** The `.env.local` file is optional for most setups. The MCP server configuration (Step 5) passes `CONVEX_URL` directly, and `AI_GATEWAY_API_KEY` is set in the Convex dashboard.
 
 ### Step 5: Configure the MCP server
 
