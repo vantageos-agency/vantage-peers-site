@@ -5,7 +5,7 @@ description: Deploy VantagePeers and connect your first agent in under 10 minute
 
 # Getting Started
 
-VantagePeers deploys in four steps: clone, install, deploy, configure. No infrastructure to manage beyond a Convex account.
+VantagePeers deploys in five steps: clone, configure, authenticate, deploy, and set up the MCP server. No infrastructure to manage beyond a Convex account.
 
 ## Prerequisites
 
@@ -71,6 +71,22 @@ Add VantagePeers to your Claude Code MCP configuration. Open `~/.claude.json` (g
 ```
 
 Restart Claude Code. VantagePeers tools will appear in the tool list.
+
+### Claude Code Web
+
+VantagePeers also works with [Claude Code Web](https://claude.ai/code) (formerly claude.ai). To configure:
+
+1. Open Claude Code Web at [claude.ai/code](https://claude.ai/code)
+2. Go to **Settings → MCP Servers**
+3. Click **Add Server**
+4. Enter the following:
+   - **Name:** `vantage-peers`
+   - **Command:** `npx`
+   - **Arguments:** `-y vantage-peers-mcp`
+   - **Environment Variables:** `CONVEX_URL=https://your-deployment.convex.cloud`
+5. Save and verify tools appear in the tool list
+
+The same MCP server works in Claude Code CLI, Claude Code Web, and the VS Code / JetBrains extensions.
 
 ## Quick Start
 
