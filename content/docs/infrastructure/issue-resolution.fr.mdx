@@ -1,11 +1,11 @@
 ---
 title: Protocole de résolution d'issues
-description: Résolution automatisée en 12 étapes avec intégration webhook GitHub et modèles de missions.
+description: Résolution automatisée en 14 étapes (T0-T13) avec intégration webhook GitHub et modèles de missions.
 ---
 
 # Protocole de résolution d'issues
 
-Quand une issue GitHub est ouverte sur un dépôt mappé, VantagePeers crée automatiquement une mission avec 12 tâches suivant le Protocole de Résolution d'Issues (IRP). L'orchestrateur assigné exécute chaque étape, avec des commentaires de progression postés automatiquement sur GitHub.
+Quand une issue GitHub est ouverte sur un dépôt mappé, VantagePeers crée automatiquement une mission avec 14 tâches suivant le Protocole de Résolution d'Issues (IRP). L'orchestrateur assigné exécute chaque étape, avec des commentaires de progression postés automatiquement sur GitHub.
 
 ## Fonctionnement
 
@@ -19,10 +19,10 @@ Le webhook reçoit l'événement
 Auto-commentaire : "Investigating - assigned to {orchestrator}"
        |
        v
-Mission créée avec 12 tâches (depuis le modèle)
+Mission créée avec 14 tâches (depuis le modèle)
        |
        v
-L'orchestrateur exécute les étapes T1-T12
+L'orchestrateur exécute les étapes T0-T13
        |
        v
 Auto-commentaires aux étapes T6, T8, T11
@@ -31,7 +31,7 @@ Auto-commentaires aux étapes T6, T8, T11
 Issue fermée avec le correctif déployé
 ```
 
-## Les 12 étapes
+## Les 14 étapes (T0-T13)
 
 | Étape | Titre | Description | Auto-commentaire |
 |-------|-------|-------------|------------------|
