@@ -284,7 +284,7 @@ Creates a new mission and assigns a pilot.
 
 ```json
 {
-  "title": "Landing Page Migration — Phase 1",
+  "name": "Landing Page Migration — Phase 1",
   "pilot": "tau",
   "targetDate": 1712275200000
 }
@@ -292,15 +292,15 @@ Creates a new mission and assigns a pilot.
 
 ### `list_missions`
 
-Lists all missions, optionally filtered by stage or pilot.
+Lists all missions, optionally filtered by status or pilot.
 
 ```json
 {
-  "stage": "execute"
+  "status": "execute"
 }
 ```
 
-Stage values: `brainstorm`, `plan`, `execute`, `validate`, `complete`.
+Status values: `brainstorm`, `plan`, `execute`, `validate`, `complete`.
 
 ### `update_mission`
 
