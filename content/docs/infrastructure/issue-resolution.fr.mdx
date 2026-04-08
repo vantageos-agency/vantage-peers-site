@@ -91,7 +91,7 @@ Vous pouvez ajouter, supprimer ou réordonner les étapes. Les modifications pre
 Dans les paramètres de votre dépôt, ajoutez un webhook :
 - **URL** : `https://your-deployment.convex.site/github/webhook`
 - **Content type** : `application/json`
-- **Événements** : Issues, Issue comments
+- **Événements** : Issues, Issue comments, Pull requests, Pull request reviews
 - **Secret** : Doit correspondre à votre variable d'environnement `GITHUB_WEBHOOK_SECRET`
 
 ### 2. Mapper le dépôt à un orchestrateur

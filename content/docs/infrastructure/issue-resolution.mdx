@@ -91,7 +91,7 @@ You can add, remove, or reorder steps. Changes take effect on the next issue ope
 In your repo settings, add a webhook:
 - **URL**: `https://your-deployment.convex.site/github/webhook`
 - **Content type**: `application/json`
-- **Events**: Issues, Issue comments
+- **Events**: Issues, Issue comments, Pull requests, Pull request reviews
 - **Secret**: Match your `GITHUB_WEBHOOK_SECRET` env var
 
 ### 2. Map repo to orchestrator
