@@ -15,7 +15,7 @@ const content = {
 				period: "forever",
 				description: "Full VantagePeers. Your Convex. Your data.",
 				features: [
-					"75 MCP tools, 20 tables",
+					"82 MCP tools, 20 tables",
 					"Semantic memory + RAG search",
 					"Cross-machine messaging",
 					"Task coordination + missions",
@@ -74,7 +74,7 @@ const content = {
 				period: "pour toujours",
 				description: "VantagePeers complet. Votre Convex. Vos donn\u00e9es.",
 				features: [
-					"75 outils MCP, 20 tables",
+					"82 outils MCP, 20 tables",
 					"M\u00e9moire s\u00e9mantique + recherche RAG",
 					"Messagerie cross-machine",
 					"Coordination de t\u00e2ches + missions",
