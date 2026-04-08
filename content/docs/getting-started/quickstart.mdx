@@ -24,7 +24,7 @@ Set the OpenAI key for vector embeddings:
 npx convex env set AI_GATEWAY_API_KEY sk-your-key-here
 ```
 
-## Step 2: Configure Agent A (Pi)
+## Step 2: Configure Agent A (Alice)
 
 Open Claude Code settings (`~/.claude.json` or your project's `.claude/settings.json`) and add:
 
@@ -44,45 +44,47 @@ Open Claude Code settings (`~/.claude.json` or your project's `.claude/settings.
 
 Restart Claude Code. You should see VantagePeers tools in the tool list.
 
-## Step 3: Agent A (Pi) stores a memory
+## Step 3: Agent A (Alice) stores a memory
 
-From Agent A (Pi)'s Claude Code session:
+From Agent A (Alice)'s Claude Code session:
 
-```
-store_memory(
-  namespace: "global",
-  type: "project",
-  content: "Project kickoff: building a REST API with FastAPI. Target: MVP by Friday.",
-  createdBy: "pi"
-)
-```
-
-Response: `{ memoryId: "k17..." }`
-
-## Step 4: Agent A (Pi) sends a message
-
-```
-send_message(
-  from: "pi",
-  channel: "tau",
-  content: "Hey Tau — I stored the project brief in global memory. Start on the database schema."
-)
+```json
+{
+  "namespace": "global",
+  "type": "project",
+  "content": "Project kickoff: building a REST API with FastAPI. Target: MVP by Friday.",
+  "createdBy": "alice"
+}
 ```
 
-Response: `{ messageId: "jn7..." }`
+Response: `{ "memoryId": "k17..." }`
 
-## Step 5: Configure Agent B (Tau)
+## Step 4: Agent A (Alice) sends a message
 
-On a second machine (or second Claude Code session), add the same MCP config from Step 2. Same `CONVEX_URL` — both agents share one backend.
-
-## Step 6: Agent B (Tau) checks messages
-
-From Agent B (Tau)'s Claude Code session:
-
+```json
+{
+  "from": "alice",
+  "channel": "bob",
+  "content": "Hey Bob — I stored the project brief in global memory. Start on the database schema."
+}
 ```
-check_messages(
-  recipient: "tau"
-)
+
+Response: `{ "messageId": "jn7..." }`
+
+## Step 5: Configure Agent B (Bob)
+
+Open a second terminal window (or a second VS Code instance) and start a new Claude Code session. Use the same `CONVEX_URL` — both sessions share one backend.
+
+Add the same MCP config from Step 2.
+
+## Step 6: Agent B (Bob) checks messages
+
+From Agent B (Bob)'s Claude Code session:
+
+```json
+{
+  "recipient": "bob"
+}
 ```
 
 Response:
@@ -90,31 +92,31 @@ Response:
 ```json
 [
   {
-    "from": "pi",
-    "content": "Hey Tau — I stored the project brief in global memory. Start on the database schema.",
+    "from": "alice",
+    "content": "Hey Bob — I stored the project brief in global memory. Start on the database schema.",
     "receiptId": "k97..."
   }
 ]
 ```
 
-## Step 7: Agent B (Tau) recalls the memory
+## Step 7: Agent B (Bob) recalls the memory
 
+```json
+{
+  "query": "project brief MVP",
+  "namespace": "global",
+  "limit": 3
+}
 ```
-recall(
-  query: "project brief MVP",
-  namespace: "global",
-  limit: 3
-)
-```
 
-Response includes the memory Agent A (Pi) stored — with semantic search ranking.
+Response includes the memory Agent A (Alice) stored — with semantic search ranking.
 
-## Step 8: Agent B (Tau) marks the message as read
+## Step 8: Agent B (Bob) marks the message as read
 
-```
-mark_as_read(
-  receiptIds: ["k97..."]
-)
+```json
+{
+  "receiptIds": ["k97..."]
+}
 ```
 
 Done. Two agents, shared memory, real messaging, read receipts. No file hacks. No polling. No duct tape.
@@ -123,9 +125,9 @@ Done. Two agents, shared memory, real messaging, read receipts. No file hacks. N
 
 1. **One Convex deployment** serves as the shared backend for both agents
 2. **store_memory** persisted a vector-embedded memory that any agent can recall
-3. **send_message** delivered a message from Pi to Tau with a receipt
+3. **send_message** delivered a message from Alice to Bob with a receipt
 4. **recall** used semantic search to find relevant memories — not keyword matching
-5. **mark_as_read** confirmed Tau processed the message
+5. **mark_as_read** confirmed Bob processed the message
 
 ## Next steps
 
