@@ -40,8 +40,8 @@ Ouvrez `.env.local` et définissez :
 # Votre URL de déploiement Convex (assignée après le deploy)
 CONVEX_URL=https://your-deployment.convex.cloud
 
-# Clé API OpenAI pour les embeddings vectoriels (requis pour recall/search)
-OPENAI_API_KEY=sk-...
+# Clé API pour les embeddings vectoriels (requis pour recall/search)
+AI_GATEWAY_API_KEY=sk-...
 ```
 
 > **À propos de la clé API OpenAI :** VantagePeers utilise `text-embedding-3-small` pour générer des embeddings vectoriels pour la recherche sémantique (`recall`, `hybrid_search`). Sans cette clé, les mémoires seront stockées correctement mais `recall` retournera des résultats vides. Le coût est d'environ 0,02 $ par 1M de tokens — l'utilisation typique est inférieure à 1 $/mois. Définissez `AI_GATEWAY_API_KEY` dans le tableau de bord Convex (Settings → Environment Variables) avec votre clé API OpenAI.
@@ -159,7 +159,7 @@ Vous devriez voir le message listé avec son ID de réception et son statut de l
 
 Pour confirmer que votre déploiement est sain, consultez le tableau de bord Convex sur [dashboard.convex.dev](https://dashboard.convex.dev). Vous devriez voir :
 
-- 19 tables dans la section Data : `memories`, `messages`, `messageReceipts`, `tasks`, `missions`, `recurringTasks`, `profiles`, `diary`, `briefingNotes`, `components`, `fixPatterns`, `fixAttempts`, `issues`, `mandates`, `businessUnits`, `missionTemplates`, `githubRepoMapping`, `monitoredDeployments`, `errorLogs`
+- 20 tables dans la section Data : `memories`, `messages`, `messageReceipts`, `tasks`, `missions`, `recurringTasks`, `profiles`, `diary`, `briefingNotes`, `components`, `fixPatterns`, `fixAttempts`, `issues`, `issueStats`, `mandates`, `businessUnits`, `missionTemplates`, `githubRepoMapping`, `monitoredDeployments`, `errorLogs`
 - Vos appels de fonctions récents dans la section Functions
 - Les index vectoriels actifs sur la table `memories`
 
