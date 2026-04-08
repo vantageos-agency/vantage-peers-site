@@ -49,17 +49,73 @@ Fichier de config : `.cursor/mcp.json`
 
 ### Codex (OpenAI)
 
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
 Fichier de config : `~/.codex/config.json`
 
 ### Windsurf
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
 
 Fichier de config : `~/.codeium/windsurf/mcp_config.json`
 
 ### Cline
 
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
 Fichier de config : Paramètres VS Code → Cline MCP Servers
 
 ### Roo Code
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
 
 Fichier de config : Paramètres VS Code → Roo Code MCP Servers
 
@@ -78,15 +134,57 @@ Fichier de config : `opencode.toml`
 
 ### Amazon Q Developer
 
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
 Fichier de config : `~/.aws/amazonq/mcp.json`
 
 ### Augment Code
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
 
 Fichier de config : Paramètres VS Code → Augment MCP Servers
 
 ### Void
 
-Fichier de config : Paramètres Void
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Fichier de config : Paramètres Void MCP
 
 ## Mode Agent uniquement
 
@@ -116,6 +214,22 @@ Ces outils supportent MCP en mode agent mais pas en mode inline/chat.
 Fichier de config : `~/.continue/config.json`
 
 ### GitHub Copilot
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "vantage-peers": {
+        "command": "npx",
+        "args": ["-y", "vantage-peers-mcp"],
+        "env": {
+          "CONVEX_URL": "https://your-deployment.convex.cloud"
+        }
+      }
+    }
+  }
+}
+```
 
 Fichier de config : `.github/copilot-mcp.json` — nécessite le mode agent
 
