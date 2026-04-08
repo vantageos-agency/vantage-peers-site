@@ -1,22 +1,23 @@
 ---
 title: Tools Reference
-description: All 75 MCP tools across 13 capability categories in VantagePeers.
+description: All 88 MCP tools across 14 capability categories in VantagePeers.
 ---
 
 # Tools Reference
 
-VantagePeers exposes 75 MCP tools organized into 13 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
+VantagePeers exposes 88 MCP tools organized into 14 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
 
 ## Tool Categories
 
 | Category | Tool Count | Description |
 |----------|-----------|-------------|
-| [Memory](#memory-tools) | 4 | Store, recall, and manage typed memories with vector search |
-| [Messaging](#messaging-tools) | 6 | Send messages across machines with read receipts |
-| [Tasks](#task-tools) | 8 | Create and manage tasks with full lifecycle tracking |
-| [Missions](#mission-tools) | 4 | Group tasks into missions with stage tracking |
+| [Memory](#memory-tools) | 6 | Store, recall, and manage typed memories with vector search |
+| [Search](#search-tools) | 2 | Full-text and hybrid search over memories |
+| [Messaging](#messaging-tools) | 7 | Send messages across machines with read receipts |
+| [Tasks](#task-tools) | 11 | Create and manage tasks with full lifecycle tracking |
+| [Missions](#mission-tools) | 5 | Group tasks into missions with stage tracking |
 | [Profiles & Sessions](#profile-and-session-tools) | 8 | Agent identity, session state, diary, and briefings |
-| [Recurring Tasks](#recurring-task-tools) | 5 | Cron-based automation |
+| [Recurring Tasks](#recurring-task-tools) | 7 | Cron-based automation |
 | [Registry](#registry-tools) | 3 | Component backup and inventory |
 | [Mandates](#mandate-tools) | 6 | Cross-agent service requests with budgets |
 | [Business Units](#business-unit-tools) | 5 | BU strategy, pricing, and KPIs |
@@ -88,6 +89,56 @@ Lists memories in a namespace, optionally filtered by type.
   "namespace": "project/vantage-starter",
   "type": "project",
   "limit": 20
+}
+```
+
+### `soft_delete_memory`
+
+Soft-delete a memory so it stops appearing in recall results.
+
+```json
+{
+  "memoryId": "memory-abc123"
+}
+```
+
+### `get_memory`
+
+Fetch a single memory by its ID.
+
+```json
+{
+  "memoryId": "memory-abc123"
+}
+```
+
+---
+
+## Search Tools
+
+Full-text and hybrid search over the memory store.
+
+### `text_search`
+
+BM25 full-text keyword search over memories.
+
+```json
+{
+  "query": "deployment error",
+  "namespace": "global",
+  "limit": 10
+}
+```
+
+### `hybrid_search`
+
+Combined vector + BM25 search using RRF fusion.
+
+```json
+{
+  "query": "deployment error",
+  "namespace": "global",
+  "limit": 10
 }
 ```
 
@@ -184,6 +235,16 @@ Returns all known agent instances and their current status.
 
 Returns orchestrator IDs, instance IDs, last seen timestamps, and current tasks.
 
+### `list_broadcast_status`
+
+Show who read a broadcast message and who didn't.
+
+```json
+{
+  "messageId": "msg-abc123"
+}
+```
+
 ---
 
 ## Task Tools
@@ -272,6 +333,38 @@ Links two tasks so one cannot start before the other completes.
 }
 ```
 
+### `checkout_task`
+
+Atomically claim a task (conflict-safe for multi-instance).
+
+```json
+{
+  "taskId": "task-abc123",
+  "callerOrchestrator": "tau"
+}
+```
+
+### `delete_task`
+
+Permanently delete a task (creator or system only).
+
+```json
+{
+  "taskId": "task-abc123",
+  "callerOrchestrator": "sigma"
+}
+```
+
+### `list_tasks_by_mission`
+
+List all tasks linked to a specific mission.
+
+```json
+{
+  "missionId": "mission-abc123"
+}
+```
+
 ---
 
 ## Mission Tools
@@ -320,6 +413,17 @@ Returns a mission with all its linked tasks and current status.
 ```json
 {
   "missionId": "mission-abc123"
+}
+```
+
+### `update_mission_status`
+
+Change a mission's lifecycle status.
+
+```json
+{
+  "missionId": "mission-abc123",
+  "status": "validate"
 }
 ```
 
@@ -393,14 +497,17 @@ List diary entries for an orchestrator, optionally filtered by date range.
 
 ### `update_profile`
 
-Update an orchestrator profile (role, capabilities, status).
+Create or update an orchestrator profile (partial updates supported).
 
 ```json
 {
   "orchestratorId": "tau",
-  "instanceId": "tau-main",
-  "role": "frontend specialist",
-  "status": "active"
+  "name": "Tau",
+  "dynamic": {
+    "currentTask": "Building dashboard",
+    "lastSeen": 1712275200000,
+    "sessionCount": 42
+  }
 }
 ```
 
@@ -473,6 +580,26 @@ Updates a recurring task template.
 ### `delete_recurring_task`
 
 Removes a recurring task template. Does not delete already-created instances.
+
+```json
+{
+  "recurringTaskId": "rt-abc123"
+}
+```
+
+### `pause_recurring_task`
+
+Pause a recurring task.
+
+```json
+{
+  "recurringTaskId": "rt-abc123"
+}
+```
+
+### `resume_recurring_task`
+
+Resume a paused recurring task.
 
 ```json
 {
@@ -614,6 +741,17 @@ Bug fix knowledge base with semantic search. See [Fix Patterns KB](/docs/capabil
 | `validate_fix` | Set the validated fix |
 | `search_fix_patterns` | Semantic search over patterns |
 | `list_fix_patterns` | List patterns by project |
+
+### `link_issue_to_pattern`
+
+Link a VantagePeers issue to a fix pattern.
+
+```json
+{
+  "issueId": "issue-abc123",
+  "patternId": "pattern-abc123"
+}
+```
 
 ---
 
