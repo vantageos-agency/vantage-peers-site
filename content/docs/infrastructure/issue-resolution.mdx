@@ -1,11 +1,11 @@
 ---
 title: Issue Resolution Protocol
-description: Automated 12-step issue resolution with GitHub webhook integration and mission templates.
+description: Automated 14-step issue resolution with GitHub webhook integration and mission templates.
 ---
 
 # Issue Resolution Protocol
 
-When a GitHub issue is opened on a mapped repository, VantagePeers automatically creates a mission with 12 tasks following the Issue Resolution Protocol (IRP). The assigned orchestrator works through each step, with progress comments posted back to GitHub.
+When a GitHub issue is opened on a mapped repository, VantagePeers automatically creates a mission with 14 tasks following the Issue Resolution Protocol (IRP). The assigned orchestrator works through each step, with progress comments posted back to GitHub.
 
 ## How It Works
 
@@ -19,10 +19,10 @@ Webhook receives event
 Auto-comment: "Investigating - assigned to {orchestrator}"
        |
        v
-Mission created with 12 tasks (from template)
+Mission created with 14 tasks (from template)
        |
        v
-Orchestrator executes steps T1-T12
+Orchestrator executes steps T0-T13
        |
        v
 Auto-comments at T6, T8, T11
@@ -31,7 +31,7 @@ Auto-comments at T6, T8, T11
 Issue closed with fix deployed
 ```
 
-## The 12 Steps
+## The 14 Steps (T0-T13)
 
 | Step | Title | Description | Auto-Comment |
 |------|-------|-------------|--------------|
