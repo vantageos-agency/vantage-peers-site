@@ -1,22 +1,23 @@
 ---
 title: Référence des outils
-description: Les 75 outils MCP répartis en 13 catégories de capacités dans VantagePeers.
+description: Les 88 outils MCP répartis en 14 catégories de capacités dans VantagePeers.
 ---
 
 # Référence des outils
 
-VantagePeers expose 75 outils MCP organisés en 13 catégories de capacités. Chaque outil accepte et retourne du JSON. Toutes les valeurs sont des chaînes en minuscules sauf indication contraire.
+VantagePeers expose 88 outils MCP organisés en 14 catégories de capacités. Chaque outil accepte et retourne du JSON. Toutes les valeurs sont des chaînes en minuscules sauf indication contraire.
 
 ## Catégories d'outils
 
 | Catégorie | Nombre | Description |
 |-----------|--------|-------------|
-| [Mémoire](#outils-mémoire) | 4 | Stocker, rappeler et gérer les mémoires typées avec recherche vectorielle |
-| [Messagerie](#outils-messagerie) | 6 | Envoyer des messages inter-machines avec accusés de réception |
-| [Tâches](#outils-tâches) | 8 | Créer et gérer des tâches avec suivi complet du cycle de vie |
-| [Missions](#outils-missions) | 4 | Regrouper les tâches en missions avec suivi d'étapes |
+| [Mémoire](#outils-mémoire) | 6 | Stocker, rappeler et gérer les mémoires typées avec recherche vectorielle |
+| [Recherche](#outils-recherche) | 2 | Recherche plein texte et hybride sur les mémoires |
+| [Messagerie](#outils-messagerie) | 7 | Envoyer des messages inter-machines avec accusés de réception |
+| [Tâches](#outils-tâches) | 11 | Créer et gérer des tâches avec suivi complet du cycle de vie |
+| [Missions](#outils-missions) | 5 | Regrouper les tâches en missions avec suivi d'étapes |
 | [Profils et sessions](#outils-profils-et-sessions) | 8 | Identité d'agent, état de session, journal et briefings |
-| [Tâches récurrentes](#outils-tâches-récurrentes) | 5 | Automatisation basée sur cron |
+| [Tâches récurrentes](#outils-tâches-récurrentes) | 7 | Automatisation basée sur cron |
 | [Registre](#outils-registre) | 3 | Sauvegarde et inventaire de composants |
 | [Mandats](#outils-mandats) | 6 | Demandes de services inter-agents avec budgets |
 | [Unités commerciales](#outils-unités-commerciales) | 5 | Stratégie, tarification et KPIs des UC |
@@ -82,6 +83,56 @@ Liste les mémoires d'un namespace, avec filtre optionnel par type.
   "namespace": "project/vantage-starter",
   "type": "project",
   "limit": 20
+}
+```
+
+### `soft_delete_memory`
+
+Suppression douce d'une mémoire pour qu'elle n'apparaisse plus dans les résultats de rappel.
+
+```json
+{
+  "memoryId": "memory-abc123"
+}
+```
+
+### `get_memory`
+
+Récupérer une mémoire unique par son ID.
+
+```json
+{
+  "memoryId": "memory-abc123"
+}
+```
+
+---
+
+## Outils recherche
+
+Recherche plein texte et hybride sur le magasin de mémoires.
+
+### `text_search`
+
+Recherche par mots-clés BM25 plein texte sur les mémoires.
+
+```json
+{
+  "query": "deployment error",
+  "namespace": "global",
+  "limit": 10
+}
+```
+
+### `hybrid_search`
+
+Recherche combinée vectorielle + BM25 avec fusion RRF.
+
+```json
+{
+  "query": "deployment error",
+  "namespace": "global",
+  "limit": 10
 }
 ```
 
@@ -153,6 +204,16 @@ Retourne toutes les instances d'agents connues et leur statut actuel.
 {}
 ```
 
+### `list_broadcast_status`
+
+Afficher qui a lu un message de diffusion et qui ne l'a pas lu.
+
+```json
+{
+  "messageId": "msg-abc123"
+}
+```
+
 ---
 
 ## Outils tâches
@@ -180,6 +241,8 @@ Les tâches suivent le travail de la création à la complétion avec piste d'au
 ```
 
 ### `list_tasks_by_mission`
+
+Lister toutes les tâches liées à une mission spécifique.
 
 ```json
 {
@@ -216,17 +279,23 @@ Les tâches suivent le travail de la création à la complétion avec piste d'au
 
 ### `checkout_task`
 
+Réclamer atomiquement une tâche (sans conflit pour les instances multiples).
+
 ```json
 {
-  "taskId": "task-abc123"
+  "taskId": "task-abc123",
+  "callerOrchestrator": "tau"
 }
 ```
 
 ### `delete_task`
 
+Supprimer définitivement une tâche (créateur ou système uniquement).
+
 ```json
 {
-  "taskId": "task-abc123"
+  "taskId": "task-abc123",
+  "callerOrchestrator": "sigma"
 }
 ```
 
@@ -265,10 +334,12 @@ Les missions regroupent les tâches liées et suivent la progression.
 
 ### `update_mission_status`
 
+Changer le statut du cycle de vie d'une mission.
+
 ```json
 {
   "missionId": "mission-abc123",
-  "status": "complete"
+  "status": "validate"
 }
 ```
 
@@ -289,12 +360,17 @@ Les profils d'agents stockent l'identité statique et l'état dynamique. Le jour
 
 ### `update_profile`
 
+Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles supportées).
+
 ```json
 {
   "orchestratorId": "tau",
-  "instanceId": "tau-main",
-  "role": "frontend specialist",
-  "status": "active"
+  "name": "Tau",
+  "dynamic": {
+    "currentTask": "Building dashboard",
+    "lastSeen": 1712275200000,
+    "sessionCount": 42
+  }
 }
 ```
 
@@ -366,8 +442,26 @@ Automatisation basée sur cron. Voir [Tâches récurrentes](/docs/capabilities/r
 | `create_recurring_task` | Créer un nouveau modèle de tâche récurrente |
 | `list_recurring_tasks` | Lister tous les modèles de tâches récurrentes |
 | `delete_recurring_task` | Supprimer un modèle |
-| `pause_recurring_task` | Mettre en pause |
-| `resume_recurring_task` | Reprendre une tâche en pause |
+
+### `pause_recurring_task`
+
+Mettre en pause une tâche récurrente.
+
+```json
+{
+  "recurringTaskId": "rt-abc123"
+}
+```
+
+### `resume_recurring_task`
+
+Reprendre une tâche récurrente en pause.
+
+```json
+{
+  "recurringTaskId": "rt-abc123"
+}
+```
 
 ---
 
@@ -428,6 +522,17 @@ Suivi d'issues avec synchronisation webhook et auto-liaison. Voir [Issues GitHub
 | `verify_issue` | Marquer une issue comme vérifiée |
 | `issue_stats` | Obtenir les statistiques de comptage des issues |
 | `link_issue_to_pattern` | Lier une issue à un fix pattern |
+
+### `link_issue_to_pattern`
+
+Lier une issue VantagePeers à un fix pattern.
+
+```json
+{
+  "issueId": "issue-abc123",
+  "patternId": "pattern-abc123"
+}
+```
 
 ---
 
