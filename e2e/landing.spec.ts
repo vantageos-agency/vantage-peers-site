@@ -24,17 +24,17 @@ test.describe("VantagePeers landing page", () => {
 		expect(bodyText).not.toContain("Persistent memory");
 	});
 
-	// Test 3: Hero stats show "20" tables and "75" tools
-	test("hero stats show 20 tables and 75 tools", async ({ page }) => {
+	// Test 3: Hero stats show "20" tables and "82" tools
+	test("hero stats show 20 tables and 82 tools", async ({ page }) => {
 		const bodyText = await page.locator("body").textContent();
 		expect(bodyText).toMatch(/20/);
-		expect(bodyText).toMatch(/75/);
+		expect(bodyText).toMatch(/82/);
 		// Verify via meta description which is always present
 		const metaDesc = await page
 			.locator('meta[name="description"]')
 			.getAttribute("content");
 		expect(metaDesc).toContain("20 tables");
-		expect(metaDesc).toContain("75 tools");
+		expect(metaDesc).toContain("82 tools");
 	});
 
 	// Test 4: FSL license badge visible (not MIT)

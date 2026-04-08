@@ -30,7 +30,7 @@ const faqs = {
 		{
 			question: "Can I use this with any AI agent, not just Claude?",
 			answer:
-				"VantagePeers exposes 75 MCP tools. Any MCP-compatible agent can use them. Claude is the primary use case because of the Claude Code / Claude Desktop MCP support, but the protocol is open.",
+				"VantagePeers exposes 82 MCP tools. Any MCP-compatible agent can use them. Claude is the primary use case because of the Claude Code / Claude Desktop MCP support, but the protocol is open.",
 		},
 		{
 			question: "What happens to my data if Convex changes pricing?",
@@ -94,7 +94,7 @@ const faqs = {
 			question:
 				"Puis-je l'utiliser avec n'importe quel agent IA, pas seulement Claude ?",
 			answer:
-				"VantagePeers expose 75 outils MCP. N'importe quel agent compatible MCP peut les utiliser. Claude est le cas d'utilisation principal en raison du support MCP de Claude Code / Claude Desktop, mais le protocole est ouvert.",
+				"VantagePeers expose 82 outils MCP. N'importe quel agent compatible MCP peut les utiliser. Claude est le cas d'utilisation principal en raison du support MCP de Claude Code / Claude Desktop, mais le protocole est ouvert.",
 		},
 		{
 			question:
