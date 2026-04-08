@@ -52,13 +52,9 @@ A cron runs every hour and checks all external issues with `prStatus = open` or 
 
 No manual checking needed — Pi gets a message when any PR changes state.
 
-## MCP Tools
+## Tools
 
-| Tool | Description |
-|------|-------------|
-| `createExternal` | Create an external issue in VantagePeers |
-| `updatePrStatus` | Update PR URL and status |
-| `listExternalOpen` | List all external issues with open PRs |
+External issue tracking uses the standard VantagePeers tools: `create_task`, `update_task`, and `list_tasks` with appropriate tags. There are no dedicated external-tracking MCP tools — the `/track-external-issue` skill below handles the full workflow.
 
 ## Skill: /track-external-issue
 
