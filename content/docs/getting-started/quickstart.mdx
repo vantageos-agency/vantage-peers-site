@@ -24,7 +24,7 @@ Set the OpenAI key for vector embeddings:
 npx convex env set OPENAI_API_KEY sk-your-key-here
 ```
 
-## Step 2: Configure Agent A
+## Step 2: Configure Agent A (Pi)
 
 Open Claude Code settings (`~/.claude.json` or your project's `.claude/settings.json`) and add:
 
@@ -44,44 +44,44 @@ Open Claude Code settings (`~/.claude.json` or your project's `.claude/settings.
 
 Restart Claude Code. You should see VantagePeers tools in the tool list.
 
-## Step 3: Agent A stores a memory
+## Step 3: Agent A (Pi) stores a memory
 
-From Agent A's Claude Code session:
+From Agent A (Pi)'s Claude Code session:
 
 ```
 store_memory(
   namespace: "global",
   type: "project",
   content: "Project kickoff: building a REST API with FastAPI. Target: MVP by Friday.",
-  createdBy: "alpha"
+  createdBy: "pi"
 )
 ```
 
 Response: `{ memoryId: "k17..." }`
 
-## Step 4: Agent A sends a message
+## Step 4: Agent A (Pi) sends a message
 
 ```
 send_message(
-  from: "alpha",
-  channel: "beta",
-  content: "Hey Beta — I stored the project brief in global memory. Start on the database schema."
+  from: "pi",
+  channel: "tau",
+  content: "Hey Tau — I stored the project brief in global memory. Start on the database schema."
 )
 ```
 
 Response: `{ messageId: "jn7..." }`
 
-## Step 5: Configure Agent B
+## Step 5: Configure Agent B (Tau)
 
 On a second machine (or second Claude Code session), add the same MCP config from Step 2. Same `CONVEX_URL` — both agents share one backend.
 
-## Step 6: Agent B checks messages
+## Step 6: Agent B (Tau) checks messages
 
-From Agent B's Claude Code session:
+From Agent B (Tau)'s Claude Code session:
 
 ```
 check_messages(
-  recipient: "beta"
+  recipient: "tau"
 )
 ```
 
@@ -90,14 +90,14 @@ Response:
 ```json
 [
   {
-    "from": "alpha",
-    "content": "Hey Beta — I stored the project brief in global memory. Start on the database schema.",
+    "from": "pi",
+    "content": "Hey Tau — I stored the project brief in global memory. Start on the database schema.",
     "receiptId": "k97..."
   }
 ]
 ```
 
-## Step 7: Agent B recalls the memory
+## Step 7: Agent B (Tau) recalls the memory
 
 ```
 recall(
@@ -107,9 +107,9 @@ recall(
 )
 ```
 
-Response includes the memory Agent A stored — with semantic search ranking.
+Response includes the memory Agent A (Pi) stored — with semantic search ranking.
 
-## Step 8: Agent B marks the message as read
+## Step 8: Agent B (Tau) marks the message as read
 
 ```
 mark_as_read(
@@ -123,9 +123,9 @@ Done. Two agents, shared memory, real messaging, read receipts. No file hacks. N
 
 1. **One Convex deployment** serves as the shared backend for both agents
 2. **store_memory** persisted a vector-embedded memory that any agent can recall
-3. **send_message** delivered a message from Alpha to Beta with a receipt
+3. **send_message** delivered a message from Pi to Tau with a receipt
 4. **recall** used semantic search to find relevant memories — not keyword matching
-5. **mark_as_read** confirmed Beta processed the message
+5. **mark_as_read** confirmed Tau processed the message
 
 ## Next steps
 
