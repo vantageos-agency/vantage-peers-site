@@ -1,5 +1,5 @@
 {
   "title": "Getting Started",
   "defaultOpen": true,
-  "pages": ["index", "quickstart", "supported-tools"]
+  "pages": ["index", "quickstart", "add-orchestrator", "supported-tools"]
 }
