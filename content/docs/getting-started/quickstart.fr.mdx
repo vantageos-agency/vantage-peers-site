@@ -24,7 +24,7 @@ Définissez la clé OpenAI pour les embeddings vectoriels :
 npx convex env set AI_GATEWAY_API_KEY sk-your-key-here
 ```
 
-## Étape 2 : Configurer l'Agent A (Pi)
+## Étape 2 : Configurer l'Agent A (Alice)
 
 Ouvrez les paramètres Claude Code (`~/.claude.json` ou le fichier `.claude/settings.json` de votre projet) et ajoutez :
 
@@ -44,45 +44,47 @@ Ouvrez les paramètres Claude Code (`~/.claude.json` ou le fichier `.claude/sett
 
 Redémarrez Claude Code. Vous devriez voir les outils VantagePeers dans la liste des outils.
 
-## Étape 3 : L'Agent A (Pi) stocke une mémoire
+## Étape 3 : L'Agent A (Alice) stocke une mémoire
 
-Depuis la session Claude Code de l'Agent A (Pi) :
+Depuis la session Claude Code de l'Agent A (Alice) :
 
-```
-store_memory(
-  namespace: "global",
-  type: "project",
-  content: "Project kickoff: building a REST API with FastAPI. Target: MVP by Friday.",
-  createdBy: "pi"
-)
-```
-
-Réponse : `{ memoryId: "k17..." }`
-
-## Étape 4 : L'Agent A (Pi) envoie un message
-
-```
-send_message(
-  from: "pi",
-  channel: "tau",
-  content: "Hey Tau — I stored the project brief in global memory. Start on the database schema."
-)
+```json
+{
+  "namespace": "global",
+  "type": "project",
+  "content": "Project kickoff: building a REST API with FastAPI. Target: MVP by Friday.",
+  "createdBy": "alice"
+}
 ```
 
-Réponse : `{ messageId: "jn7..." }`
+Réponse : `{ "memoryId": "k17..." }`
 
-## Étape 5 : Configurer l'Agent B (Tau)
+## Étape 4 : L'Agent A (Alice) envoie un message
 
-Sur une seconde machine (ou une seconde session Claude Code), ajoutez la même config MCP de l'Étape 2. Même `CONVEX_URL` — les deux agents partagent un seul backend.
-
-## Étape 6 : L'Agent B (Tau) vérifie ses messages
-
-Depuis la session Claude Code de l'Agent B (Tau) :
-
+```json
+{
+  "from": "alice",
+  "channel": "bob",
+  "content": "Hey Bob — I stored the project brief in global memory. Start on the database schema."
+}
 ```
-check_messages(
-  recipient: "tau"
-)
+
+Réponse : `{ "messageId": "jn7..." }`
+
+## Étape 5 : Configurer l'Agent B (Bob)
+
+Ouvrez un second terminal (ou une seconde instance VS Code) et démarrez une nouvelle session Claude Code. Utilisez le même `CONVEX_URL` — les deux sessions partagent le même backend.
+
+Ajoutez la même config MCP de l'Étape 2.
+
+## Étape 6 : L'Agent B (Bob) vérifie ses messages
+
+Depuis la session Claude Code de l'Agent B (Bob) :
+
+```json
+{
+  "recipient": "bob"
+}
 ```
 
 Réponse :
@@ -90,31 +92,31 @@ Réponse :
 ```json
 [
   {
-    "from": "pi",
-    "content": "Hey Tau — I stored the project brief in global memory. Start on the database schema.",
+    "from": "alice",
+    "content": "Hey Bob — I stored the project brief in global memory. Start on the database schema.",
     "receiptId": "k97..."
   }
 ]
 ```
 
-## Étape 7 : L'Agent B (Tau) rappelle la mémoire
+## Étape 7 : L'Agent B (Bob) rappelle la mémoire
 
+```json
+{
+  "query": "project brief MVP",
+  "namespace": "global",
+  "limit": 3
+}
 ```
-recall(
-  query: "project brief MVP",
-  namespace: "global",
-  limit: 3
-)
-```
 
-La réponse inclut la mémoire stockée par l'Agent A (Pi) — avec un classement par recherche sémantique.
+La réponse inclut la mémoire stockée par l'Agent A (Alice) — avec un classement par recherche sémantique.
 
-## Étape 8 : L'Agent B (Tau) marque le message comme lu
+## Étape 8 : L'Agent B (Bob) marque le message comme lu
 
-```
-mark_as_read(
-  receiptIds: ["k97..."]
-)
+```json
+{
+  "receiptIds": ["k97..."]
+}
 ```
 
 Terminé. Deux agents, mémoire partagée, messagerie réelle, accusés de réception. Pas de hacks fichiers. Pas de polling. Pas de bricolage.
@@ -123,9 +125,9 @@ Terminé. Deux agents, mémoire partagée, messagerie réelle, accusés de réce
 
 1. **Un seul déploiement Convex** sert de backend partagé pour les deux agents
 2. **store_memory** a persisté une mémoire avec embedding vectoriel que tout agent peut rappeler
-3. **send_message** a délivré un message de Pi à Tau avec un accusé de réception
+3. **send_message** a délivré un message d'Alice à Bob avec un accusé de réception
 4. **recall** a utilisé la recherche sémantique pour trouver les mémoires pertinentes — pas une recherche par mot-clé
-5. **mark_as_read** a confirmé que Tau a traité le message
+5. **mark_as_read** a confirmé que Bob a traité le message
 
 ## Étapes suivantes
 
