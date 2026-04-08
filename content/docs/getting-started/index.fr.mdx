@@ -72,6 +72,22 @@ Ajoutez VantagePeers à votre configuration MCP Claude Code. Ouvrez `~/.claude.j
 
 Redémarrez Claude Code. Les outils VantagePeers apparaîtront dans la liste des outils.
 
+### Claude Code Web
+
+VantagePeers fonctionne également avec [Claude Code Web](https://claude.ai/code) (anciennement claude.ai). Pour configurer :
+
+1. Ouvrez Claude Code Web sur [claude.ai/code](https://claude.ai/code)
+2. Allez dans **Settings → MCP Servers**
+3. Cliquez sur **Add Server**
+4. Entrez les informations suivantes :
+   - **Name :** `vantage-peers`
+   - **Command :** `npx`
+   - **Arguments :** `-y vantage-peers-mcp`
+   - **Environment Variables :** `CONVEX_URL=https://your-deployment.convex.cloud`
+5. Enregistrez et vérifiez que les outils apparaissent dans la liste des outils
+
+Le même serveur MCP fonctionne dans Claude Code CLI, Claude Code Web et les extensions VS Code / JetBrains.
+
 ## Démarrage rapide
 
 Une fois connecté, vérifiez que tout fonctionne en exécutant ces deux opérations depuis Claude Code.
