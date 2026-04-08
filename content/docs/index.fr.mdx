@@ -1,6 +1,6 @@
 ---
 title: Documentation VantagePeers
-description: Le système d'exploitation open-source pour les équipes d'agents IA. 20 tables, 75 outils MCP, gratuit pour toujours.
+description: Le système d'exploitation open-source pour les équipes d'agents IA. 20 tables, 82 outils MCP, gratuit pour toujours.
 ---
 
 # Bienvenue sur VantagePeers
@@ -11,7 +11,7 @@ VantagePeers est le backend open-source qui donne à vos agents IA une mémoire 
 
 Quand vous exécutez plusieurs agents Claude Code sur différentes machines et sessions, ils font face à un problème de coordination : chaque agent démarre sans connaître ce que les autres ont fait, sans moyen d'envoyer des messages entre machines, et sans tableau de bord partagé. Vous finissez par bricoler des plugins mémoire, des hacks basés sur des fichiers et une coordination manuelle — et ça casse à l'échelle.
 
-VantagePeers résout ce problème en fournissant un backend auto-hébergé unique avec 20 tables de base de données et 75 outils MCP couvrant chaque primitive de coordination dont votre équipe d'agents a besoin. Les agents stockent des mémoires typées avec recherche sémantique, envoient des messages avec accusés de réception, assignent des tâches avec priorités et dépendances, planifient des missions avec des étapes de cycle de vie, écrivent des journaux de session et maintiennent un registre partagé de composants. Tout persiste dans le cloud Convex et est accessible à tout agent sur n'importe quelle machine.
+VantagePeers résout ce problème en fournissant un backend auto-hébergé unique avec 20 tables de base de données et 82 outils MCP couvrant chaque primitive de coordination dont votre équipe d'agents a besoin. Les agents stockent des mémoires typées avec recherche sémantique, envoient des messages avec accusés de réception, assignent des tâches avec priorités et dépendances, planifient des missions avec des étapes de cycle de vie, écrivent des journaux de session et maintiennent un registre partagé de composants. Tout persiste dans le cloud Convex et est accessible à tout agent sur n'importe quelle machine.
 
 Ce n'est pas un SaaS. Ce n'est pas un service managé. Vous le déployez une fois avec `npx convex deploy`, vous l'ajoutez comme serveur MCP dans votre config Claude Code, et toute votre équipe d'agents est coordonnée. Licence FSL. Gratuit pour toujours.
 
@@ -22,7 +22,7 @@ Ce n'est pas un SaaS. Ce n'est pas un service managé. Vous le déployez une foi
 | [Démarrage](/docs/getting-started) | Installer, déployer et connecter en moins de 10 minutes |
 | [Quickstart](/docs/getting-started/quickstart) | Deux agents qui échangent des messages en 5 minutes |
 | [Architecture](/docs/core-concepts/architecture) | Concepts clés, schéma de base de données et intégration MCP |
-| [Référence des outils](/docs/tools) | Les 13 catégories et 75 outils |
+| [Référence des outils](/docs/tools) | Les 14 catégories et 82 outils |
 | [Mémoire](/docs/capabilities/memory) | Mémoire sémantique, namespaces et recherche vectorielle |
 | [Messagerie](/docs/capabilities/messaging) | Messagerie inter-machines avec accusés de réception |
 | [Tâches](/docs/capabilities/tasks) | Cycle de vie des tâches, priorités, missions et cron |
@@ -30,8 +30,8 @@ Ce n'est pas un SaaS. Ce n'est pas un service managé. Vous le déployez une foi
 ## Chiffres clés
 
 - **20 tables de base de données** — mémoires, messages, tâches, missions, profils, journal, briefings, composants, patterns de fix, issues, mandats, unités commerciales, et plus
-- **75 outils MCP** — chaque primitive de coordination exposée comme outil MCP natif
-- **13 catégories de capacités** — mémoire, messagerie, tâches, missions, profils, journal, registre, patterns de fix, issues, mandats, unités commerciales, tâches récurrentes, monitoring d'erreurs
+- **82 outils MCP** — chaque primitive de coordination exposée comme outil MCP natif
+- **14 catégories de capacités** — mémoire, messagerie, tâches, missions, profils, journal, registre, patterns de fix, issues, mandats, unités commerciales, tâches récurrentes, monitoring d'erreurs
 - **< 10 minutes** — de zéro à une équipe d'agents pleinement coordonnée
 - **0 € / mois** — licence FSL, auto-hébergé sur le tier gratuit de Convex
 
