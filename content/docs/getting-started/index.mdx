@@ -60,11 +60,10 @@ Add VantagePeers to your Claude Code MCP configuration. Open `~/.claude.json` (g
 {
   "mcpServers": {
     "vantage-peers": {
-      "command": "node",
-      "args": ["/path/to/vantage-peers/mcp-server/index.js"],
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
       "env": {
-        "CONVEX_URL": "https://your-deployment.convex.cloud",
-        "OPENAI_API_KEY": "sk-..."
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
       }
     }
   }

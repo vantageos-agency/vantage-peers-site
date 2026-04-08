@@ -32,8 +32,8 @@ Open Claude Code settings (`~/.claude.json` or your project's `.claude/settings.
 {
   "mcpServers": {
     "vantage-peers": {
-      "command": "node",
-      "args": ["/path/to/vantage-peers/mcp-server/dist/server.js"],
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp"],
       "env": {
         "CONVEX_URL": "https://your-deployment.convex.cloud"
       }
