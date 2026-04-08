@@ -150,7 +150,7 @@ VantagePeers replaces the stack you were going to build. One backend. One deploy
 | Session diary | Custom logging | Not available | Included |
 | Briefing notes | Google Docs / Notion | Not available | Included |
 | Component registry | File system + README | Not available | Included |
-| MCP native | Custom tool wrappers | Partial (mem0 only) | 75 tools, 13 categories |
+| MCP native | Custom tool wrappers | Partial (mem0 only) | 82 tools, 14 categories |
 | Self-hosted | Your responsibility | Cloud-only or abandoned | Convex (free tier) |
 | Open source | N/A | Partial or closed | FSL License |
 | **Setup time** | Weeks | Hours + $$$ | < 10 minutes |
@@ -241,7 +241,7 @@ A: Convex is a real-time backend platform — database, serverless functions, ve
 - Angle: the only integrated backend for multi-agent orchestration — and it is free
 
 ### Key Messages (priority order)
-1. **Complete, not partial.** 20 tables, 75 tools, 13 categories. Not just memory — the full stack.
+1. **Complete, not partial.** 20 tables, 82 tools, 14 categories. Not just memory — the full stack.
 2. **Open source, zero cost.** FSL license. Self-hosted on Convex free tier. No SaaS pricing trap.
 3. **Built for multi-agent teams.** Messaging with receipts. Tasks with dependencies. Missions with lifecycle. Not single-agent memory.
 4. **10-minute setup.** One deploy command. One MCP config. Production-ready.
