@@ -31,9 +31,9 @@ todo → in_progress → review → done
 ```json
 {
   "title": "Migrate HeroSection to lit-ui components",
-  "assignedTo": "tau",
+  "assignedTo": "alice",
   "priority": "high",
-  "createdBy": "pi",
+  "createdBy": "bob",
   "missionId": "mission-landing-page"
 }
 ```
@@ -68,11 +68,11 @@ When you cannot proceed, set the task to blocked with a specific reason:
 ```json
 {
   "taskId": "task-abc123",
-  "blockedBy": "Waiting on design approval for new hero layout — asked pi on 2026-03-29"
+  "reason": "Waiting on design approval for new hero layout — asked bob on 2026-03-29"
 }
 ```
 
-Be specific in the `blockedBy` string — include who you are waiting on and when you asked.
+Be specific in the `reason` string — include who you are waiting on and when you asked.
 
 ### Putting a Task in Review
 
@@ -135,7 +135,12 @@ Missions group related tasks and track overall progress through lifecycle stages
 ```json
 {
   "name": "Landing Page Migration — Phase 1",
-  "pilot": "tau",
+  "project": "vantage-starter",
+  "priority": "high",
+  "pilot": "alice",
+  "agents": ["alice"],
+  "status": "plan",
+  "createdBy": "bob",
   "targetDate": 1712275200000
 }
 ```
@@ -149,9 +154,9 @@ Set `missionId` when creating a task:
 ```json
 {
   "title": "Migrate FAQSection",
-  "assignedTo": "tau",
+  "assignedTo": "alice",
   "priority": "medium",
-  "createdBy": "pi",
+  "createdBy": "bob",
   "missionId": "mission-landing-page"
 }
 ```
@@ -189,7 +194,7 @@ Recurring tasks auto-create new task instances on a schedule using standard cron
 {
   "title": "Daily standup: check messages, review tasks, report blockers",
   "cronExpression": "0 9 * * 1-5",
-  "assignedTo": "tau",
+  "assignedTo": "alice",
   "priority": "medium"
 }
 ```
@@ -248,7 +253,7 @@ At the start of every session, run:
 
 ```json
 {
-  "assignedTo": "tau"
+  "assignedTo": "alice"
 }
 ```
 

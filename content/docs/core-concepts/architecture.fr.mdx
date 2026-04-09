@@ -41,9 +41,9 @@ Chaque agent exécute son propre processus serveur MCP local. Tous les agents pa
 
 ### Orchestrateurs
 
-Un **orchestrateur** est un rôle nommé dans votre équipe d'agents. Exemples : `pi`, `tau`, `phi`. Un orchestrateur représente ce que l'agent *fait* — sa responsabilité dans le système. Les noms d'orchestrateurs sont utilisés comme identités pour les namespaces de mémoire, le routage de messages, l'assignation de tâches et les profils d'agents.
+Un **orchestrateur** est un rôle nommé dans votre équipe d'agents. Exemples : `alice`, `bob`, `carol`. Un orchestrateur représente ce que l'agent *fait* — sa responsabilité dans le système. Les noms d'orchestrateurs sont utilisés comme identités pour les namespaces de mémoire, le routage de messages, l'assignation de tâches et les profils d'agents.
 
-Quand vous stockez une mémoire avec `createdBy: "tau"`, elle est attribuée à l'orchestrateur `tau`. Quand vous envoyez un message `from: "tau"` vers `channel: "pi"`, l'orchestrateur `pi` le reçoit.
+Quand vous stockez une mémoire avec `createdBy: "alice"`, elle est attribuée à l'orchestrateur `alice`. Quand vous envoyez un message `from: "alice"` vers `channel: "bob"`, l'orchestrateur `bob` le reçoit.
 
 ### Instances
 

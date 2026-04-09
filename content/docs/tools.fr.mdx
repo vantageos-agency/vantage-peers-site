@@ -41,7 +41,7 @@ Stocke une nouvelle mémoire avec embedding vectoriel optionnel.
   "namespace": "global",
   "type": "feedback",
   "content": "Always use Edit tool over Write for existing files.",
-  "createdBy": "tau"
+  "createdBy": "alice"
 }
 ```
 
@@ -63,8 +63,8 @@ Stocke un épisode structuré (événement de succès ou d'échec avec contexte 
 
 ```json
 {
-  "namespace": "orchestrator/tau",
-  "createdBy": "tau",
+  "namespace": "orchestrator/alice",
+  "createdBy": "alice",
   "context": "Deploying frontend component",
   "goal": "Fix broken layout on mobile",
   "action": "Delegated to dev-frontend with exact file:line brief",
@@ -148,8 +148,8 @@ Envoie un message à un canal, rôle ou instance spécifique.
 
 ```json
 {
-  "from": "tau",
-  "channel": "pi",
+  "from": "alice",
+  "channel": "bob",
   "content": "Phase 1 complete. Ready for review."
 }
 ```
@@ -160,8 +160,8 @@ Récupère les messages non lus pour un destinataire.
 
 ```json
 {
-  "recipient": "tau",
-  "recipientInstanceId": "tau-main"
+  "recipient": "alice",
+  "recipientInstanceId": "alice-main"
 }
 ```
 
@@ -181,7 +181,7 @@ Liste les messages avec filtres optionnels.
 
 ```json
 {
-  "from": "tau",
+  "from": "alice",
   "limit": 20
 }
 ```
@@ -225,9 +225,9 @@ Les tâches suivent le travail de la création à la complétion avec piste d'au
 ```json
 {
   "title": "Migrate HeroSection to lit-ui components",
-  "assignedTo": "tau",
+  "assignedTo": "alice",
   "priority": "high",
-  "createdBy": "pi"
+  "createdBy": "bob"
 }
 ```
 
@@ -235,7 +235,7 @@ Les tâches suivent le travail de la création à la complétion avec piste d'au
 
 ```json
 {
-  "assignedTo": "tau",
+  "assignedTo": "alice",
   "status": "todo"
 }
 ```
@@ -256,7 +256,7 @@ Lister toutes les tâches liées à une mission spécifique.
 {
   "taskId": "task-abc123",
   "priority": "urgent",
-  "blockedBy": "Waiting on API key"
+  "completionNote": "Reprioritized — waiting on API key"
 }
 ```
 
@@ -284,7 +284,7 @@ Réclamer atomiquement une tâche (sans conflit pour les instances multiples).
 ```json
 {
   "taskId": "task-abc123",
-  "callerOrchestrator": "tau"
+  "callerOrchestrator": "alice"
 }
 ```
 
@@ -295,7 +295,7 @@ Supprimer définitivement une tâche (créateur ou système uniquement).
 ```json
 {
   "taskId": "task-abc123",
-  "callerOrchestrator": "sigma"
+  "callerOrchestrator": "carol"
 }
 ```
 
@@ -310,7 +310,12 @@ Les missions regroupent les tâches liées et suivent la progression.
 ```json
 {
   "name": "Landing Page Migration — Phase 1",
-  "pilot": "tau",
+  "project": "vantage-starter",
+  "priority": "high",
+  "pilot": "alice",
+  "agents": ["alice"],
+  "status": "plan",
+  "createdBy": "alice",
   "targetDate": 1712275200000
 }
 ```
@@ -319,7 +324,7 @@ Les missions regroupent les tâches liées et suivent la progression.
 
 ```json
 {
-  "pilot": "tau"
+  "pilot": "alice"
 }
 ```
 
@@ -353,8 +358,7 @@ Les profils d'agents stockent l'identité statique et l'état dynamique. Le jour
 
 ```json
 {
-  "orchestratorId": "tau",
-  "instanceId": "tau-main"
+  "orchestratorId": "alice"
 }
 ```
 
@@ -364,7 +368,7 @@ Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles sup
 
 ```json
 {
-  "orchestratorId": "tau",
+  "orchestratorId": "alice",
   "name": "Tau",
   "dynamic": {
     "currentTask": "Building dashboard",
@@ -378,8 +382,8 @@ Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles sup
 
 ```json
 {
-  "orchestratorId": "tau",
-  "instanceId": "tau-main",
+  "orchestratorId": "alice",
+  "instanceId": "alice-main",
   "summary": "Migrating HeroSection to lit-ui — ETA 30 minutes"
 }
 ```
@@ -389,7 +393,7 @@ Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles sup
 ```json
 {
   "date": "2026-03-29",
-  "orchestrator": "tau",
+  "orchestrator": "alice",
   "content": "Completed Phase 1 of landing page migration.",
   "highlights": ["Nav fully migrated", "Hero responsive layout fixed"]
 }
@@ -399,7 +403,7 @@ Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles sup
 
 ```json
 {
-  "orchestrator": "tau",
+  "orchestrator": "alice",
   "date": "2026-03-29"
 }
 ```
@@ -408,7 +412,7 @@ Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles sup
 
 ```json
 {
-  "orchestrator": "tau",
+  "orchestrator": "alice",
   "limit": 10
 }
 ```
@@ -418,8 +422,11 @@ Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles sup
 ```json
 {
   "title": "Landing page migration kickoff",
-  "participants": ["pi", "tau"],
-  "decisions": ["Migrate section by section"]
+  "topic": "migration",
+  "participants": ["alice", "bob"],
+  "content": "Discussion du plan de migration de la landing page de shadcn vers lit-ui.",
+  "decisions": ["Migrate section by section"],
+  "createdBy": "alice"
 }
 ```
 

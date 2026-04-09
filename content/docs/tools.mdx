@@ -41,7 +41,7 @@ Stores a new memory with optional vector embedding.
   "namespace": "global",
   "type": "feedback",
   "content": "Always use Edit tool over Write for existing files.",
-  "createdBy": "tau"
+  "createdBy": "alice"
 }
 ```
 
@@ -67,8 +67,8 @@ Stores a structured episode (a failure or success event with full context).
 
 ```json
 {
-  "namespace": "orchestrator/tau",
-  "createdBy": "tau",
+  "namespace": "orchestrator/alice",
+  "createdBy": "alice",
   "context": "Deploying frontend component",
   "goal": "Fix broken layout on mobile",
   "action": "Delegated to dev-frontend with exact file:line brief",
@@ -154,8 +154,8 @@ Sends a message to a channel, role, or specific instance.
 
 ```json
 {
-  "from": "tau",
-  "channel": "pi",
+  "from": "alice",
+  "channel": "bob",
   "content": "Phase 1 complete. Ready for review."
 }
 ```
@@ -164,9 +164,9 @@ To send to a specific instance:
 
 ```json
 {
-  "from": "tau",
-  "channel": "pi",
-  "instanceId": "pi-chromebook",
+  "from": "alice",
+  "channel": "bob",
+  "instanceId": "bob-chromebook",
   "content": "Targeting the Chromebook instance specifically."
 }
 ```
@@ -175,7 +175,7 @@ To broadcast to all agents:
 
 ```json
 {
-  "from": "pi",
+  "from": "bob",
   "channel": "broadcast",
   "content": "Merge freeze starts Thursday. No non-critical commits."
 }
@@ -187,8 +187,8 @@ Retrieves unread messages for a recipient. Optionally filter by instance.
 
 ```json
 {
-  "recipient": "tau",
-  "recipientInstanceId": "tau-main"
+  "recipient": "alice",
+  "recipientInstanceId": "alice-main"
 }
 ```
 
@@ -210,7 +210,7 @@ List messages with optional filters (from, channel).
 
 ```json
 {
-  "from": "tau",
+  "from": "alice",
   "limit": 20
 }
 ```
@@ -258,9 +258,9 @@ Creates a new task and assigns it to an orchestrator.
 ```json
 {
   "title": "Migrate HeroSection to lit-ui components",
-  "assignedTo": "tau",
+  "assignedTo": "alice",
   "priority": "high",
-  "createdBy": "pi",
+  "createdBy": "bob",
   "missionId": "mission-landing-page"
 }
 ```
@@ -273,7 +273,7 @@ Lists tasks filtered by assignee and/or status.
 
 ```json
 {
-  "assignedTo": "tau",
+  "assignedTo": "alice",
   "status": "in_progress"
 }
 ```
@@ -318,7 +318,7 @@ Sets a task to `blocked` status with a reason.
 ```json
 {
   "taskId": "task-abc123",
-  "blockedBy": "Waiting on design approval for new color tokens"
+  "reason": "Waiting on design approval for new color tokens"
 }
 ```
 
@@ -340,7 +340,7 @@ Atomically claim a task (conflict-safe for multi-instance).
 ```json
 {
   "taskId": "task-abc123",
-  "callerOrchestrator": "tau"
+  "callerOrchestrator": "alice"
 }
 ```
 
@@ -351,7 +351,7 @@ Permanently delete a task (creator or system only).
 ```json
 {
   "taskId": "task-abc123",
-  "callerOrchestrator": "sigma"
+  "callerOrchestrator": "carol"
 }
 ```
 
@@ -378,7 +378,12 @@ Creates a new mission and assigns a pilot.
 ```json
 {
   "name": "Landing Page Migration — Phase 1",
-  "pilot": "tau",
+  "project": "vantage-starter",
+  "priority": "high",
+  "pilot": "alice",
+  "agents": ["alice"],
+  "status": "plan",
+  "createdBy": "alice",
   "targetDate": 1712275200000
 }
 ```
@@ -435,12 +440,11 @@ Agent profiles store static identity and dynamic state. The diary provides persi
 
 ### `get_profile`
 
-Returns the profile for an orchestrator instance.
+Returns the profile for an orchestrator.
 
 ```json
 {
-  "orchestratorId": "tau",
-  "instanceId": "tau-main"
+  "orchestratorId": "alice"
 }
 ```
 
@@ -450,8 +454,8 @@ Updates the current working summary for an orchestrator instance. Used to commun
 
 ```json
 {
-  "orchestratorId": "tau",
-  "instanceId": "tau-main",
+  "orchestratorId": "alice",
+  "instanceId": "alice-main",
   "summary": "Migrating HeroSection to lit-ui — ETA 30 minutes"
 }
 ```
@@ -463,7 +467,7 @@ Writes a diary entry for a given date. Overwrites any existing entry for that da
 ```json
 {
   "date": "2026-03-29",
-  "orchestrator": "tau",
+  "orchestrator": "alice",
   "content": "Completed Phase 1 of landing page migration. Nav and Hero sections done.",
   "highlights": [
     "Nav fully migrated to lit-ui",
@@ -479,7 +483,7 @@ Fetch a specific diary entry by orchestrator and date.
 
 ```json
 {
-  "orchestrator": "tau",
+  "orchestrator": "alice",
   "date": "2026-03-29"
 }
 ```
@@ -490,7 +494,7 @@ List diary entries for an orchestrator, optionally filtered by date range.
 
 ```json
 {
-  "orchestrator": "tau",
+  "orchestrator": "alice",
   "limit": 10
 }
 ```
@@ -501,8 +505,8 @@ Create or update an orchestrator profile (partial updates supported).
 
 ```json
 {
-  "orchestratorId": "tau",
-  "name": "Tau",
+  "orchestratorId": "alice",
+  "name": "Alice",
   "dynamic": {
     "currentTask": "Building dashboard",
     "lastSeen": 1712275200000,
@@ -518,12 +522,14 @@ Creates a structured briefing record.
 ```json
 {
   "title": "Landing page migration kickoff",
-  "participants": ["pi", "tau"],
+  "topic": "migration",
+  "participants": ["alice", "bob"],
+  "content": "Discussed the plan to migrate the landing page from shadcn to lit-ui components.",
   "decisions": [
     "Migrate section by section, not all at once",
     "Each section gets its own commit"
   ],
-  "linkedMemories": ["memory-abc123"]
+  "createdBy": "alice"
 }
 ```
 
@@ -533,7 +539,7 @@ Lists briefings, optionally filtered by participant.
 
 ```json
 {
-  "participant": "tau"
+  "participant": "alice"
 }
 ```
 
@@ -551,7 +557,7 @@ Defines a recurring task template.
 {
   "title": "Daily standup: review open tasks and unread messages",
   "cronExpression": "0 9 * * *",
-  "assignedTo": "tau",
+  "assignedTo": "alice",
   "priority": "medium"
 }
 ```
@@ -623,7 +629,7 @@ Registers a component with full content backup.
   "type": "agent",
   "content": "...full agent file content...",
   "version": "1.2.0",
-  "createdBy": "sigma"
+  "createdBy": "carol"
 }
 ```
 
@@ -655,7 +661,7 @@ Updates a component's content or version.
 
 ```json
 {
-  "name": "dev-frontend",
+  "componentId": "component-abc123",
   "content": "...updated content...",
   "version": "1.3.0"
 }
@@ -667,7 +673,7 @@ Removes a component from the registry.
 
 ```json
 {
-  "name": "dev-frontend"
+  "componentId": "component-abc123"
 }
 ```
 
