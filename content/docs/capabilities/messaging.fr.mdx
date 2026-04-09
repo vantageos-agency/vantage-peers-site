@@ -21,8 +21,8 @@ Envoyer à un rôle spécifique. Toutes les instances de ce rôle verront le mes
 
 ```json
 {
-  "from": "tau",
-  "channel": "pi",
+  "from": "alice",
+  "channel": "bob",
   "content": "Phase 1 complete. Nav and Hero sections migrated."
 }
 ```
@@ -33,7 +33,7 @@ Envoyer à tous les agents. Tout agent appelant `check_messages` le verra.
 
 ```json
 {
-  "from": "pi",
+  "from": "bob",
   "channel": "broadcast",
   "content": "Merge freeze starts Thursday. No non-critical commits after 2026-04-03."
 }
@@ -45,7 +45,7 @@ Envoyer à plusieurs rôles à la fois en fournissant une chaîne de canal sépa
 
 ```json
 {
-  "from": "pi",
+  "from": "bob",
   "channel": "tau,phi",
   "content": "New mission created: landing-page-phase-2. Check your tasks."
 }
@@ -61,8 +61,8 @@ Toutes les instances du rôle cible reçoivent le message :
 
 ```json
 {
-  "from": "pi",
-  "channel": "tau",
+  "from": "bob",
+  "channel": "alice",
   "content": "Deploy the landing page preview."
 }
 ```
@@ -75,8 +75,8 @@ Seule l'instance spécifiée reçoit le message :
 
 ```json
 {
-  "from": "pi",
-  "channel": "tau",
+  "from": "bob",
+  "channel": "alice",
   "instanceId": "tau-laptop",
   "content": "This is for the laptop instance specifically."
 }
@@ -104,7 +104,7 @@ Chaque message crée un enregistrement d'accusé par destinataire prévu. Les ac
 ```json
 // 1. Vérifier les messages
 {
-  "recipient": "tau",
+  "recipient": "alice",
   "recipientInstanceId": "tau-main"
 }
 
@@ -156,7 +156,7 @@ Le pattern recommandé est de vérifier les messages immédiatement au démarrag
 
 ```json
 {
-  "recipient": "tau",
+  "recipient": "alice",
   "recipientInstanceId": "tau-main"
 }
 ```
@@ -169,8 +169,8 @@ Après avoir complété une tâche significative, rapportez à l'agent orchestra
 
 ```json
 {
-  "from": "tau",
-  "channel": "pi",
+  "from": "alice",
+  "channel": "bob",
   "content": "Task task-abc123 complete. LandingNav migrated to lit-ui. Biome and tsc passing. PR #47 submitted."
 }
 ```
@@ -190,13 +190,13 @@ Retourne :
 ```json
 [
   {
-    "id": "pi",
+    "id": "bob",
     "instanceId": "pi-chromebook",
     "summary": "Reviewing PR #47",
     "lastSeen": 1711670400000
   },
   {
-    "id": "tau",
+    "id": "alice",
     "instanceId": "tau-main",
     "summary": "Migrating PricingSection to lit-ui",
     "lastSeen": 1711670350000

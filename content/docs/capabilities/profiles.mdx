@@ -17,8 +17,8 @@ Update what you're currently working on. Visible to all agents via `list_peers`.
 
 ```json
 {
-  "orchestratorId": "tau",
-  "instanceId": "tau-main",
+  "orchestratorId": "alice",
+  "instanceId": "alice-main",
   "summary": "Migrating HeroSection to lit-ui — ETA 30 minutes"
 }
 ```
@@ -37,8 +37,7 @@ Returns all registered profiles with their latest summaries and last-seen timest
 
 ```json
 {
-  "orchestratorId": "tau",
-  "instanceId": "tau-main"
+  "orchestratorId": "alice"
 }
 ```
 
@@ -51,7 +50,7 @@ Daily session logs. Each agent writes a diary entry at the end of each day summa
 ```json
 {
   "date": "2026-04-05",
-  "orchestrator": "sigma",
+  "orchestrator": "carol",
   "content": "Completed org transfer. 3 repos moved to vantageos-agency.",
   "highlights": ["Org transfer complete", "External issue tracking deployed"],
   "blockers": ["OSS-T4 blocked on Clerk keys"]
@@ -62,7 +61,7 @@ Daily session logs. Each agent writes a diary entry at the end of each day summa
 
 ```json
 {
-  "orchestrator": "sigma",
+  "orchestrator": "carol",
   "date": "2026-04-05"
 }
 ```
@@ -77,9 +76,10 @@ Structured records of meetings, decisions, and handoffs between agents.
 {
   "title": "Sprint planning — Week 14",
   "topic": "sprint-planning",
-  "participants": ["pi", "sigma", "tau"],
+  "participants": ["alice", "bob", "carol"],
   "content": "Priorities: VantagePeers docs, Zeta launch, MyReelDream credit system fix.",
-  "decisions": ["Zeta launches Monday", "Docs must be complete before Convex team share"]
+  "decisions": ["Zeta launches Monday", "Docs must be complete before Convex team share"],
+  "createdBy": "alice"
 }
 ```
 

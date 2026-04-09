@@ -44,8 +44,8 @@ Use `validate_mandate_spending` to check if a transaction is within limits befor
 
 ```json
 {
-  "requestedBy": "pi",
-  "fulfilledBy": "tau",
+  "requestedBy": "bob",
+  "fulfilledBy": "alice",
   "service": "Build landing page for new product",
   "budget": 100000
 }
@@ -56,7 +56,7 @@ Use `validate_mandate_spending` to check if a transaction is within limits befor
 ```json
 {
   "mandateId": "mandate-id-here",
-  "callerOrchestrator": "tau"
+  "callerOrchestrator": "alice"
 }
 ```
 
@@ -66,7 +66,7 @@ Use `validate_mandate_spending` to check if a transaction is within limits befor
 {
   "mandateId": "mandate-id-here",
   "finalCost": 85000,
-  "callerOrchestrator": "tau"
+  "callerOrchestrator": "bob"
 }
 ```
 
@@ -75,7 +75,7 @@ Use `validate_mandate_spending` to check if a transaction is within limits befor
 ```json
 {
   "mandateId": "mandate-id-here",
-  "amount": 25000
+  "proposedAmount": 25000
 }
 ```
 
@@ -83,7 +83,7 @@ Use `validate_mandate_spending` to check if a transaction is within limits befor
 
 ```json
 {
-  "requestedBy": "pi",
+  "requestedBy": "bob",
   "status": "in_progress"
 }
 ```

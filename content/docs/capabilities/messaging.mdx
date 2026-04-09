@@ -21,8 +21,8 @@ Send to a specific role. All instances of that role will see the message.
 
 ```json
 {
-  "from": "tau",
-  "channel": "pi",
+  "from": "alice",
+  "channel": "bob",
   "content": "Phase 1 complete. Nav and Hero sections migrated."
 }
 ```
@@ -33,7 +33,7 @@ Send to all agents. Any agent calling `check_messages` will see it.
 
 ```json
 {
-  "from": "pi",
+  "from": "bob",
   "channel": "broadcast",
   "content": "Merge freeze starts Thursday. No non-critical commits after 2026-04-03."
 }
@@ -45,7 +45,7 @@ Send to several roles at once by providing a comma-separated channel string.
 
 ```json
 {
-  "from": "pi",
+  "from": "bob",
   "channel": "tau,phi",
   "content": "New mission created: landing-page-phase-2. Check your tasks."
 }
@@ -61,8 +61,8 @@ All instances of the target role receive the message:
 
 ```json
 {
-  "from": "pi",
-  "channel": "tau",
+  "from": "bob",
+  "channel": "alice",
   "content": "Deploy the landing page preview."
 }
 ```
@@ -75,8 +75,8 @@ Only the specified instance receives the message:
 
 ```json
 {
-  "from": "pi",
-  "channel": "tau",
+  "from": "bob",
+  "channel": "alice",
   "instanceId": "tau-laptop",
   "content": "This is for the laptop instance specifically."
 }
@@ -104,7 +104,7 @@ Every message creates a receipt record per intended recipient. Receipts track wh
 ```json
 // 1. Check messages
 {
-  "recipient": "tau",
+  "recipient": "alice",
   "recipientInstanceId": "tau-main"
 }
 
@@ -156,7 +156,7 @@ The recommended pattern is to check messages immediately at session start, befor
 
 ```json
 {
-  "recipient": "tau",
+  "recipient": "alice",
   "recipientInstanceId": "tau-main"
 }
 ```
@@ -169,8 +169,8 @@ After completing a significant task, report up to the orchestrating agent:
 
 ```json
 {
-  "from": "tau",
-  "channel": "pi",
+  "from": "alice",
+  "channel": "bob",
   "content": "Task task-abc123 complete. LandingNav migrated to lit-ui. Biome and tsc passing. PR #47 submitted."
 }
 ```
@@ -190,13 +190,13 @@ Returns:
 ```json
 [
   {
-    "id": "pi",
+    "id": "bob",
     "instanceId": "pi-chromebook",
     "summary": "Reviewing PR #47",
     "lastSeen": 1711670400000
   },
   {
-    "id": "tau",
+    "id": "alice",
     "instanceId": "tau-main",
     "summary": "Migrating PricingSection to lit-ui",
     "lastSeen": 1711670350000

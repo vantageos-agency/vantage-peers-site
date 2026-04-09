@@ -41,9 +41,9 @@ Each agent runs its own local MCP server process. All agents share the same Conv
 
 ### Orchestrators
 
-An **orchestrator** is a named role in your agent team. Examples: `pi`, `tau`, `phi`. An orchestrator represents what the agent *does* — its responsibility in the system. Orchestrator names are used as identities for memory namespaces, message routing, task assignment, and agent profiles.
+An **orchestrator** is a named role in your agent team. Examples: `alice`, `bob`, `carol`. An orchestrator represents what the agent *does* — its responsibility in the system. Orchestrator names are used as identities for memory namespaces, message routing, task assignment, and agent profiles.
 
-When you store a memory with `createdBy: "tau"`, it is attributed to the `tau` orchestrator. When you send a message `from: "tau"` to `channel: "pi"`, the `pi` orchestrator receives it.
+When you store a memory with `createdBy: "alice"`, it is attributed to the `alice` orchestrator. When you send a message `from: "alice"` to `channel: "bob"`, the `bob` orchestrator receives it.
 
 ### Instances
 
