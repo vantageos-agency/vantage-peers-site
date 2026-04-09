@@ -25,7 +25,7 @@ Nouvelle erreur détectée ? ──Non──> Ignorer (dédup par hash)
 Créer une issue GitHub avec la stack trace
        |
        v
-Le webhook IRP se déclenche (auto-commentaire + mission 12 tâches)
+Le webhook IRP se déclenche (auto-commentaire + mission 14 tâches)
 ```
 
 ## Ajouter un déploiement
@@ -67,7 +67,7 @@ Les erreurs sont dédupliquées à l'aide d'un hash de `functionName + errorMess
 Quand le moniteur d'erreurs crée une issue GitHub, le pipeline webhook existant gère la suite :
 
 1. Issue créée avec le préfixe `[Auto]` et les labels `bug` + `auto-detected`
-2. Le webhook déclenche l'IRP : auto-commentaire + mission 12 tâches
+2. Le webhook déclenche l'IRP : auto-commentaire + mission 14 tâches
 3. L'orchestrateur assigné reçoit la mission et commence la résolution
 
 Cela signifie que les erreurs sont détectées et assignées avant que les utilisateurs ne les signalent.
