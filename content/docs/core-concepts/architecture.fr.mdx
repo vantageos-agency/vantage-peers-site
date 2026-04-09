@@ -114,7 +114,7 @@ Table de coordination des tâches :
 | `priority` | string | `low`, `medium`, `high`, `urgent` |
 | `missionId` | string? | Mission parente, si regroupée |
 | `dependsOn` | string[] | IDs des tâches qui doivent être terminées d'abord |
-| `blockedBy` | string | Description du bloqueur, si bloquée |
+| `blockedBy` | string? | Description du bloqueur (défini quand le status est `blocked`) |
 | `completionNote` | string? | Ce qui a été fait, défini à la complétion |
 | `dueDate` | number? | Deadline en timestamp Unix |
 
@@ -125,7 +125,7 @@ Groupes de tâches liées avec suivi du cycle de vie :
 | Champ | Type | Description |
 |-------|------|-------------|
 | `title` | string | Nom de la mission |
-| `stage` | string | `brainstorm`, `plan`, `execute`, `validate`, `complete` |
+| `status` | string | `brainstorm`, `plan`, `execute`, `validate`, `complete` |
 | `pilot` | string | Orchestrateur principal |
 | `targetDate` | number? | Timestamp de complétion cible |
 
@@ -148,10 +148,15 @@ Identité statique et état dynamique par instance d'orchestrateur :
 |-------|------|-------------|
 | `orchestratorId` | string | Nom du rôle |
 | `instanceId` | string | Identifiant d'instance |
-| `capabilities` | string[] | Ce que cet agent peut faire |
-| `currentTask` | string? | ID de la tâche active |
-| `lastSeen` | number | Timestamp de la dernière activité |
-| `sessionCount` | number | Total de sessions démarrées |
+| `name` | string | Nom d'affichage |
+| `static` | object | Champs d'identité immuables |
+| `static.role` | string | Ce que fait cet agent |
+| `static.workspace` | string | Chemin du répertoire de travail |
+| `static.capabilities` | string[] | Ce que cet agent peut faire |
+| `dynamic` | object | État d'exécution mutable |
+| `dynamic.currentTask` | string? | Description de la tâche active |
+| `dynamic.lastSeen` | number | Timestamp de la dernière activité |
+| `dynamic.sessionCount` | number | Total de sessions démarrées |
 
 ### diary
 

@@ -70,7 +70,7 @@ Les autres orchestrateurs recevront ce message lors de leur prochain `check_mess
 
 ## Liste de diffusion
 
-Le canal `broadcast` envoie à une liste codée en dur : pi, tau, phi, sigma, omega, zeta, eta. Les nouveaux orchestrateurs ne reçoivent les diffusions que s'ils sont ajoutés à cette liste dans `convex/messages.ts`. Pour la messagerie directe, utilisez le nom de l'orchestrateur comme canal — aucune modification de code n'est nécessaire.
+Tout orchestrateur disposant d'un profil reçoit automatiquement les diffusions. Aucune modification de code n'est nécessaire. Le canal `broadcast` interroge dynamiquement la table `profiles`, donc dès que l'étape 3 est terminée, votre nouvel orchestrateur est inclus. Pour la messagerie directe, utilisez le nom de l'orchestrateur comme canal.
 
 ## Identifiants d'instance
 

@@ -114,7 +114,7 @@ Task coordination table:
 | `priority` | string | `low`, `medium`, `high`, `urgent` |
 | `missionId` | string? | Parent mission, if grouped |
 | `dependsOn` | string[] | Task IDs that must complete first |
-| `blockedBy` | string | Blocker description, if blocked |
+| `blockedBy` | string? | Blocker description (set when status is `blocked`) |
 | `completionNote` | string? | What was done, set on completion |
 | `dueDate` | number? | Unix timestamp deadline |
 
@@ -125,7 +125,7 @@ Groups of related tasks with lifecycle tracking:
 | Field | Type | Description |
 |-------|------|-------------|
 | `title` | string | Mission name |
-| `stage` | string | `brainstorm`, `plan`, `execute`, `validate`, `complete` |
+| `status` | string | `brainstorm`, `plan`, `execute`, `validate`, `complete` |
 | `pilot` | string | Lead orchestrator |
 | `targetDate` | number? | Target completion timestamp |
 
@@ -148,10 +148,15 @@ Static identity and dynamic state per orchestrator instance:
 |-------|------|-------------|
 | `orchestratorId` | string | Role name |
 | `instanceId` | string | Instance identifier |
-| `capabilities` | string[] | What this agent can do |
-| `currentTask` | string? | Active task ID |
-| `lastSeen` | number | Timestamp of last activity |
-| `sessionCount` | number | Total sessions started |
+| `name` | string | Display name |
+| `static` | object | Immutable identity fields |
+| `static.role` | string | What this agent does |
+| `static.workspace` | string | Working directory path |
+| `static.capabilities` | string[] | What this agent can do |
+| `dynamic` | object | Mutable runtime state |
+| `dynamic.currentTask` | string? | Active task description |
+| `dynamic.lastSeen` | number | Timestamp of last activity |
+| `dynamic.sessionCount` | number | Total sessions started |
 
 ### diary
 

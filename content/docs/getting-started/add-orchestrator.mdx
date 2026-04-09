@@ -70,7 +70,7 @@ Other orchestrators will receive this on their next `check_messages`.
 
 ## Broadcast list
 
-The `broadcast` channel sends to a hardcoded list: pi, tau, phi, sigma, omega, zeta, eta. New orchestrators receive broadcasts only if added to this list in `convex/messages.ts`. For direct messaging, use the orchestrator name as the channel — no code changes needed.
+Any orchestrator with a profile receives broadcasts automatically. No code changes needed. The `broadcast` channel dynamically queries the `profiles` table, so as soon as Step 3 is complete your new orchestrator is included. For direct messaging, use the orchestrator name as the channel.
 
 ## Instance IDs
 

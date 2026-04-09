@@ -25,7 +25,7 @@ New error detected? ──No──> Skip (dedup by hash)
 Create GitHub issue with stack trace
        |
        v
-IRP webhook triggers (auto-comment + 12-task mission)
+IRP webhook triggers (auto-comment + 14-task mission)
 ```
 
 ## Adding a Deployment
@@ -67,7 +67,7 @@ Errors are deduplicated using a hash of `functionName + errorMessage`. If the sa
 When the error monitor creates a GitHub issue, the existing webhook pipeline handles the rest:
 
 1. Issue created with `[Auto]` prefix and `bug` + `auto-detected` labels
-2. Webhook triggers IRP: auto-comment + 12-task mission
+2. Webhook triggers IRP: auto-comment + 14-task mission
 3. Assigned orchestrator receives the mission and begins resolution
 
 This means errors are detected and assigned before users report them.
