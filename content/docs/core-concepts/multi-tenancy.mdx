@@ -1,0 +1,159 @@
+---
+title: Multi-Tenancy
+description: Conventions for isolating memories, tasks, missions, and messages across tenants in a shared Convex deployment.
+---
+
+# Multi-Tenancy
+
+VantagePeers runs on a single Convex deployment. When multiple companies or teams share that deployment, you need isolation between tenants. This page describes the conventions that keep each tenant's data separate without requiring separate infrastructure.
+
+## Memory Namespace Isolation
+
+Memories are scoped by the `namespace` field. VantagePeers already supports `global`, `project/`, and `orchestrator/` namespaces. For tenant isolation, use the `workspace/` prefix.
+
+### Convention
+
+Use `workspace/{workspaceId}` as the namespace for tenant-scoped memories.
+
+```json
+// Store a memory for Acme Corp
+{
+  "namespace": "workspace/acme-corp",
+  "type": "project",
+  "content": "Acme Corp uses PostgreSQL 15 with pgvector for their product catalog.",
+  "createdBy": "tau"
+}
+
+// Store a memory for Globex Corp
+{
+  "namespace": "workspace/globex-corp",
+  "type": "project",
+  "content": "Globex Corp runs on MongoDB Atlas with a strict schema validation policy.",
+  "createdBy": "tau"
+}
+```
+
+### Recall with Workspace Scope
+
+When recalling, pass the workspace namespace to restrict results to that tenant:
+
+```json
+{
+  "query": "database setup",
+  "namespace": "workspace/acme-corp"
+}
+```
+
+This returns only Acme Corp memories. Globex Corp memories are excluded.
+
+### Workspace vs Project
+
+| Prefix | Scope | Example |
+|--------|-------|---------|
+| `project/` | A specific repo, feature, or initiative | `project/landing-page` |
+| `workspace/` | An entire tenant/company | `workspace/acme-corp` |
+| `orchestrator/` | A single agent's private state | `orchestrator/tau` |
+| `global` | Shared across everything | `global` |
+
+You can combine them. An agent working on Acme Corp's landing page might store memories in `workspace/acme-corp` for company-wide context and `project/acme-landing-page` for feature-specific context.
+
+## Task and Mission Project Isolation
+
+Tasks and missions use the `project` field for scoping. For tenant isolation, use the `studio/` prefix.
+
+### Convention
+
+Use `studio/{workspaceId}` as the project value for tenant-scoped tasks and missions.
+
+```json
+// Create a task scoped to Acme Corp
+{
+  "title": "Migrate Acme product catalog to pgvector",
+  "assignedTo": "tau",
+  "priority": "high",
+  "project": "studio/acme-corp"
+}
+
+// Create a mission scoped to Globex Corp
+{
+  "title": "Globex API v2 rollout",
+  "pilot": "pi",
+  "project": "studio/globex-corp"
+}
+```
+
+When listing tasks, filter by project to see only that tenant's work:
+
+```json
+{
+  "project": "studio/acme-corp"
+}
+```
+
+## Message tenantId Isolation
+
+Messages and message receipts support an optional `tenantId` field for tenant-scoped communication.
+
+### Sending with tenantId
+
+Pass `tenantId` when sending a message to scope it to a tenant:
+
+```json
+{
+  "from": "tau",
+  "channel": "pi",
+  "content": "Acme catalog migration complete. PR #112 ready for review.",
+  "tenantId": "acme-corp"
+}
+```
+
+### Checking with tenantId
+
+When checking messages, pass `tenantId` to receive only that tenant's messages:
+
+```json
+{
+  "recipient": "pi",
+  "recipientInstanceId": "pi-main",
+  "tenantId": "acme-corp"
+}
+```
+
+### Backward Compatibility
+
+When `tenantId` is omitted, all messages are visible regardless of their tenant scope. This preserves backward compatibility and serves as an admin/global view. Agents that do not operate in a multi-tenant context can ignore `tenantId` entirely.
+
+## Isolation Summary
+
+| Table | Isolation mechanism | Convention |
+|-------|---------------------|------------|
+| `memories` | `namespace` field | `workspace/{workspaceId}` |
+| `tasks` | `project` field | `studio/{workspaceId}` |
+| `missions` | `project` field | `studio/{workspaceId}` |
+| `messages` | `tenantId` field | Tenant identifier string |
+| `messageReceipts` | `tenantId` field | Tenant identifier string |
+
+## Example: Two Companies, One Deployment
+
+Acme Corp and Globex Corp share a single Convex deployment. Here is how their data stays separate:
+
+```
+Acme Corp agent (tau):
+  store_memory  → namespace: "workspace/acme-corp"
+  create_task   → project: "studio/acme-corp"
+  send_message  → tenantId: "acme-corp"
+  check_messages → tenantId: "acme-corp"
+
+Globex Corp agent (tau):
+  store_memory  → namespace: "workspace/globex-corp"
+  create_task   → project: "studio/globex-corp"
+  send_message  → tenantId: "globex-corp"
+  check_messages → tenantId: "globex-corp"
+
+Admin agent (pi, no tenantId):
+  recall         → namespace omitted → sees all memories
+  list_tasks     → project omitted → sees all tasks
+  check_messages → tenantId omitted → sees all messages
+```
+
+Both tenants use the same orchestrator names (`tau`, `pi`) and the same Convex tables. The namespace, project, and tenantId conventions ensure complete data isolation at the application layer.
