@@ -205,3 +205,7 @@ Returns:
 ```
 
 Use this to confirm an agent is active before sending time-sensitive messages.
+
+## Multi-Tenant Isolation
+
+Messages and receipts support an optional `tenantId` field. When provided on `send_message`, the message is scoped to that tenant. When provided on `check_messages`, only messages matching that tenant are returned. Omitting `tenantId` preserves backward-compatible behavior where all messages are visible. See [Multi-Tenancy](/docs/core-concepts/multi-tenancy) for the full conventions.
