@@ -1,0 +1,91 @@
+---
+title: "Deploy Keys"
+description: Server-to-server authentication for external services accessing your VantagePeers deployment.
+---
+
+# Deploy Keys
+
+Deploy keys allow external services to call Convex functions directly, without going through the MCP server. Use them for server-to-server integrations such as CI/CD pipelines, cron jobs, webhooks, and custom dashboards.
+
+## What are deploy keys?
+
+A deploy key is a credential that authenticates server-side code against your Convex deployment. Unlike MCP tools (which are designed for AI agents), deploy keys let any backend service call `fetchQuery` and `fetchMutation` with full type safety via the `vantage-peers-mcp` package.
+
+## Generate a deploy key
+
+1. Open the [Convex dashboard](https://dashboard.convex.dev)
+2. Select your VantagePeers deployment
+3. Go to **Settings > Deploy Keys**
+4. Click **Generate Deploy Key**
+5. Copy the key immediately -- it will not be shown again
+
+## Environment variable setup
+
+Store the deploy key as an environment variable. Never hardcode it in source files.
+
+```bash
+# Production
+CONVEX_DEPLOY_KEY=prod:your-deploy-key-here
+
+# Development (if using a separate dev deployment)
+CONVEX_DEPLOY_KEY=dev:your-dev-deploy-key-here
+```
+
+For hosted environments, add it through your platform's secrets manager (Vercel Environment Variables, AWS Secrets Manager, GitHub Actions secrets, etc.).
+
+## Usage with ConvexHttpClient
+
+Use `ConvexHttpClient` from the `convex/browser` package for general-purpose server-to-server calls:
+
+```typescript
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "vantage-peers-mcp/api";
+
+const client = new ConvexHttpClient(process.env.CONVEX_URL!);
+
+// Query memories with full type safety
+const memories = await client.query(api.memories.listMemories, {
+  namespace: "global",
+  limit: 10,
+});
+
+// Send a message
+await client.mutation(api.messages.sendMessage, {
+  from: "studio",
+  channel: "sigma",
+  content: "Deployment complete",
+});
+```
+
+## Usage with fetchQuery (Next.js)
+
+For Next.js server components and route handlers, use `fetchQuery` and `fetchMutation` from `convex/nextjs`:
+
+```typescript
+import { fetchQuery, fetchMutation } from "convex/nextjs";
+import { api } from "vantage-peers-mcp/api";
+
+// In a Server Component or Route Handler
+const tasks = await fetchQuery(
+  api.tasks.listTasks,
+  { status: "in_progress" },
+  { url: process.env.CONVEX_URL }
+);
+
+// Mutate from a server action
+await fetchMutation(
+  api.tasks.completeTask,
+  { taskId: "k17..." },
+  { url: process.env.CONVEX_URL }
+);
+```
+
+Both `fetchQuery` and `fetchMutation` read `CONVEX_DEPLOY_KEY` from the environment automatically when running server-side.
+
+## Security best practices
+
+- **Never commit deploy keys to git.** Add `CONVEX_DEPLOY_KEY` to your `.gitignore` and `.env` files, not to source code.
+- **Use separate keys for dev and prod.** Generate distinct deploy keys for each environment so revoking one does not affect the other.
+- **Rotate keys regularly.** Generate a new key, update your environment, verify the new key works, then revoke the old one.
+- **Restrict access.** Only give deploy keys to services that need direct Convex access. For AI agents, use the MCP server instead.
+- **Audit usage.** Monitor your Convex dashboard logs to verify that deploy key traffic matches expected patterns.
