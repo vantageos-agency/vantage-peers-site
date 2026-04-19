@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
+import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { LandingStructuredData } from "@/components/landing/structured-data";
@@ -129,6 +130,12 @@ export default async function LocaleLayout({ children, params }: Props) {
 					href="/apple-touch-icon.png"
 				/>
 				<LandingStructuredData locale={locale} />
+				<Script
+					defer
+					data-domain="vantagepeers.com"
+					src="https://plausible.io/js/script.js"
+					strategy="afterInteractive"
+				/>
 			</head>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -143,11 +150,13 @@ export default async function LocaleLayout({ children, params }: Props) {
 						href="#main-content"
 						className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-2xl focus:bg-primary focus:text-primary-foreground focus:font-medium focus:outline-none focus:ring-2 focus:ring-ring"
 					>
-						{locale === "fr" ? "Aller au contenu principal" : "Skip to main content"}
+						{locale === "fr"
+							? "Aller au contenu principal"
+							: "Skip to main content"}
 					</a>
 					<noscript>
 						<style>{`
-							[data-framer-motion-initial], .motion-safe\:opacity-0 { opacity: 1 !important; transform: none !important; }
+							[data-framer-motion-initial], .motion-safe:opacity-0 { opacity: 1 !important; transform: none !important; }
 						`}</style>
 					</noscript>
 					<NextIntlClientProvider messages={messages}>
