@@ -33,6 +33,6 @@ export default function robots(): MetadataRoute.Robots {
 				allow: "/",
 			},
 		],
-		sitemap: "https://vantagepeers.com/sitemap.xml",
+		sitemap: "https://www.vantagepeers.com/sitemap.xml",
 	};
 }

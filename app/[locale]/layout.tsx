@@ -8,7 +8,7 @@ import { LandingStructuredData } from "@/components/landing/structured-data";
 import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
 
-const BASE_URL = "https://vantagepeers.com";
+const BASE_URL = "https://www.vantagepeers.com";
 
 type Locale = "en" | "fr";
 
