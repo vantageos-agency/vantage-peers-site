@@ -121,6 +121,8 @@ Every message creates a receipt record per intended recipient. Receipts track wh
 
 Marking messages read is not just bookkeeping — it determines what `check_messages` returns on the next call. If you never mark messages read, every call returns the full backlog. Mark as read after processing to keep the message queue clean.
 
+For incremental polling, pass the `since` parameter to `check_messages` with the timestamp of your last check — this avoids re-transferring the full unread backlog.
+
 ## Message Lifecycle
 
 ```

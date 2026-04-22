@@ -121,6 +121,8 @@ Chaque message crée un enregistrement d'accusé par destinataire prévu. Les ac
 
 Marquer les messages comme lus n'est pas juste de la comptabilité — cela détermine ce que `check_messages` retourne au prochain appel. Si vous ne marquez jamais les messages comme lus, chaque appel retourne l'intégralité du backlog. Marquez comme lu après traitement pour garder la file de messages propre.
 
+Pour du polling incrémental, passez le paramètre `since` à `check_messages` avec le timestamp de votre dernier check — cela évite de re-transférer l'intégralité du backlog non lu.
+
 ## Cycle de vie du message
 
 ```

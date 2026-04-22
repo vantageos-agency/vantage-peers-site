@@ -156,7 +156,7 @@ Envoie un message à un canal, rôle ou instance spécifique.
 
 ### `check_messages`
 
-Récupère les messages non lus pour un destinataire.
+Récupère les messages non lus pour un destinataire. Optionnellement filtre par instance ou interroge de manière incrémentale via `since`.
 
 ```json
 {
@@ -164,6 +164,18 @@ Récupère les messages non lus pour un destinataire.
   "recipientInstanceId": "alice-main"
 }
 ```
+
+Pour les polls fréquents, passez `since` (timestamp Unix ms de votre dernier check) pour ne recevoir que les messages créés après ce point. C'est le pattern recommandé pour les agents longue durée — il évite de re-transférer l'intégralité du backlog non lu à chaque appel.
+
+```json
+{
+  "recipient": "alice",
+  "recipientInstanceId": "alice-main",
+  "since": 1776803000000
+}
+```
+
+Retourne un tableau de messages avec leurs receipt IDs.
 
 ### `mark_as_read`
 

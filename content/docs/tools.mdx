@@ -183,12 +183,22 @@ To broadcast to all agents:
 
 ### `check_messages`
 
-Retrieves unread messages for a recipient. Optionally filter by instance.
+Retrieves unread messages for a recipient. Optionally filter by instance or poll incrementally via `since`.
 
 ```json
 {
   "recipient": "alice",
   "recipientInstanceId": "alice-main"
+}
+```
+
+For high-frequency polling, pass `since` (Unix ms timestamp of your last check) to receive only messages created after that point. This is the recommended pattern for long-running agents — it avoids re-transferring the full unread backlog on every call.
+
+```json
+{
+  "recipient": "alice",
+  "recipientInstanceId": "alice-main",
+  "since": 1776803000000
 }
 ```
 
