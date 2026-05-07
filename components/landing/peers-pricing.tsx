@@ -2,12 +2,37 @@
 
 import { motion } from "framer-motion";
 import { Check, Github } from "lucide-react";
+import { PeersCompareTracks } from "./peers-compare-tracks";
+import { PeersPricingCloud } from "./peers-pricing-cloud";
+import { PeersPricingFaq } from "./peers-pricing-faq";
 
-const content = {
+interface PricingTier {
+	name: string;
+	price: string;
+	period: string;
+	description: string;
+	features: string[];
+	cta: string;
+	ctaHref: string;
+	highlight: boolean;
+	badge?: string;
+}
+
+interface PricingContent {
+	title: string;
+	subtitle: string;
+	selfHostedLabel: string;
+	selfHostedSubtitle: string;
+	tiers: PricingTier[];
+	sponsor: string;
+}
+
+const content: Record<"en" | "fr", PricingContent> = {
 	en: {
-		title: "Simple pricing. Free to start.",
-		subtitle:
-			"Self-host for free. Pay only if you want hands-on help.",
+		title: "Two tracks. One mission.",
+		subtitle: "Self-host for control. Cloud for speed.",
+		selfHostedLabel: "Self-Hosted",
+		selfHostedSubtitle: "Your Convex. Your data. Full control.",
 		tiers: [
 			{
 				name: "Self-Hosted",
@@ -19,8 +44,6 @@ const content = {
 					"Semantic memory + RAG search",
 					"Cross-machine messaging",
 					"Task coordination + missions",
-					"Fix patterns KB",
-					"GitHub issue tracking",
 					"Community support (GitHub Issues)",
 				],
 				cta: "Get Started",
@@ -28,26 +51,42 @@ const content = {
 				highlight: false,
 			},
 			{
+				name: "Railway 1-click",
+				price: "Free",
+				period: "forever",
+				description: "Deploy in 2 minutes. No terminal needed.",
+				features: [
+					"One-click Railway deploy",
+					"Full VantagePeers, your account",
+					"Automatic environment config",
+					"No Convex CLI knowledge needed",
+					"Community support (GitHub Issues)",
+				],
+				cta: "Deploy on Railway",
+				ctaHref: "https://github.com/vantageos-agency/vantage-peers#deploy",
+				highlight: false,
+			},
+			{
 				name: "QuickStart",
-				price: "\u20ac290",
+				price: "€290",
 				period: "one-time",
-				description: "We set it up for you. 1-hour guided call.",
+				description: "We set it up for you. Running in 1 hour.",
 				features: [
 					"Everything in Self-Hosted",
 					"1h guided setup call",
 					"Deploy to your Convex account",
-					"3 agents configured",
-					"MCP server wired to Claude Code",
-					"Email support for 1 week",
+					"3 agents configured + tested",
+					"Email support for 1 year",
 				],
 				cta: "Book a Call",
 				ctaHref: "mailto:contact@vantageos.com?subject=QuickStart",
 				highlight: true,
+				badge: "Most popular",
 			},
 			{
 				name: "Pro Support",
-				price: "\u20ac49",
-				period: "/month",
+				price: "€99",
+				period: "/year",
 				description: "Priority help when you need it.",
 				features: [
 					"Everything in Self-Hosted",
@@ -64,56 +103,71 @@ const content = {
 		sponsor: "Support the project on GitHub Sponsors",
 	},
 	fr: {
-		title: "Tarifs simples. Gratuit pour commencer.",
-		subtitle:
-			"Auto-h\u00e9bergez gratuitement. Payez uniquement si vous voulez de l\u2019aide.",
+		title: "Deux tracks. Une mission.",
+		subtitle: "Auto-hébergez pour le contrôle. Cloud pour la rapidité.",
+		selfHostedLabel: "Auto-hébergé",
+		selfHostedSubtitle: "Votre Convex. Vos données. Contrôle total.",
 		tiers: [
 			{
-				name: "Auto-h\u00e9berg\u00e9",
+				name: "Auto-hébergé",
 				price: "Gratuit",
 				period: "pour toujours",
-				description: "VantagePeers complet. Votre Convex. Vos donn\u00e9es.",
+				description: "VantagePeers complet. Votre Convex. Vos données.",
 				features: [
 					"82 outils MCP, 20 tables",
-					"M\u00e9moire s\u00e9mantique + recherche RAG",
+					"Mémoire sémantique + recherche RAG",
 					"Messagerie cross-machine",
-					"Coordination de t\u00e2ches + missions",
-					"Base de fix patterns",
-					"Suivi d\u2019issues GitHub",
-					"Support communaut\u00e9 (GitHub Issues)",
+					"Coordination de tâches + missions",
+					"Support communauté (GitHub Issues)",
 				],
 				cta: "Commencer",
 				ctaHref: "https://github.com/vantageos-agency/vantage-peers",
 				highlight: false,
 			},
 			{
-				name: "QuickStart",
-				price: "290\u20ac",
-				period: "unique",
-				description: "On configure pour vous. Appel guid\u00e9 d\u20191h.",
+				name: "Railway 1-clic",
+				price: "Gratuit",
+				period: "pour toujours",
+				description: "Déployé en 2 minutes. Sans terminal.",
 				features: [
-					"Tout ce qui est dans Auto-h\u00e9berg\u00e9",
-					"Appel de configuration guid\u00e9 d\u20191h",
-					"D\u00e9ploiement sur votre compte Convex",
-					"3 agents configur\u00e9s",
-					"Serveur MCP connect\u00e9 \u00e0 Claude Code",
-					"Support email pendant 1 semaine",
+					"Déploiement Railway en un clic",
+					"VantagePeers complet, votre compte",
+					"Configuration d'environnement automatique",
+					"Aucune connaissance Convex CLI requise",
+					"Support communauté (GitHub Issues)",
 				],
-				cta: "R\u00e9server un appel",
+				cta: "Déployer sur Railway",
+				ctaHref: "https://github.com/vantageos-agency/vantage-peers#deploy",
+				highlight: false,
+			},
+			{
+				name: "QuickStart",
+				price: "290€",
+				period: "unique",
+				description: "On configure pour vous. Opérationnel en 1h.",
+				features: [
+					"Tout ce qui est dans Auto-hébergé",
+					"Appel de configuration guidé 1h",
+					"Déploiement sur votre compte Convex",
+					"3 agents configurés + testés",
+					"Support email pendant 1 an",
+				],
+				cta: "Réserver un appel",
 				ctaHref: "mailto:contact@vantageos.com?subject=QuickStart",
 				highlight: true,
+				badge: "Le plus populaire",
 			},
 			{
 				name: "Support Pro",
-				price: "49\u20ac",
-				period: "/mois",
+				price: "99€",
+				period: "/an",
 				description: "Aide prioritaire quand vous en avez besoin.",
 				features: [
-					"Tout ce qui est dans Auto-h\u00e9berg\u00e9",
-					"Temps de r\u00e9ponse prioritaire 24h",
+					"Tout ce qui est dans Auto-hébergé",
+					"Temps de réponse prioritaire 24h",
 					"Canal de support direct",
-					"Revue + optimisation du sch\u00e9ma",
-					"Assistance aux mises \u00e0 jour",
+					"Revue + optimisation du schéma",
+					"Assistance aux mises à jour",
 				],
 				cta: "Nous contacter",
 				ctaHref: "mailto:contact@vantageos.com?subject=Support%20Pro",
@@ -147,7 +201,20 @@ export function PeersPricing({ locale }: PeersPricingProps) {
 					<p className="text-lg text-muted-foreground">{t.subtitle}</p>
 				</motion.div>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+				<motion.div
+					className="mb-8"
+					initial={{ opacity: 0, y: 20 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
+					transition={{ duration: 0.5, delay: 0.1 }}
+				>
+					<h3 className="text-2xl font-bold tracking-tight mb-2">
+						{t.selfHostedLabel}
+					</h3>
+					<p className="text-muted-foreground">{t.selfHostedSubtitle}</p>
+				</motion.div>
+
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 					{t.tiers.map((tier, index) => (
 						<motion.div
 							key={tier.name}
@@ -162,7 +229,12 @@ export function PeersPricing({ locale }: PeersPricingProps) {
 							transition={{ duration: 0.4, delay: index * 0.1 }}
 						>
 							<div className="mb-6">
-								<h3 className="text-xl font-semibold mb-2">{tier.name}</h3>
+								{tier.badge ? (
+									<span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-chart-1/15 text-chart-2 mb-3">
+										{tier.badge}
+									</span>
+								) : null}
+								<h4 className="text-xl font-semibold mb-2">{tier.name}</h4>
 								<div className="flex items-baseline gap-1 mb-2">
 									<span className="text-3xl font-bold">{tier.price}</span>
 									<span className="text-muted-foreground text-sm">
@@ -177,7 +249,10 @@ export function PeersPricing({ locale }: PeersPricingProps) {
 							<ul className="space-y-3 mb-8 flex-1">
 								{tier.features.map((feature) => (
 									<li key={feature} className="flex items-start gap-2 text-sm">
-										<Check className="size-4 text-chart-1 shrink-0 mt-0.5" aria-hidden="true" />
+										<Check
+											className="size-4 text-chart-1 shrink-0 mt-0.5"
+											aria-hidden="true"
+										/>
 										<span>{feature}</span>
 									</li>
 								))}
@@ -197,8 +272,12 @@ export function PeersPricing({ locale }: PeersPricingProps) {
 					))}
 				</div>
 
+				<PeersPricingCloud locale={locale} />
+				<PeersCompareTracks locale={locale} />
+				<PeersPricingFaq locale={locale} />
+
 				<motion.div
-					className="text-center mt-8"
+					className="text-center mt-12"
 					initial={{ opacity: 0 }}
 					whileInView={{ opacity: 1 }}
 					viewport={{ once: true }}
