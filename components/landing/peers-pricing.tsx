@@ -6,8 +6,7 @@ import { Check, Github } from "lucide-react";
 const content = {
 	en: {
 		title: "Simple pricing. Free to start.",
-		subtitle:
-			"Self-host for free. Pay only if you want hands-on help.",
+		subtitle: "Self-host for free. Pay only if you want hands-on help.",
 		tiers: [
 			{
 				name: "Self-Hosted",
@@ -38,7 +37,7 @@ const content = {
 					"Deploy to your Convex account",
 					"3 agents configured",
 					"MCP server wired to Claude Code",
-					"Email support for 1 week",
+					"Email support for 1 year",
 				],
 				cta: "Book a Call",
 				ctaHref: "mailto:contact@vantageos.com?subject=QuickStart",
@@ -46,8 +45,8 @@ const content = {
 			},
 			{
 				name: "Pro Support",
-				price: "\u20ac49",
-				period: "/month",
+				price: "\u20ac99",
+				period: "/year (annual only)",
 				description: "Priority help when you need it.",
 				features: [
 					"Everything in Self-Hosted",
@@ -97,7 +96,7 @@ const content = {
 					"D\u00e9ploiement sur votre compte Convex",
 					"3 agents configur\u00e9s",
 					"Serveur MCP connect\u00e9 \u00e0 Claude Code",
-					"Support email pendant 1 semaine",
+					"Support email pendant 1 an",
 				],
 				cta: "R\u00e9server un appel",
 				ctaHref: "mailto:contact@vantageos.com?subject=QuickStart",
@@ -105,8 +104,8 @@ const content = {
 			},
 			{
 				name: "Support Pro",
-				price: "49\u20ac",
-				period: "/mois",
+				price: "99\u20ac",
+				period: "/an (annuel uniquement)",
 				description: "Aide prioritaire quand vous en avez besoin.",
 				features: [
 					"Tout ce qui est dans Auto-h\u00e9berg\u00e9",
@@ -177,7 +176,10 @@ export function PeersPricing({ locale }: PeersPricingProps) {
 							<ul className="space-y-3 mb-8 flex-1">
 								{tier.features.map((feature) => (
 									<li key={feature} className="flex items-start gap-2 text-sm">
-										<Check className="size-4 text-chart-1 shrink-0 mt-0.5" aria-hidden="true" />
+										<Check
+											className="size-4 text-chart-1 shrink-0 mt-0.5"
+											aria-hidden="true"
+										/>
 										<span>{feature}</span>
 									</li>
 								))}
