@@ -542,16 +542,20 @@ Suivi d'issues avec synchronisation webhook et auto-liaison. Voir [Issues GitHub
 | `issue_stats` | Obtenir les statistiques de comptage des issues |
 | `link_issue_to_pattern` | Lier une issue à un fix pattern |
 
-### `link_issue_to_pattern`
+---
 
-Lier une issue VantagePeers à un fix pattern.
+## Outils fix patterns
 
-```json
-{
-  "issueId": "issue-abc123",
-  "patternId": "pattern-abc123"
-}
-```
+Base de connaissances de correctifs avec recherche sémantique. Voir [Fix Patterns KB](/docs/capabilities/fix-patterns) pour la documentation complète.
+
+| Outil | Description |
+|-------|-------------|
+| `create_fix_pattern` | Créer un fix pattern documentant un bug, sa cause racine et son correctif |
+| `add_fix_attempt` | Documenter une tentative de correctif (réussie/échouée) avec raisonnement |
+| `validate_fix` | Définir le correctif validé sur un pattern |
+| `search_fix_patterns` | Recherche sémantique sur les patterns |
+| `list_fix_patterns` | Lister les patterns par projet |
+| `link_issue_to_pattern` | Lier une issue VantagePeers à un fix pattern |
 
 ---
 
