@@ -753,22 +753,12 @@ Bug fix knowledge base with semantic search. See [Fix Patterns KB](/docs/capabil
 
 | Tool | Description |
 |------|-------------|
-| `create_fix_pattern` | Create a fix pattern |
-| `add_fix_attempt` | Document a fix attempt |
-| `validate_fix` | Set the validated fix |
+| `create_fix_pattern` | Create a fix pattern documenting a bug, root cause, and fix |
+| `add_fix_attempt` | Document a fix attempt (worked/failed) with reasoning |
+| `validate_fix` | Set the validated fix on a pattern |
 | `search_fix_patterns` | Semantic search over patterns |
 | `list_fix_patterns` | List patterns by project |
-
-### `link_issue_to_pattern`
-
-Link a VantagePeers issue to a fix pattern.
-
-```json
-{
-  "issueId": "issue-abc123",
-  "patternId": "pattern-abc123"
-}
-```
+| `link_issue_to_pattern` | Link a VantagePeers issue to a fix pattern |
 
 ---
 
