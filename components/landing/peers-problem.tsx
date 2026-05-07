@@ -1,77 +1,106 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CreditCard, Lock, ServerCrash, WifiOff } from "lucide-react";
+import {
+	ClipboardList,
+	Copy,
+	EyeOff,
+	Layers,
+	RotateCcw,
+	Unplug,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const content = {
 	en: {
-		title: "Existing solutions are broken.",
-		titleAccent: "Here is why.",
+		title: "Your AI agents forget everything between sessions.",
 		subtitle:
-			"You tried mem0. You got a $249/month invoice. You tried Zep — Community Edition was abandoned. You hacked together something local — no cross-machine, no read receipts, no tasks.",
+			"You spend more time explaining context than doing actual work. Your agents reset. Your notes scatter. Your team stays in the dark. That is not an AI problem — it is a memory problem.",
 		problems: [
 			{
-				icon: CreditCard,
-				title: "$249-475/month just for memory",
+				icon: RotateCcw,
+				title: "Your agent starts from zero. Every time.",
 				description:
-					"mem0 charges $249/mo for graph memory. Zep starts at $475/mo plus overages. Memory should not cost more than your LLM.",
+					"Every new session, every new tab — your agent has no idea what you worked on yesterday. You repeat yourself. It guesses. You correct it.",
 			},
 			{
-				icon: ServerCrash,
-				title: "Zep Community Edition abandoned",
+				icon: ClipboardList,
+				title: "10 minutes wasted before any real work starts.",
 				description:
-					"Zep pushed everyone to their cloud. The self-hosted version stopped receiving updates. You cannot build on an abandoned foundation.",
+					"Before you can actually build, you re-explain the project, the constraints, the last decision. Every. Single. Time. That is not setup — that is a tax.",
 			},
 			{
-				icon: Lock,
-				title: "Vendor lock-in",
+				icon: Layers,
+				title: "Your context lives in 5 tools at once.",
 				description:
-					"Proprietary schemas, closed APIs, no export. When they raise prices or shut down, your agents lose their memory overnight.",
+					"Notion. ChatGPT history. Claude projects. A doc somewhere. A Slack thread. None of it talks to your agents. You are the glue — manually.",
 			},
 			{
-				icon: WifiOff,
-				title: "Local-only hacks break at scale",
+				icon: Copy,
+				title: "Copy-pasting between ChatGPT and Claude is not a workflow.",
 				description:
-					"SQLite files and JSON dumps do not survive multi-agent, multi-machine setups. No messaging. No read receipts. No tasks.",
+					"Switching models mid-project means manually transferring context. You copy. You paste. You hope nothing gets lost. It always does.",
+			},
+			{
+				icon: Unplug,
+				title: "Your agents work in silos. They never compare notes.",
+				description:
+					"You have one agent for code, one for research, one for writing. They do not share what they learn. Every agent is an island.",
+			},
+			{
+				icon: EyeOff,
+				title: "Your team has no idea what your agents are doing.",
+				description:
+					"No shared memory. No audit trail. No way to pick up where someone else's agent left off. Collaboration with AI stops at the individual level.",
 			},
 		],
 		closing:
-			"You do not need a SaaS. You need an open protocol that runs on your infrastructure.",
+			"This is not an AI limitation. Your models are capable — they just have no memory between sessions, no shared context across agents, and no way to coordinate at team scale. VantagePeers gives your agents a persistent, shared brain. Open. Self-hosted. Yours.",
 	},
 	fr: {
-		title: "Les solutions existantes sont cassées.",
-		titleAccent: "Voici pourquoi.",
+		title: "Tes agents IA oublient tout entre les sessions.",
 		subtitle:
-			"Vous avez essayé mem0 — 249$/mois pour la mémoire graphe. Vous avez essayé Zep — la Community Edition a été abandonnée. Vous avez bricolé quelque chose en local — pas de multi-machine, pas d'accusés de lecture, pas de tâches.",
+			"Tu passes plus de temps à expliquer le contexte qu'à travailler vraiment. Tes agents repartent de zéro. Tes notes s'éparpillent. Ton équipe ne sait rien de ce qui se passe. Ce n'est pas un problème d'IA — c'est un problème de mémoire.",
 		problems: [
 			{
-				icon: CreditCard,
-				title: "249-475$/mois juste pour la mémoire",
+				icon: RotateCcw,
+				title: "Ton agent repart de zéro. À chaque fois.",
 				description:
-					"mem0 facture 249$/mois pour la mémoire graphe. Zep commence à 475$/mois + dépassements. La mémoire ne devrait pas coûter plus que votre LLM.",
+					"Nouvelle session, nouvel onglet — ton agent ne sait pas ce que tu faisais hier. Tu te répètes. Il devine. Tu corriges.",
 			},
 			{
-				icon: ServerCrash,
-				title: "Zep Community Edition abandonnée",
+				icon: ClipboardList,
+				title: "10 minutes perdues avant chaque vraie session.",
 				description:
-					"Zep a poussé tout le monde vers son cloud. La version auto-hébergée a arrêté de recevoir des mises à jour. On ne peut pas construire sur une base abandonnée.",
+					"Avant de pouvoir vraiment avancer, tu ré-expliques le projet, les contraintes, la dernière décision. À chaque fois. Ça ne s'appelle pas de la configuration — ça s'appelle une perte de temps.",
 			},
 			{
-				icon: Lock,
-				title: "Dépendance vendeur",
+				icon: Layers,
+				title: "Ton contexte est éparpillé dans 5 outils.",
 				description:
-					"Schémas propriétaires, APIs fermées, pas d'export. Quand ils augmentent les prix ou ferment, vos agents perdent leur mémoire du jour au lendemain.",
+					"Notion. Historique ChatGPT. Projets Claude. Un doc quelque part. Un fil Slack. Rien de tout ça ne parle à tes agents. C'est toi qui fais la colle — à la main.",
 			},
 			{
-				icon: WifiOff,
-				title: "Les hacks locaux ne passent pas à l'échelle",
+				icon: Copy,
+				title: "Copier-coller entre ChatGPT et Claude, c'est pas un workflow.",
 				description:
-					"Les fichiers SQLite et dumps JSON ne survivent pas aux configurations multi-agents et multi-machines. Pas de messagerie. Pas d'accusés de lecture. Pas de tâches.",
+					"Changer de modèle en cours de projet veut dire transférer le contexte à la main. Tu copies. Tu colles. Tu espères que rien se perd. Il y a toujours quelque chose.",
+			},
+			{
+				icon: Unplug,
+				title: "Tes agents travaillent en silos. Ils ne se parlent pas.",
+				description:
+					"Un agent pour le code, un pour la recherche, un pour la rédaction. Ils ne partagent pas ce qu'ils apprennent. Chaque agent est une île.",
+			},
+			{
+				icon: EyeOff,
+				title: "Ton équipe ne sait pas ce que font tes agents.",
+				description:
+					"Pas de mémoire partagée. Pas de trace. Pas moyen de reprendre là où l'agent d'un collègue s'est arrêté. La collaboration avec l'IA s'arrête à l'individu.",
 			},
 		],
 		closing:
-			"Vous n'avez pas besoin d'un SaaS. Vous avez besoin d'un protocole ouvert qui tourne sur votre infrastructure.",
+			"Ce n'est pas une limite de l'IA. Tes modèles sont capables — ils n'ont juste pas de mémoire entre les sessions, pas de contexte partagé entre les agents, pas de coordination à l'échelle de l'équipe. VantagePeers donne à tes agents une mémoire persistante et partagée. Ouverte. Auto-hébergée. La tienne.",
 	},
 };
 
@@ -93,13 +122,12 @@ export function PeersProblem({ locale }: PeersProblemProps) {
 					transition={{ duration: 0.5 }}
 				>
 					<h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-						{t.title}{" "}
-						<span className="text-muted-foreground">{t.titleAccent}</span>
+						{t.title}
 					</h2>
 					<p className="text-lg text-muted-foreground">{t.subtitle}</p>
 				</motion.div>
 
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 					{t.problems.map((problem, index) => (
 						<motion.div
 							key={problem.title}
@@ -111,7 +139,10 @@ export function PeersProblem({ locale }: PeersProblemProps) {
 							<Card className="relative overflow-hidden h-full">
 								<CardContent className="relative p-6 text-center">
 									<div className="size-12 rounded-3xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-										<problem.icon className="size-6 text-destructive" />
+										<problem.icon
+											className="size-6 text-destructive"
+											aria-hidden="true"
+										/>
 									</div>
 									<h3 className="font-semibold text-lg mb-2">
 										{problem.title}
