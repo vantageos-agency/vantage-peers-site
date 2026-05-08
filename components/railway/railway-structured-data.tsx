@@ -48,7 +48,7 @@ function getHowToSchema(locale: string) {
 				text: isEn
 					? "Click the Railway deploy button to open the pre-configured VantagePeers template in your Railway dashboard."
 					: "Cliquez sur le bouton de déploiement Railway pour ouvrir le template VantagePeers pré-configuré dans votre tableau de bord Railway.",
-				url: "https://railway.com/deploy/MBoPtr?referralCode=vantagepeers&utm_medium=integration&utm_source=template&utm_campaign=generic",
+				url: "https://railway.com/deploy/vantagepeers-mcp",
 			},
 			{
 				"@type": "HowToStep",

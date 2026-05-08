@@ -179,8 +179,7 @@ const content = {
 	},
 };
 
-const DEPLOY_URL =
-	"https://railway.com/deploy/MBoPtr?referralCode=vantagepeers&utm_medium=integration&utm_source=template&utm_campaign=generic";
+const DEPLOY_URL = "https://railway.com/deploy/vantagepeers-mcp";
 
 interface RailwayPageProps {
 	locale: "en" | "fr";
