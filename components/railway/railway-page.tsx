@@ -80,9 +80,9 @@ const content = {
 		],
 		claudeWebTitle: "Also works in Claude.ai web",
 		claudeWebBody:
-			"Claude.ai web connects via OAuth 2.1 DCR — paste your Railway URL in Settings → Integrations → Custom MCP servers. No bearer token, no config file. Full docs at vantagepeers.com/docs/install.",
+			"Claude.ai web connects via OAuth 2.1 DCR — paste your Railway URL in Settings → Integrations → Custom MCP servers. No bearer token, no config file. Full docs at vantagepeers.com/docs.",
 		claudeWebCta: "View Claude.ai web setup docs",
-		claudeWebCtaHref: "https://vantagepeers.com/docs/install",
+		claudeWebCtaHref: "https://vantagepeers.com/docs",
 		verifyTitle: "Verify the deployment",
 		verifyBody:
 			"Once Railway finishes building, run this health check from your terminal:",
@@ -193,9 +193,9 @@ const content = {
 		convexCta: "Créer un compte Convex (parrainage : LAUREN7583)",
 		claudeWebTitle: "Fonctionne aussi dans Claude.ai web",
 		claudeWebBody:
-			"Claude.ai web se connecte via OAuth 2.1 DCR — collez votre URL Railway dans Paramètres → Intégrations → Serveurs MCP personnalisés. Aucun jeton porteur, aucun fichier de config. Documentation complète sur vantagepeers.com/docs/install.",
+			"Claude.ai web se connecte via OAuth 2.1 DCR — collez votre URL Railway dans Paramètres → Intégrations → Serveurs MCP personnalisés. Aucun jeton porteur, aucun fichier de config. Documentation complète sur vantagepeers.com/docs.",
 		claudeWebCta: "Voir la documentation Claude.ai web",
-		claudeWebCtaHref: "https://vantagepeers.com/docs/install",
+		claudeWebCtaHref: "https://vantagepeers.com/docs",
 	},
 };
 
