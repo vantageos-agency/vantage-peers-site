@@ -53,22 +53,23 @@ const content = {
 			{
 				id: "env-vars",
 				step: "3",
-				title: "Add 3 environment variables",
-				body: "In your Railway project → Variables, add:",
+				title: "Set environment variables in both Railway and Convex",
+				body: "Two layers, each with its own set. In Railway → Variables, add these 3 service vars:",
 				vars: [
 					{
-						name: "CONVEX_URL",
+						name: "NODE_ENV",
+						desc: "Set to: production",
+					},
+					{
+						name: "CONVEX_URL_INTERNAL",
 						desc: "The deployment URL from step 2 (https://….convex.cloud)",
 					},
 					{
 						name: "BEARER_SECRET_MASTER",
-						desc: "Any long random string. Used to authenticate MCP clients.",
-					},
-					{
-						name: "AI_GATEWAY_API_KEY",
-						desc: "Your OpenAI-compatible key for vector embeddings.",
+						desc: "A long random string (32+ chars). Authenticates all MCP client requests.",
 					},
 				],
+				note: "Then in Convex (dashboard → Settings → Environment Variables), set 3 backend vars: BEARER_SECRET_MASTER (same value as Railway), AI_GATEWAY_API_KEY for Vercel AI Gateway or OPENAI_API_KEY for direct OpenAI BYOK, and VP_LICENSE_KEY.",
 			},
 			{
 				id: "connect",
@@ -144,22 +145,23 @@ const content = {
 			{
 				id: "env-vars",
 				step: "3",
-				title: "Ajouter 3 variables d'environnement",
-				body: "Dans votre projet Railway → Variables, ajoutez :",
+				title: "Configurer les variables dans Railway et Convex",
+				body: "Deux couches, chacune avec ses propres variables. Dans Railway → Variables, ajoutez ces 3 variables de service :",
 				vars: [
 					{
-						name: "CONVEX_URL",
+						name: "NODE_ENV",
+						desc: "Valeur : production",
+					},
+					{
+						name: "CONVEX_URL_INTERNAL",
 						desc: "L'URL de déploiement de l'étape 2 (https://….convex.cloud)",
 					},
 					{
 						name: "BEARER_SECRET_MASTER",
-						desc: "Une longue chaîne aléatoire. Utilisée pour authentifier les clients MCP.",
-					},
-					{
-						name: "AI_GATEWAY_API_KEY",
-						desc: "Votre clé compatible OpenAI pour les embeddings vectoriels.",
+						desc: "Une chaîne aléatoire longue (32+ caractères). Authentifie toutes les requêtes des clients MCP.",
 					},
 				],
+				note: "Puis dans Convex (tableau de bord → Paramètres → Variables d'environnement), définissez 3 variables backend : BEARER_SECRET_MASTER (même valeur que Railway), AI_GATEWAY_API_KEY pour Vercel AI Gateway ou OPENAI_API_KEY pour OpenAI direct BYOK, et VP_LICENSE_KEY.",
 			},
 			{
 				id: "connect",
@@ -410,6 +412,12 @@ export function RailwayPage({ locale }: RailwayPageProps) {
 														</li>
 													))}
 												</ul>
+											)}
+
+											{"note" in step && step.note && (
+												<p className="text-xs text-muted-foreground leading-relaxed mt-3 pl-3 border-l-2 border-border">
+													{step.note}
+												</p>
 											)}
 
 											{"cta" in step && step.cta && step.ctaHref && (
