@@ -249,26 +249,30 @@ export function RailwayPage({ locale }: RailwayPageProps) {
 								>
 									+
 								</span>
-								<Image
-									src="/logo-railway.svg"
-									alt="Railway"
-									width={28}
-									height={28}
-									className="invert dark:invert-0 opacity-80"
-								/>
+								<div className="h-8 flex items-center">
+									<Image
+										src="/logo-railway.svg"
+										alt="Railway"
+										width={32}
+										height={32}
+										className="invert dark:invert-0 opacity-80"
+									/>
+								</div>
 								<span
 									className="text-muted-foreground text-sm select-none"
 									aria-hidden="true"
 								>
 									+
 								</span>
-								<Image
-									src="/logo-convex.svg"
-									alt="Convex"
-									width={72}
-									height={28}
-									className="invert dark:invert-0 opacity-80"
-								/>
+								<div className="h-8 flex items-center">
+									<Image
+										src="/logo-convex.svg"
+										alt="Convex"
+										width={104}
+										height={40}
+										className="invert dark:invert-0 opacity-80"
+									/>
+								</div>
 							</figure>
 
 							<div className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground border border-border rounded-full px-4 py-1.5 mb-6">
@@ -490,12 +494,12 @@ export function RailwayPage({ locale }: RailwayPageProps) {
 						className="py-14 md:py-20 border-t border-border"
 					>
 						<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-							<div className="flex items-center gap-3 mb-4">
+							<div className="mb-6">
 								<Image
 									src="/logo-convex.svg"
 									alt="Convex"
-									width={80}
-									height={30}
+									width={136}
+									height={52}
 									className="invert dark:invert-0 opacity-80"
 								/>
 							</div>
