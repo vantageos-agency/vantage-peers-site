@@ -85,6 +85,10 @@ const content = {
 		pricingBody:
 			"Self-hosting is free. No Railway subscription is required for low-traffic deployments (Railway free plan covers most dev teams). Optional paid support plans are available.",
 		pricingLink: "See pricing plans",
+		railwayTitle: "Need a Railway account?",
+		railwayBody:
+			"Railway is the hosting platform for the VantagePeers MCP server. The free plan is sufficient for most teams. Sign up via our referral link — it costs you nothing extra.",
+		railwayCta: "Create Railway account",
 		convexTitle: "Need a Convex account?",
 		convexBody:
 			"Convex is the real-time database powering VantagePeers. The free plan covers up to 1M function calls/month — enough for several active agent teams. Using our referral link costs you nothing extra.",
@@ -172,6 +176,10 @@ const content = {
 		pricingBody:
 			"L'auto-hébergement est gratuit. Aucun abonnement Railway n'est requis pour les déploiements à faible trafic (le plan gratuit Railway couvre la plupart des équipes dev). Des plans de support payants optionnels sont disponibles.",
 		pricingLink: "Voir les plans tarifaires",
+		railwayTitle: "Besoin d'un compte Railway ?",
+		railwayBody:
+			"Railway est la plateforme d'hébergement du serveur MCP VantagePeers. Le forfait gratuit est suffisant pour la plupart des équipes. Inscrivez-vous via notre lien de parrainage — sans surcoût pour vous.",
+		railwayCta: "Créer un compte Railway",
 		convexTitle: "Besoin d'un compte Convex ?",
 		convexBody:
 			"Convex est la base de données temps réel qui alimente VantagePeers. Le plan gratuit couvre jusqu'à 1M d'appels de fonctions/mois — suffisant pour plusieurs équipes d'agents actifs. Utiliser notre lien de parrainage ne vous coûte rien de plus.",
@@ -180,6 +188,7 @@ const content = {
 };
 
 const DEPLOY_URL = "https://railway.com/deploy/vantagepeers-mcp";
+const RAILWAY_SIGNUP_URL = "https://railway.com?referralCode=vantagepeers";
 
 interface RailwayPageProps {
 	locale: "en" | "fr";
@@ -484,6 +493,53 @@ export function RailwayPage({ locale }: RailwayPageProps) {
 }`}</code>
 								</pre>
 							</div>
+						</div>
+					</section>
+
+					{/* ── Railway Sign-up CTA ──────────────────────────────── */}
+					<section
+						aria-labelledby="railway-signup-heading"
+						className="py-14 md:py-20 border-t border-border"
+					>
+						<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+							<div className="mb-6">
+								<Image
+									src="/logo-railway.svg"
+									alt="Railway"
+									width={120}
+									height={32}
+									className="invert dark:invert-0 opacity-80"
+								/>
+							</div>
+							<h2
+								id="railway-signup-heading"
+								className="text-2xl sm:text-3xl font-bold tracking-tight mb-4"
+							>
+								{t.railwayTitle}
+							</h2>
+							<p className="text-muted-foreground leading-relaxed mb-6">
+								{t.railwayBody}
+							</p>
+							<a
+								href={RAILWAY_SIGNUP_URL}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="inline-flex items-center gap-2 min-h-[44px] px-7 rounded-4xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+							>
+								{t.railwayCta}
+								<svg
+									aria-hidden="true"
+									className="size-3.5"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+								</svg>
+							</a>
 						</div>
 					</section>
 
