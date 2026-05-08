@@ -263,13 +263,13 @@ export function RailwayPage({ locale }: RailwayPageProps) {
 								>
 									+
 								</span>
-								<div className="h-8 flex items-center">
+								<div className="size-8 flex items-center justify-center">
 									<Image
-										src="/logo-convex.svg"
+										src="/logo-convex-symbol.svg"
 										alt="Convex"
-										width={104}
-										height={40}
-										className="invert dark:invert-0 opacity-80"
+										width={32}
+										height={32}
+										className="opacity-90"
 									/>
 								</div>
 							</figure>
