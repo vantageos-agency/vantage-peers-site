@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Black rounded square — matches rounded-2xl (16px radius at 32px = 50% => scaled: 16/32*256 = 128px at full size, but rounded-2xl Tailwind v4 default is 1rem=16px, so at 256px canvas: 16px radius) -->
+  <rect x="0" y="0" width="256" height="256" rx="40" ry="40" fill="#111111"/>
+  <!-- Bold white "V" as a vector path, centered in 256×256 -->
+  <!-- V shape: two diagonal strokes meeting at bottom center, drawn as a single filled polygon -->
+  <!-- Design: top-left start (52,60), top-right start (204,60), meet at bottom center (128,200) -->
+  <!-- Stroke weight: ~36px thick sides, creating a bold geometric V -->
+  <polygon
+    points="52,60 96,60 128,172 160,60 204,60 148,200 108,200"
+    fill="#ffffff"
+  />
+</svg>
