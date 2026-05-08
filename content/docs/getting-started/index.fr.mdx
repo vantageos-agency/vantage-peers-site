@@ -44,7 +44,19 @@ Cela déploie les 20 tables de base de données, les fonctions serverless et les
 
 ### Étape 4 : Configurer les variables d'environnement
 
-Définissez `AI_GATEWAY_API_KEY` dans le **tableau de bord Convex** (Settings → Environment Variables) avec votre clé API OpenAI. Ceci est requis pour la recherche sémantique (`recall`, `hybrid_search`).
+Définissez les variables suivantes dans le **tableau de bord Convex** (Settings → Environment Variables) :
+
+| Variable | Requis | Description |
+|---|---|---|
+| `AI_GATEWAY_API_KEY` | Oui | Clé API OpenAI pour les embeddings vectoriels (`text-embedding-3-small`) |
+| `BEARER_SECRET_MASTER` | Oui | Jeton d'auth pour le serveur MCP — tous les appels retournent "Unauthorized" sans cette valeur |
+| `VP_LICENSE_KEY` | Oui | Clé de licence VantagePeers — tous les appels retournent 403 sans cette valeur |
+
+**Générer `BEARER_SECRET_MASTER` :** Cette valeur doit être une chaîne aléatoire d'au moins 32 caractères. Générez-en une avec :
+
+```bash
+openssl rand -hex 32
+```
 
 > **À propos de la clé API OpenAI :** VantagePeers utilise `text-embedding-3-small` pour générer des embeddings vectoriels pour la recherche sémantique. Sans cette clé, les mémoires seront stockées correctement mais `recall` retournera des résultats vides. Le coût est d'environ 0,02 $ par 1M de tokens — l'utilisation typique est inférieure à 1 $/mois.
 
@@ -77,7 +89,8 @@ Ajoutez VantagePeers à votre configuration MCP Claude Code. Ouvrez `~/.claude.j
       "command": "npx",
       "args": ["-y", "vantage-peers-mcp"],
       "env": {
-        "CONVEX_URL": "https://your-deployment.convex.cloud"
+        "CONVEX_URL": "https://your-deployment.convex.cloud",
+        "VP_LICENSE_KEY": "<votre-clé-de-licence>"
       }
     }
   }
@@ -97,7 +110,7 @@ VantagePeers fonctionne également avec [Claude Code Web](https://claude.ai/code
    - **Name :** `vantage-peers`
    - **Command :** `npx`
    - **Arguments :** `-y vantage-peers-mcp`
-   - **Environment Variables :** `CONVEX_URL=https://your-deployment.convex.cloud`
+   - **Environment Variables :** `CONVEX_URL=https://your-deployment.convex.cloud` et `VP_LICENSE_KEY=<votre-clé-de-licence>`
 5. Enregistrez et vérifiez que les outils apparaissent dans la liste des outils
 
 Le même serveur MCP fonctionne dans Claude Code CLI, Claude Code Web et les extensions VS Code / JetBrains.

@@ -13,15 +13,30 @@ Two agents. Shared memory. Real messages. Fifteen minutes.
 git clone https://github.com/vantageos-agency/vantage-peers.git
 cd vantage-peers
 npm install
+```
+
+Authenticate with Convex (opens a browser window — press Ctrl+C after the login completes):
+
+```bash
+npx convex dev
+```
+
+Once authenticated, deploy the backend:
+
+```bash
 npx convex deploy
 ```
 
 Convex outputs your deployment URL. Copy it — you'll need it next.
 
-Set the OpenAI key for vector embeddings:
+Set the required environment variables:
 
 ```bash
+# API key for vector embeddings
 npx convex env set AI_GATEWAY_API_KEY sk-your-key-here
+
+# Auth token for MCP server (generate with: openssl rand -hex 32)
+npx convex env set BEARER_SECRET_MASTER your-random-secret-here
 ```
 
 ## Step 2: Configure Agent A (Alice)
@@ -35,7 +50,8 @@ Open Claude Code settings (`~/.claude.json` or your project's `.claude/settings.
       "command": "npx",
       "args": ["-y", "vantage-peers-mcp"],
       "env": {
-        "CONVEX_URL": "https://your-deployment.convex.cloud"
+        "CONVEX_URL": "https://your-deployment.convex.cloud",
+        "VP_LICENSE_KEY": "<your-license-key>"
       }
     }
   }
