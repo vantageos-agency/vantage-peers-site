@@ -78,6 +78,11 @@ const content = {
 				body: 'Add the Railway URL to your Claude Code MCP config (claude_desktop_config.json or .claude.json). Set the Authorization header to "Bearer {BEARER_SECRET_MASTER}".',
 			},
 		],
+		claudeWebTitle: "Also works in Claude.ai web",
+		claudeWebBody:
+			"Claude.ai web connects via OAuth 2.1 DCR — paste your Railway URL in Settings → Integrations → Custom MCP servers. No bearer token, no config file. Full docs at vantagepeers.com/docs/install.",
+		claudeWebCta: "View Claude.ai web setup docs",
+		claudeWebCtaHref: "https://vantagepeers.com/docs/install",
 		verifyTitle: "Verify the deployment",
 		verifyBody:
 			"Once Railway finishes building, run this health check from your terminal:",
@@ -186,6 +191,11 @@ const content = {
 		convexBody:
 			"Convex est la base de données temps réel qui alimente VantagePeers. Le plan gratuit couvre jusqu'à 1M d'appels de fonctions/mois — suffisant pour plusieurs équipes d'agents actifs. Utiliser notre lien de parrainage ne vous coûte rien de plus.",
 		convexCta: "Créer un compte Convex (parrainage : LAUREN7583)",
+		claudeWebTitle: "Fonctionne aussi dans Claude.ai web",
+		claudeWebBody:
+			"Claude.ai web se connecte via OAuth 2.1 DCR — collez votre URL Railway dans Paramètres → Intégrations → Serveurs MCP personnalisés. Aucun jeton porteur, aucun fichier de config. Documentation complète sur vantagepeers.com/docs/install.",
+		claudeWebCta: "Voir la documentation Claude.ai web",
+		claudeWebCtaHref: "https://vantagepeers.com/docs/install",
 	},
 };
 
@@ -582,6 +592,44 @@ export function RailwayPage({ locale }: RailwayPageProps) {
 								className="inline-flex items-center gap-2 min-h-[44px] px-7 rounded-4xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							>
 								{t.convexCta}
+								<svg
+									aria-hidden="true"
+									className="size-3.5"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+								</svg>
+							</a>
+						</div>
+					</section>
+
+					{/* ── Claude.ai web ────────────────────────────────────── */}
+					<section
+						aria-labelledby="claude-web-heading"
+						className="py-14 md:py-20 border-t border-border"
+					>
+						<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+							<h2
+								id="claude-web-heading"
+								className="text-2xl sm:text-3xl font-bold tracking-tight mb-4"
+							>
+								{t.claudeWebTitle}
+							</h2>
+							<p className="text-muted-foreground leading-relaxed mb-6">
+								{t.claudeWebBody}
+							</p>
+							<a
+								href={t.claudeWebCtaHref}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-muted-foreground transition-colors underline underline-offset-4 decoration-border hover:decoration-muted-foreground"
+							>
+								{t.claudeWebCta}
 								<svg
 									aria-hidden="true"
 									className="size-3.5"
