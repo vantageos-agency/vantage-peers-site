@@ -44,7 +44,19 @@ This deploys all 20 database tables, serverless functions, and vector indexes to
 
 ### Step 4: Set environment variables
 
-Set `AI_GATEWAY_API_KEY` in the **Convex dashboard** (Settings → Environment Variables) with your OpenAI API key. This is required for semantic search (`recall`, `hybrid_search`).
+Set the following in the **Convex dashboard** (Settings → Environment Variables):
+
+| Variable | Required | Description |
+|---|---|---|
+| `AI_GATEWAY_API_KEY` | Yes | OpenAI API key for vector embeddings (`text-embedding-3-small`) |
+| `BEARER_SECRET_MASTER` | Yes | Auth token for the MCP server — all calls return "Unauthorized" without it |
+| `VP_LICENSE_KEY` | Yes | License key for VantagePeers — all tool calls return 403 without it |
+
+**Generating `BEARER_SECRET_MASTER`:** This must be a random string of 32+ characters. Generate one with:
+
+```bash
+openssl rand -hex 32
+```
 
 > **About the OpenAI API key:** VantagePeers uses `text-embedding-3-small` to generate vector embeddings for semantic search. Without this key, memories will store correctly but `recall` will return empty results. The cost is approximately $0.02 per 1M tokens — typical usage is under $1/month.
 
@@ -77,7 +89,8 @@ Add VantagePeers to your Claude Code MCP configuration. Open `~/.claude.json` (g
       "command": "npx",
       "args": ["-y", "vantage-peers-mcp"],
       "env": {
-        "CONVEX_URL": "https://your-deployment.convex.cloud"
+        "CONVEX_URL": "https://your-deployment.convex.cloud",
+        "VP_LICENSE_KEY": "<your-license-key>"
       }
     }
   }
@@ -97,7 +110,7 @@ VantagePeers also works with [Claude Code Web](https://claude.ai/code) (formerly
    - **Name:** `vantage-peers`
    - **Command:** `npx`
    - **Arguments:** `-y vantage-peers-mcp`
-   - **Environment Variables:** `CONVEX_URL=https://your-deployment.convex.cloud`
+   - **Environment Variables:** `CONVEX_URL=https://your-deployment.convex.cloud` and `VP_LICENSE_KEY=<your-license-key>`
 5. Save and verify tools appear in the tool list
 
 The same MCP server works in Claude Code CLI, Claude Code Web, and the VS Code / JetBrains extensions.
