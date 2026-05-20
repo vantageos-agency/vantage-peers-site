@@ -44,6 +44,14 @@ const webSiteSchema = {
 	publisher: {
 		"@id": `${BASE_URL}/#organization`,
 	},
+	potentialAction: {
+		"@type": "SearchAction",
+		target: {
+			"@type": "EntryPoint",
+			urlTemplate: `${BASE_URL}/api/search?q={search_term_string}`,
+		},
+		"query-input": "required name=search_term_string",
+	},
 };
 
 // Q&A pairs embedded in WebPage.mainEntity — FAQPage type is restricted to
