@@ -165,23 +165,6 @@ function getPersonSchema() {
 	};
 }
 
-function getFaqPageSchema(locale: string) {
-	const content = locale === "fr" ? webPageContent.fr : webPageContent.en;
-	return {
-		"@context": "https://schema.org",
-		"@type": "FAQPage",
-		"@id": `${locale === "fr" ? `${BASE_URL}/fr` : BASE_URL}#faqpage`,
-		mainEntity: content.faq.map((item) => ({
-			"@type": "Question",
-			name: item.q,
-			acceptedAnswer: {
-				"@type": "Answer",
-				text: item.a,
-			},
-		})),
-	};
-}
-
 function JsonLd({ data }: { data: Record<string, unknown> }) {
 	return (
 		<script
@@ -200,7 +183,6 @@ export function LandingStructuredData({ locale = "en" }: { locale?: string }) {
 			<JsonLd data={getWebPageSchema(locale)} />
 			<JsonLd data={getSoftwareApplicationSchema(locale)} />
 			<JsonLd data={getPersonSchema()} />
-			<JsonLd data={getFaqPageSchema(locale)} />
 		</>
 	);
 }
