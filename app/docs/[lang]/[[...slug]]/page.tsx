@@ -6,6 +6,8 @@ import type { Metadata } from 'next';
 import { MarkdownCopyButton, ViewOptionsPopover } from '@/components/ai/page-actions';
 import { i18n } from '@/lib/i18n';
 
+const BASE_URL = 'https://www.vantagepeers.com';
+
 export default async function Page(props: {
   params: Promise<{ lang: string; slug?: string[] }>;
 }) {
@@ -47,8 +49,38 @@ export async function generateMetadata(props: {
   const page = source.getPage(params.slug, params.lang);
   if (!page) notFound();
 
+  const slugPath = params.slug?.join('/') ?? '';
+
+  // Canonical always points to the un-prefixed EN path (/docs/slug)
+  // For FR pages the canonical points to the EN equivalent (cross-locale canonical)
+  // except we set hreflang so Google picks the right locale URL per user.
+  const canonicalUrl =
+    slugPath === ''
+      ? `${BASE_URL}/docs`
+      : `${BASE_URL}/docs/${slugPath}`;
+
+  const enUrl =
+    slugPath === '' ? `${BASE_URL}/docs` : `${BASE_URL}/docs/${slugPath}`;
+  const frUrl =
+    slugPath === '' ? `${BASE_URL}/docs/fr` : `${BASE_URL}/docs/fr/${slugPath}`;
+
+  // For FR pages, self-canonical is the FR URL; for EN pages it's the EN URL.
+  const selfCanonical = params.lang === 'fr' ? frUrl : canonicalUrl;
+
+  // Check if a FR counterpart exists via the source loader
+  const frPage = source.getPage(params.slug, 'fr');
+  const hasFr = Boolean(frPage);
+
   return {
     title: page.data.title,
     description: page.data.description,
+    alternates: {
+      canonical: selfCanonical,
+      languages: {
+        en: enUrl,
+        ...(hasFr ? { fr: frUrl } : {}),
+        'x-default': enUrl,
+      },
+    },
   };
 }
