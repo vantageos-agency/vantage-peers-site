@@ -9,6 +9,71 @@ const BASE_URL = 'https://www.vantagepeers.com';
 
 const BASE_URL = 'https://www.vantagepeers.com';
 
+// JSON-LD injection via dangerouslySetInnerHTML is the standard pattern for
+// server-rendered structured data. No user input is interpolated — values
+// come from static MDX frontmatter or build-time constants.
+function JsonLd({ data }: { data: Record<string, unknown> }) {
+	return (
+		<script
+			type="application/ld+json"
+			// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data — MDX frontmatter values, no user input interpolated
+			dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+		/>
+	);
+}
+
+function getDocsBreadcrumbSchema(lang: string, slug: string[] | undefined, pageTitle: string) {
+	const slugParts = slug ?? [];
+	const pageUrl = `${BASE_URL}/docs/${lang}${slugParts.length > 0 ? `/${slugParts.join("/")}` : ""}`;
+	const docsHomeUrl = `${BASE_URL}/docs/${lang}`;
+	const docsHomeName = lang === "fr" ? "Documentation" : "Docs";
+
+	const items: Array<{ "@type": string; position: number; name: string; item?: string }> = [
+		{ "@type": "ListItem", position: 1, name: "VantagePeers", item: lang === "fr" ? `${BASE_URL}/fr` : BASE_URL },
+		{ "@type": "ListItem", position: 2, name: docsHomeName, item: docsHomeUrl },
+	];
+
+	if (slugParts.length > 0) {
+		items.push({ "@type": "ListItem", position: 3, name: pageTitle, item: pageUrl });
+	}
+
+	return {
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		"@id": `${pageUrl}#breadcrumb`,
+		itemListElement: items,
+	};
+}
+
+function getTechArticleSchema(lang: string, slug: string[] | undefined, title: string, description: string | undefined) {
+	const slugParts = slug ?? [];
+	const pageUrl = `${BASE_URL}/docs/${lang}${slugParts.length > 0 ? `/${slugParts.join("/")}` : ""}`;
+	const buildDate = new Date().toISOString().split("T")[0];
+
+	return {
+		"@context": "https://schema.org",
+		"@type": "TechArticle",
+		"@id": `${pageUrl}#article`,
+		headline: title,
+		description: description ?? title,
+		url: pageUrl,
+		inLanguage: lang === "fr" ? "fr" : "en",
+		datePublished: buildDate,
+		dateModified: buildDate,
+		author: {
+			"@type": "Person",
+			"@id": `${BASE_URL}/#founder`,
+			name: "Laurent Perello",
+		},
+		publisher: {
+			"@id": `${BASE_URL}/#organization`,
+		},
+		isPartOf: {
+			"@id": `${BASE_URL}/#website`,
+		},
+	};
+}
+
 export default async function Page(props: {
   params: Promise<{ lang: string; slug?: string[] }>;
 }) {
@@ -22,6 +87,8 @@ export default async function Page(props: {
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
       <DocsBody>
+        <JsonLd data={getDocsBreadcrumbSchema(params.lang, params.slug, page.data.title)} />
+        <JsonLd data={getTechArticleSchema(params.lang, params.slug, page.data.title, page.data.description)} />
         <div className="flex flex-row gap-2 items-center not-prose mb-4">
           <MarkdownCopyButton markdownUrl={markdownUrl} />
           <ViewOptionsPopover
