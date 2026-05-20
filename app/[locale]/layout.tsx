@@ -124,6 +124,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 		<html lang={locale} suppressHydrationWarning>
 			<head>
 				<meta name="theme-color" content="#0a0a0a" />
+				<link rel="preconnect" href="https://plausible.io" />
 				<link
 					rel="apple-touch-icon"
 					sizes="180x180"

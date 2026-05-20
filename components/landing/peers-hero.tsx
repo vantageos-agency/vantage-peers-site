@@ -83,17 +83,12 @@ export function PeersHero({ locale }: PeersHeroProps) {
 						</Badge>
 					</motion.div>
 
-					{/* Headline */}
-					<motion.h1
-						className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.1 }}
-					>
+					{/* Headline — plain h1, paint-visible immediately (LCP element) */}
+					<h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
 						{t.headline}
 						<br />
 						<span className="text-gradient">{t.headlineSub}</span>
-					</motion.h1>
+					</h1>
 
 					{/* Subheadline */}
 					<motion.p
@@ -158,7 +153,10 @@ export function PeersHero({ locale }: PeersHeroProps) {
 						{t.stats.map((stat) => (
 							<div key={stat.label} className="text-center">
 								<div className="flex items-center justify-center mb-2">
-									<stat.icon className="size-5 text-muted-foreground mr-2" aria-hidden="true" />
+									<stat.icon
+										className="size-5 text-muted-foreground mr-2"
+										aria-hidden="true"
+									/>
 									<span className="text-3xl font-bold tabular-nums">
 										{stat.value}
 									</span>
