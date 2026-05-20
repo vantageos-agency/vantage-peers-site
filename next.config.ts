@@ -6,6 +6,43 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const withMDX = createMDX();
 
 const nextConfig: NextConfig = {
+	async redirects() {
+		return [
+			// P0-T2: block direct /docs/en/* access — 308 to canonical /docs/*
+			{
+				source: '/docs/en',
+				destination: '/docs',
+				permanent: true,
+			},
+			{
+				source: '/docs/en/:path*',
+				destination: '/docs/:path*',
+				permanent: true,
+			},
+			// P0-T4: /en/* → /* permanent (308) so Googlebot transfers full PageRank
+			{
+				source: '/en/:path*',
+				destination: '/:path*',
+				permanent: true,
+			},
+			{
+				source: '/en',
+				destination: '/',
+				permanent: true,
+			},
+			// P1-T4: /fr/docs/* → /docs/fr/* permanent
+			{
+				source: '/fr/docs',
+				destination: '/docs/fr',
+				permanent: true,
+			},
+			{
+				source: '/fr/docs/:path*',
+				destination: '/docs/fr/:path*',
+				permanent: true,
+			},
+		];
+	},
 	async rewrites() {
 		return {
 			beforeFiles: [
