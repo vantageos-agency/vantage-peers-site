@@ -15,7 +15,7 @@ const content = {
 		cta2: "See How It Works",
 		stats: [
 			{ value: "20", label: "DB Tables", icon: Database },
-			{ value: "75", label: "MCP Tools", icon: Wrench },
+			{ value: "82", label: "MCP Tools", icon: Wrench },
 			{ value: "Free", label: "FSL License", icon: CircleDollarSign },
 			{ value: "<10 min", label: "Setup", icon: Clock },
 		],
@@ -30,7 +30,7 @@ const content = {
 		cta2: "Comment ça marche",
 		stats: [
 			{ value: "20", label: "Tables BD", icon: Database },
-			{ value: "75", label: "Outils MCP", icon: Wrench },
+			{ value: "82", label: "Outils MCP", icon: Wrench },
 			{ value: "Gratuit", label: "Licence FSL", icon: CircleDollarSign },
 			{ value: "<10 min", label: "Installation", icon: Clock },
 		],

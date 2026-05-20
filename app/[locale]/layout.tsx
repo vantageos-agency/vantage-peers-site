@@ -45,7 +45,7 @@ export async function generateMetadata({
 		en: {
 			title: "VantagePeers \u2014 Shared Memory for Multi-Agent Claude Code",
 			description:
-				"Open source memory, messaging, and task management MCP server. 20 tables, 82 tools. Free, self-hosted on Convex.",
+				"Open source MCP server for AI agent swarms. Shared memory, inter-agent messaging, task management. 20 tables, 82 tools. Free, self-hosted on Convex.",
 			ogTitle: "VantagePeers \u2014 Shared Memory for Multi-Agent Claude Code",
 			ogDesc:
 				"Open source MCP server. 82 tools, 20 tables. Semantic memory, inter-agent messaging, task management. Free, self-hosted.",

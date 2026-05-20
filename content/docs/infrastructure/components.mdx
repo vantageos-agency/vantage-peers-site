@@ -1,11 +1,21 @@
 ---
 title: Component Registry
-description: Backup and inventory of agents, skills, hooks, and plugins.
+description: Versioned backup and inventory of agents, skills, hooks, and plugins — every file's full content stored so nothing is lost if the filesystem is destroyed.
 ---
 
 # Component Registry
 
-The component registry stores a backup of all agents, skills, hooks, and plugins. Each entry includes the full file content, so nothing is lost if the filesystem is destroyed.
+The component registry stores a versioned backup of every agent, skill, hook, and plugin you ship. Each entry holds the full file content, so the registry doubles as both an inventory (what exists, where, owned by whom) and a recovery surface (rebuild any component byte-for-byte after a disk loss or accidental deletion).
+
+## Why use it
+
+- **Survives filesystem loss.** If a workspace gets wiped or a developer machine fails, the registry has the canonical copy.
+- **Single source of truth across the fleet.** Multiple orchestrators on multiple machines reference the same components by name — versioned, scoped per project, attributable to a creator.
+- **Team-scoped permissions.** Entries carry a `team` field so you can ship a `development` library separate from a `marketing` library and grant access accordingly.
+
+## When to register
+
+Register a component whenever you ship a new agent, skill, hook, or plugin that other agents or workspaces will consume. Typical triggers: a new orchestrator joins the fleet and needs the team's skill library; a hook gets battle-tested and graduates from one workspace to the shared baseline; a plugin reaches v1 and needs distribution.
 
 ## Component Types
 
