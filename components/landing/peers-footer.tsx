@@ -15,8 +15,8 @@ const content = {
 			{ label: "FAQ", href: "#faq" },
 		],
 		legalLinks: [
-			{ label: "Privacy Policy", href: "/en/privacy" },
-			{ label: "Legal Notice", href: "/en/legal" },
+			{ label: "Privacy Policy", href: "/privacy" },
+			{ label: "Legal Notice", href: "/legal" },
 		],
 		github: "GitHub",
 		switchLabel: "Français",
