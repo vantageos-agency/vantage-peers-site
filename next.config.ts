@@ -88,9 +88,16 @@ const nextConfig: NextConfig = {
 						value: "camera=(), microphone=(), geolocation=()",
 					},
 					{
+						// P1-T2: add includeSubDomains + preload for HSTS preload list eligibility
+						key: "Strict-Transport-Security",
+						value: "max-age=63072000; includeSubDomains; preload",
+					},
+					{
+						// P1-T3: append frame-ancestors 'none' to block framing attacks
+						// TODO: remove 'unsafe-inline' + 'unsafe-eval' in a follow-up nonces refactor
 						key: "Content-Security-Policy",
 						value:
-							"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://plausible.io https:;",
+							"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://plausible.io https:; frame-ancestors 'none';",
 					},
 				],
 			},
