@@ -19,9 +19,10 @@ function getOrganizationSchema(locale: string) {
 			width: 512,
 			height: 512,
 		},
-		description: locale === "fr"
-			? "Serveur MCP open source pour la m\u00e9moire partag\u00e9e, la messagerie et la gestion de t\u00e2ches multi-agents Claude Code. 20 tables, 82 outils. Gratuit, auto-h\u00e9berg\u00e9 sur Convex."
-			: "Open source shared memory, messaging, and task management MCP server for multi-agent Claude Code. 20 database tables, 82 MCP tools. Free, self-hosted on Convex.",
+		description:
+			locale === "fr"
+				? "Serveur MCP open source pour la m\u00e9moire partag\u00e9e, la messagerie et la gestion de t\u00e2ches multi-agents Claude Code. 20 tables, 82 outils. Gratuit, auto-h\u00e9berg\u00e9 sur Convex."
+				: "Open source shared memory, messaging, and task management MCP server for multi-agent Claude Code. 20 database tables, 82 MCP tools. Free, self-hosted on Convex.",
 		sameAs: [
 			"https://github.com/vantageos",
 			"https://github.com/vantageos-agency/vantage-peers",
@@ -63,24 +64,56 @@ const webSiteSchema = {
 const webPageContent = {
 	en: {
 		name: "VantagePeers — Shared Memory for Multi-Agent Claude Code",
-		description: "Open source MCP server. 82 tools, 20 tables. Semantic memory, inter-agent messaging, task management. Free, self-hosted.",
+		description:
+			"Open source MCP server. 82 tools, 20 tables. Semantic memory, inter-agent messaging, task management. Free, self-hosted.",
 		faq: [
-			{ q: "Is VantagePeers free to use?", a: "Yes. VantagePeers is fully open source under the FSL license. It is free, self-hosted, and has no subscription fee." },
-			{ q: "What is VantagePeers?", a: "VantagePeers is an open source MCP server that gives Claude Code agents shared memory, inter-agent messaging with read receipts, and task management. It connects multiple AI agents across machines via Convex cloud." },
-			{ q: "How many MCP tools does VantagePeers provide?", a: "VantagePeers provides 82 MCP tools across 20 database tables, covering semantic memory recall, inter-agent messaging, task management, fix pattern knowledge base, GitHub issue tracking, business unit management, mandates, recurring tasks, missions, agent diary, component registry, and cross-machine coordination." },
-			{ q: "What technology does VantagePeers run on?", a: "VantagePeers is built on Convex (a real-time database) with vector embeddings powered by @convex-dev/rag. It is self-hosted and free to run." },
-			{ q: "How does VantagePeers compare to mem0 or Zep?", a: "VantagePeers replaces paid memory services like mem0 ($249/mo) and Zep ($475/mo) with a free, self-hosted alternative. Unlike claude-peers which is local-only, VantagePeers uses Convex cloud for cross-machine agent coordination." },
+			{
+				q: "Is VantagePeers free to use?",
+				a: "Yes. VantagePeers is fully open source under the FSL license. It is free, self-hosted, and has no subscription fee.",
+			},
+			{
+				q: "What is VantagePeers?",
+				a: "VantagePeers is an open source MCP server that gives Claude Code agents shared memory, inter-agent messaging with read receipts, and task management. It connects multiple AI agents across machines via Convex cloud.",
+			},
+			{
+				q: "How many MCP tools does VantagePeers provide?",
+				a: "VantagePeers provides 82 MCP tools across 20 database tables, covering semantic memory recall, inter-agent messaging, task management, fix pattern knowledge base, GitHub issue tracking, business unit management, mandates, recurring tasks, missions, agent diary, component registry, and cross-machine coordination.",
+			},
+			{
+				q: "What technology does VantagePeers run on?",
+				a: "VantagePeers is built on Convex (a real-time database) with vector embeddings powered by @convex-dev/rag. It is self-hosted and free to run.",
+			},
+			{
+				q: "How does VantagePeers compare to mem0 or Zep?",
+				a: "VantagePeers replaces paid memory services like mem0 ($249/mo) and Zep ($475/mo) with a free, self-hosted alternative. Unlike claude-peers which is local-only, VantagePeers uses Convex cloud for cross-machine agent coordination.",
+			},
 		],
 	},
 	fr: {
 		name: "VantagePeers — Mémoire partagée pour agents Claude Code",
-		description: "Serveur MCP open source. 82 outils, 20 tables. Mémoire sémantique, messagerie inter-agents, gestion de tâches. Gratuit, auto-hébergé.",
+		description:
+			"Serveur MCP open source. 82 outils, 20 tables. Mémoire sémantique, messagerie inter-agents, gestion de tâches. Gratuit, auto-hébergé.",
 		faq: [
-			{ q: "VantagePeers est-il gratuit ?", a: "Oui. VantagePeers est entièrement open source sous licence FSL. Il est gratuit, auto-hébergé, et sans abonnement." },
-			{ q: "Qu'est-ce que VantagePeers ?", a: "VantagePeers est un serveur MCP open source qui donne aux agents Claude Code une mémoire partagée, une messagerie inter-agents avec accusés de réception, et une gestion de tâches. Il connecte plusieurs agents IA sur différentes machines via Convex cloud." },
-			{ q: "Combien d'outils MCP VantagePeers fournit-il ?", a: "VantagePeers fournit 82 outils MCP répartis sur 20 tables de base de données : rappel de mémoire sémantique, messagerie inter-agents, gestion de tâches, base de connaissances de fix patterns, suivi d'issues GitHub, gestion d'unités d'affaires, mandats, tâches récurrentes, missions, journal d'agent, registre de composants, et coordination multi-machines." },
-			{ q: "Sur quelle technologie fonctionne VantagePeers ?", a: "VantagePeers est construit sur Convex (une base de données temps réel) avec des embeddings vectoriels via @convex-dev/rag. Il est auto-hébergé et gratuit." },
-			{ q: "Comment VantagePeers se compare-t-il à mem0 ou Zep ?", a: "VantagePeers remplace les services de mémoire payants comme mem0 (249$/mois) et Zep (475$/mois) par une alternative gratuite et auto-hébergée. Contrairement à claude-peers qui est local uniquement, VantagePeers utilise Convex cloud pour la coordination inter-machines." },
+			{
+				q: "VantagePeers est-il gratuit ?",
+				a: "Oui. VantagePeers est entièrement open source sous licence FSL. Il est gratuit, auto-hébergé, et sans abonnement.",
+			},
+			{
+				q: "Qu'est-ce que VantagePeers ?",
+				a: "VantagePeers est un serveur MCP open source qui donne aux agents Claude Code une mémoire partagée, une messagerie inter-agents avec accusés de réception, et une gestion de tâches. Il connecte plusieurs agents IA sur différentes machines via Convex cloud.",
+			},
+			{
+				q: "Combien d'outils MCP VantagePeers fournit-il ?",
+				a: "VantagePeers fournit 82 outils MCP répartis sur 20 tables de base de données : rappel de mémoire sémantique, messagerie inter-agents, gestion de tâches, base de connaissances de fix patterns, suivi d'issues GitHub, gestion d'unités d'affaires, mandats, tâches récurrentes, missions, journal d'agent, registre de composants, et coordination multi-machines.",
+			},
+			{
+				q: "Sur quelle technologie fonctionne VantagePeers ?",
+				a: "VantagePeers est construit sur Convex (une base de données temps réel) avec des embeddings vectoriels via @convex-dev/rag. Il est auto-hébergé et gratuit.",
+			},
+			{
+				q: "Comment VantagePeers se compare-t-il à mem0 ou Zep ?",
+				a: "VantagePeers remplace les services de mémoire payants comme mem0 (249$/mois) et Zep (475$/mois) par une alternative gratuite et auto-hébergée. Contrairement à claude-peers qui est local uniquement, VantagePeers utilise Convex cloud pour la coordination inter-machines.",
+			},
 		],
 	},
 };
@@ -122,9 +155,10 @@ function getSoftwareApplicationSchema(locale: string) {
 		name: "VantagePeers",
 		applicationCategory: "DeveloperApplication",
 		operatingSystem: "Any",
-		description: locale === "fr"
-			? "Serveur MCP de mémoire partagée, messagerie et gestion de tâches pour agents Claude Code. Construit sur Convex avec embeddings vectoriels via @convex-dev/rag."
-			: "Shared memory, messaging, and task management MCP server for multi-agent Claude Code. Built on Convex with vector embeddings via @convex-dev/rag.",
+		description:
+			locale === "fr"
+				? "Serveur MCP de mémoire partagée, messagerie et gestion de tâches pour agents Claude Code. Construit sur Convex avec embeddings vectoriels via @convex-dev/rag."
+				: "Shared memory, messaging, and task management MCP server for multi-agent Claude Code. Built on Convex with vector embeddings via @convex-dev/rag.",
 		url: BASE_URL,
 		downloadUrl: "https://github.com/vantageos-agency/vantage-peers",
 		softwareVersion: version,
@@ -133,7 +167,10 @@ function getSoftwareApplicationSchema(locale: string) {
 			"@type": "Offer",
 			price: "0",
 			priceCurrency: "USD",
-			description: locale === "fr" ? "Gratuit, open source, auto-hébergé" : "Free, open source, self-hosted",
+			description:
+				locale === "fr"
+					? "Gratuit, open source, auto-hébergé"
+					: "Free, open source, self-hosted",
 		},
 		featureList: [
 			"Shared semantic memory across agents",
