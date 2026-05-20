@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { Metadata } from 'next';
 import { MarkdownCopyButton, ViewOptionsPopover } from '@/components/ai/page-actions';
-import { i18n } from '@/lib/i18n';
 
 const BASE_URL = 'https://www.vantagepeers.com';
 
