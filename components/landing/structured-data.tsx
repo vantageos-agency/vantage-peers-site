@@ -13,7 +13,9 @@ function getOrganizationSchema(locale: string) {
 		url: BASE_URL,
 		logo: {
 			"@type": "ImageObject",
-			url: `${BASE_URL}/opengraph-image`,
+			url: `${BASE_URL}/logo-v.png`,
+			width: 512,
+			height: 512,
 		},
 		description: locale === "fr"
 			? "Serveur MCP open source pour la m\u00e9moire partag\u00e9e, la messagerie et la gestion de t\u00e2ches multi-agents Claude Code. 20 tables, 82 outils. Gratuit, auto-h\u00e9berg\u00e9 sur Convex."
