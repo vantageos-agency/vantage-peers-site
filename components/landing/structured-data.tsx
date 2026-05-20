@@ -24,6 +24,7 @@ function getOrganizationSchema(locale: string) {
 			: "Open source shared memory, messaging, and task management MCP server for multi-agent Claude Code. 20 database tables, 82 MCP tools. Free, self-hosted on Convex.",
 		sameAs: [
 			"https://github.com/vantageos",
+			"https://github.com/vantageos-agency/vantage-peers",
 			"https://x.com/PerelloLaurent",
 			"https://github.com/elpiarthera",
 			"https://www.linkedin.com/company/elpi-corp",
