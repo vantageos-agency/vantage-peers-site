@@ -150,6 +150,24 @@ function getSoftwareApplicationSchema(locale: string) {
 	};
 }
 
+function getBreadcrumbSchema(locale: string) {
+	const pageUrl = locale === "fr" ? `${BASE_URL}/fr` : BASE_URL;
+	const homeName = locale === "fr" ? "Accueil" : "Home";
+	return {
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		"@id": `${pageUrl}#breadcrumb`,
+		itemListElement: [
+			{
+				"@type": "ListItem",
+				position: 1,
+				name: homeName,
+				item: pageUrl,
+			},
+		],
+	};
+}
+
 function getPersonSchema() {
 	return {
 		"@context": "https://schema.org",
@@ -193,6 +211,7 @@ export function LandingStructuredData({ locale = "en" }: { locale?: string }) {
 			<JsonLd data={getWebPageSchema(locale)} />
 			<JsonLd data={getSoftwareApplicationSchema(locale)} />
 			<JsonLd data={getPersonSchema()} />
+			<JsonLd data={getBreadcrumbSchema(locale)} />
 		</>
 	);
 }
