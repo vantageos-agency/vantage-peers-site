@@ -1,4 +1,4 @@
-const BASE_URL = "https://vantagepeers.com";
+const BASE_URL = "https://www.vantagepeers.com";
 
 // JSON-LD injection via dangerouslySetInnerHTML is the standard pattern for
 // server-rendered structured data. No user input is interpolated here — all
