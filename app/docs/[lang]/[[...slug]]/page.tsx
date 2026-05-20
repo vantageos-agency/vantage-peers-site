@@ -7,6 +7,8 @@ import { MarkdownCopyButton, ViewOptionsPopover } from '@/components/ai/page-act
 
 const BASE_URL = 'https://www.vantagepeers.com';
 
+const BASE_URL = 'https://www.vantagepeers.com';
+
 export default async function Page(props: {
   params: Promise<{ lang: string; slug?: string[] }>;
 }) {
