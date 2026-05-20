@@ -32,6 +32,11 @@ export default function robots(): MetadataRoute.Robots {
 				userAgent: "Google-Extended",
 				allow: "/",
 			},
+			// P0-G2: explicit Bingbot allow — required for Bing/Copilot AI crawler access
+			{
+				userAgent: "Bingbot",
+				allow: "/",
+			},
 		],
 		sitemap: "https://www.vantagepeers.com/sitemap.xml",
 	};
