@@ -68,6 +68,17 @@ const nextConfig: NextConfig = {
 	},
 	async headers() {
 		return [
+			// P0-G1: force text/plain for AI crawler txt files — prevents CDN/proxy
+			// from serving them as text/html if a rewrite ever intercepts the path.
+			// Middleware matcher already excludes these paths, but belt-and-suspenders.
+			{
+				source: "/llms.txt",
+				headers: [{ key: "Content-Type", value: "text/plain; charset=utf-8" }],
+			},
+			{
+				source: "/llms-full.txt",
+				headers: [{ key: "Content-Type", value: "text/plain; charset=utf-8" }],
+			},
 			{
 				source: "/(.*)",
 				headers: [

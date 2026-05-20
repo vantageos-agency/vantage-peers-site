@@ -6,6 +6,9 @@ export const dynamic = 'force-static';
 export function GET() {
   const { index } = llms(source);
   return new Response(index(), {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+    },
   });
 }
