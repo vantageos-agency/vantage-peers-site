@@ -1,3 +1,5 @@
+import { version } from "@/package.json";
+
 const BASE_URL = "https://www.vantagepeers.com";
 
 // JSON-LD injection via dangerouslySetInnerHTML is the standard pattern for
@@ -124,7 +126,7 @@ function getSoftwareApplicationSchema(locale: string) {
 			: "Shared memory, messaging, and task management MCP server for multi-agent Claude Code. Built on Convex with vector embeddings via @convex-dev/rag.",
 		url: BASE_URL,
 		downloadUrl: "https://github.com/vantageos-agency/vantage-peers",
-		softwareVersion: "1.0.0",
+		softwareVersion: version,
 		license: "https://fsl.software/",
 		offers: {
 			"@type": "Offer",
