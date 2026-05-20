@@ -7,6 +7,8 @@ import { Separator } from "@/components/ui/separator";
 const content = {
 	en: {
 		tagline: "Open-source agent memory coordination. FSL License.",
+		founderNote:
+			"Built by Laurent Perello (Perello Consulting / ElPi Corp), who runs a fleet of 12+ Claude Code orchestrators in production every day.",
 		copyright: "Perello Consulting / ElPi Corp. All rights reserved.",
 		links: [
 			{ label: "Features", href: "#features" },
@@ -24,6 +26,8 @@ const content = {
 	},
 	fr: {
 		tagline: "Coordination de mémoire d’agents open-source. Licence FSL.",
+		founderNote:
+			"Construit par Laurent Perello (Perello Consulting / ElPi Corp), qui opère une flotte de 12+ orchestrateurs Claude Code en production chaque jour.",
 		copyright: "Perello Consulting / ElPi Corp. Tous droits réservés.",
 		links: [
 			{ label: "Fonctionnalités", href: "#features" },
@@ -65,6 +69,9 @@ export function PeersFooter({ locale, onLocaleChange }: PeersFooterProps) {
 						</a>
 						<p className="text-sm text-muted-foreground max-w-xs">
 							{t.tagline}
+						</p>
+						<p className="text-xs text-muted-foreground max-w-sm mt-3">
+							{t.founderNote}
 						</p>
 					</div>
 

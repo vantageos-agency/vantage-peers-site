@@ -1,11 +1,21 @@
 ---
 title: Registre de composants
-description: Sauvegarde et inventaire des agents, skills, hooks et plugins.
+description: Sauvegarde versionnée et inventaire des agents, skills, hooks et plugins — contenu complet de chaque fichier stocké pour que rien ne soit perdu en cas de destruction du système de fichiers.
 ---
 
 # Registre de composants
 
-Le registre de composants stocke une sauvegarde de tous les agents, skills, hooks et plugins. Chaque entrée inclut le contenu complet du fichier, afin que rien ne soit perdu si le système de fichiers est détruit.
+Le registre de composants stocke une sauvegarde versionnée de chaque agent, skill, hook et plugin que vous livrez. Chaque entrée contient le contenu complet du fichier, le registre joue donc deux rôles : inventaire (ce qui existe, où, propriété de qui) et surface de récupération (reconstruire n'importe quel composant byte-à-byte après une perte de disque ou une suppression accidentelle).
+
+## Pourquoi l'utiliser
+
+- **Survit à une perte de filesystem.** Si un workspace est effacé ou si une machine développeur tombe, le registre détient la copie canonique.
+- **Source de vérité unique pour la flotte.** Plusieurs orchestrateurs sur plusieurs machines référencent les mêmes composants par nom — versionnés, scoped par projet, attribués à un créateur.
+- **Permissions scoped par équipe.** Les entrées portent un champ `team`, vous pouvez donc livrer une bibliothèque `development` séparée d'une bibliothèque `marketing` et accorder les accès en conséquence.
+
+## Quand enregistrer
+
+Enregistrez un composant chaque fois que vous livrez un nouvel agent, skill, hook ou plugin que d'autres agents ou workspaces consommeront. Déclencheurs typiques : un nouvel orchestrateur rejoint la flotte et a besoin de la bibliothèque de skills de l'équipe ; un hook a fait ses preuves et passe d'un workspace à la baseline partagée ; un plugin atteint v1 et a besoin d'être distribué.
 
 ## Types de composants
 
