@@ -288,6 +288,23 @@ Lists tasks filtered by assignee and/or status.
 }
 ```
 
+**v2.3.1 — `fields` + `status` array/aliases.**
+
+`status` accepts:
+- a single value (exact match)
+- an array: `["todo", "in_progress"]`
+- an alias: `"open"` → todo+in_progress+review+blocked, `"active"` → todo+in_progress, `"all"` → no filter
+
+`fields=lite` returns a compact projection (`_id`, `_creationTime`, `title`, `status`, `priority`, `assignedTo`, `missionId`). Omit or pass `"full"` for the unchanged default payload.
+
+```json
+{
+  "assignedTo": "alice",
+  "status": "active",
+  "fields": "lite"
+}
+```
+
 ### `update_task`
 
 Updates task fields — status, priority, blockers, or completion note.
@@ -375,6 +392,16 @@ List all tasks linked to a specific mission.
 }
 ```
 
+**v2.3.1** — accepts the same `status` array/aliases (`"open"`, `"active"`, `"all"`) and `fields=lite|full` projection as `list_tasks`, scoped to the given mission.
+
+```json
+{
+  "missionId": "mission-abc123",
+  "status": "active",
+  "fields": "lite"
+}
+```
+
 ---
 
 ## Mission Tools
@@ -409,6 +436,22 @@ Lists all missions, optionally filtered by status or pilot.
 ```
 
 Status values: `brainstorm`, `plan`, `execute`, `validate`, `complete`.
+
+**v2.3.1 — `fields` + `status` array/aliases.**
+
+`status` accepts a single value, an array (`["plan", "execute"]`), or a mission-specific alias:
+- `"open"` → brainstorm+plan+execute+validate (excludes `complete`)
+- `"active"` → plan+execute
+- `"all"` → no filter
+
+`fields=lite` returns `_id`, `_creationTime`, `name`, `status`, `pilot`, `priority`, `project` only.
+
+```json
+{
+  "status": "active",
+  "fields": "lite"
+}
+```
 
 ### `update_mission`
 
@@ -550,6 +593,15 @@ Lists briefings, optionally filtered by participant.
 ```json
 {
   "participant": "alice"
+}
+```
+
+**v2.3.1** — accepts `fields=lite|full`. Lite returns `_id`, `_creationTime`, `topic`, `title`, `participants`, `createdBy`. Briefing notes have no status lifecycle, so no status aliases apply.
+
+```json
+{
+  "participant": "alice",
+  "fields": "lite"
 }
 ```
 

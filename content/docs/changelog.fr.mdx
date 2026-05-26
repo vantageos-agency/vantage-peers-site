@@ -1,0 +1,29 @@
+---
+title: Journal des modifications
+description: Historique des versions de vantage-peers-mcp.
+---
+
+# Journal des modifications
+
+## v2.3.1 — 2026-05-26
+
+### Ajouté
+
+- `list_tasks`, `list_missions`, `list_tasks_by_mission` et `list_briefing_notes` acceptent un paramètre `fields` (`"lite"` ou `"full"`, défaut `"full"`). Lite renvoie une projection compacte.
+- Le filtre `status` sur `list_tasks`, `list_missions` et `list_tasks_by_mission` accepte désormais des tableaux et des alias nommés :
+  - Tâches : `"open"` → todo+in_progress+review+blocked, `"active"` → todo+in_progress, `"all"` → aucun filtre
+  - Missions : `"open"` → brainstorm+plan+execute+validate (exclut complete), `"active"` → plan+execute, `"all"` → aucun filtre
+
+### Rétrocompatibilité
+
+- Le `status` chaîne unique reste inchangé.
+- Omettre `fields` revient à `"full"` — les appelants existants ne sont pas affectés.
+
+### Dépréciation
+
+- **`vantage-peers-mcp@2.3.0` est déprécié.** v2.3.0 a livré deux blockers détectés en delta-review : `status="all"` était annoncé mais rejeté par le backend, et `setPendingAliasReleases` était exposé en mutation publique. Passez à `>=2.3.1`.
+
+### Liens
+
+- Release GitHub : [v2.3.1](https://github.com/vantageos-agency/vantage-peers/releases/tag/v2.3.1)
+- npm : [vantage-peers-mcp@2.3.1](https://www.npmjs.com/package/vantage-peers-mcp)
