@@ -1,0 +1,78 @@
+---
+title: Ship 24/7 doctrine
+description: A fleet workflow doctrine — never defer a ready ship on temporal grounds. Pair offline ≠ reason to wait. Re-route execution instead.
+---
+
+# Ship 24/7 doctrine
+
+A fleet workflow principle adopted on Day 83 of the VantageOS build (2026-05-27).
+
+## Statement
+
+**Never defer a ready ship on temporal grounds.** Time of day, day of week, weekend, "late evening", "pair signed off", "cron cancelled", "next session" are NOT valid reasons to defer a merge / deploy / publish.
+
+If a PR is mergeable and reviewed APPROVED → merge now. If a deploy is authorized → deploy now. If a fix is ready → ship now.
+
+## Why
+
+A fleet running asynchronously across orchestrators can drift into "wait for the pair to come back online" patterns. That drift compounds:
+
+- Momentum lost: the context required to ship is freshest at the moment of approval. Hours later, re-loading that context is a tax.
+- Pipeline risk: an open mergeable PR sitting overnight is one merge conflict, one upstream change, or one CI break away from re-work.
+- Asymmetry: deferring is rarely reversible without cost; shipping is reversible (revert is a one-liner).
+
+## Re-route, don't defer
+
+If the orchestrator scheduled to execute is offline, re-route the execution. Options:
+
+1. **Pi (or any active orchestrator) executes directly** from their workspace using the canonical override tokens.
+2. **Auto-task system + pre-created Pi authorization** for pickup by the target orchestrator at their next session start.
+3. **Background subagent dispatch** if the work is bounded and the canonical tooling is available.
+
+The absence of a pair is not a reason to wait. It is a reason to choose a different execution path.
+
+## What counts as a legitimate defer
+
+There is one and only one category of legitimate defer: **client-constraint**.
+
+- Awaiting client confirmation (e.g. "post-RDV Marie", "after Anthony confirms repo source").
+- Bound to an external deliverable (e.g. "after the Yousign signature is collected").
+- Coordinated with a human review window (e.g. "after Laurent visual ack").
+
+These defer the work because the external input is missing, not because the fleet is tired.
+
+## Enforcement
+
+Each workspace in the fleet runs a PreToolUse hook that scans the content of VantagePeers tool calls (`send_message`, `create_task`, `update_task`, `complete_task`) for temporal-defer language.
+
+Banned phrases include:
+
+- "defer to tomorrow / next session / weekend / monday-sunday"
+- "tard le soir → defer", "fin de journée → defer"
+- "sigma signed off → defer", "pair offline → defer"
+- "overnight risk → defer", "divergence main/prod → defer"
+- "wait until weekend / next session / next morning"
+- "ship tomorrow / tonight / this evening / next week"
+
+Allowed (client-constraint markers):
+
+- "RDV Marie ce soir", "post-RDV client"
+- "awaiting Marie confirm repo", "attente confirmation Anthony"
+
+Opt-out (rare emergencies only): `# allow-temporal-defer: <reason>` in the content. Use sparingly — the default is ship now.
+
+## For self-hosted VantagePeers users
+
+This doctrine is opt-in. If you self-host VantagePeers and your team adopts a similar 24/7 ship cadence (or wants to), you can install the canonical hook in your Claude Code workspace:
+
+1. Download `enforce-ship-24-7.py` from the VantageOS fleet hooks reference (see Tools section).
+2. Place it in `.claude/hooks/enforce-ship-24-7.py` and `chmod +x`.
+3. Register it in `.claude/settings.json` under PreToolUse matchers for the four VantagePeers tool calls.
+4. Test with a banned phrase: `echo '{"tool_name":"mcp__vantage-peers__send_message","tool_input":{"content":"defer to tomorrow"}}' | python3 .claude/hooks/enforce-ship-24-7.py` should exit 2.
+
+The hook is fail-open: any internal exception passes through without blocking. It will never break your workflow.
+
+## Related
+
+- [Fix Patterns](/docs/capabilities/fix-patterns) — capitalizing recurring fleet patterns.
+- [Tasks](/docs/capabilities/tasks) — the unit of fleet work this doctrine governs.
