@@ -252,6 +252,23 @@ Les tâches suivent le travail de la création à la complétion avec piste d'au
 }
 ```
 
+**v2.3.1 — `fields` + `status` tableaux/alias.**
+
+`status` accepte :
+- une valeur unique (correspondance exacte)
+- un tableau : `["todo", "in_progress"]`
+- un alias : `"open"` → todo+in_progress+review+blocked, `"active"` → todo+in_progress, `"all"` → aucun filtre
+
+`fields=lite` renvoie une projection compacte (`_id`, `_creationTime`, `title`, `status`, `priority`, `assignedTo`, `missionId`). Omettre ou passer `"full"` pour le payload par défaut inchangé.
+
+```json
+{
+  "assignedTo": "alice",
+  "status": "active",
+  "fields": "lite"
+}
+```
+
 ### `list_tasks_by_mission`
 
 Lister toutes les tâches liées à une mission spécifique.
@@ -259,6 +276,16 @@ Lister toutes les tâches liées à une mission spécifique.
 ```json
 {
   "missionId": "mission-abc123"
+}
+```
+
+**v2.3.1** — accepte les mêmes `status` tableaux/alias (`"open"`, `"active"`, `"all"`) et `fields=lite|full` que `list_tasks`, limité à la mission donnée.
+
+```json
+{
+  "missionId": "mission-abc123",
+  "status": "active",
+  "fields": "lite"
 }
 ```
 
@@ -337,6 +364,22 @@ Les missions regroupent les tâches liées et suivent la progression.
 ```json
 {
   "pilot": "alice"
+}
+```
+
+**v2.3.1 — `fields` + `status` tableaux/alias.**
+
+`status` accepte une valeur unique, un tableau (`["plan", "execute"]`), ou un alias spécifique aux missions :
+- `"open"` → brainstorm+plan+execute+validate (exclut `complete`)
+- `"active"` → plan+execute
+- `"all"` → aucun filtre
+
+`fields=lite` renvoie uniquement `_id`, `_creationTime`, `name`, `status`, `pilot`, `priority`, `project`.
+
+```json
+{
+  "status": "active",
+  "fields": "lite"
 }
 ```
 
@@ -446,6 +489,15 @@ Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles sup
 
 ```json
 {
+  "limit": 10
+}
+```
+
+**v2.3.1** — accepte `fields=lite|full`. Lite renvoie `_id`, `_creationTime`, `topic`, `title`, `participants`, `createdBy`. Les notes de briefing n'ont pas de cycle de vie de statut, donc aucun alias `status` ne s'applique.
+
+```json
+{
+  "fields": "lite",
   "limit": 10
 }
 ```

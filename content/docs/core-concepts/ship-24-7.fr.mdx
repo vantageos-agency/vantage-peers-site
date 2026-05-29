@@ -1,0 +1,78 @@
+---
+title: Doctrine Ship 24/7
+description: Une doctrine de workflow flotte — ne jamais différer un ship prêt sur base temporelle. Pair offline ≠ raison d'attendre. Re-router l'exécution à la place.
+---
+
+# Doctrine Ship 24/7
+
+Un principe de workflow flotte adopté au Day 83 du build VantageOS (2026-05-27).
+
+## Énoncé
+
+**Ne jamais différer un ship prêt sur base temporelle.** Heure de la journée, jour de la semaine, weekend, "tard le soir", "pair signed off", "cron coupé", "prochaine session" ne sont PAS des raisons valides pour différer un merge / deploy / publish.
+
+Si une PR est mergeable et reviewed APPROVED → on merge maintenant. Si un deploy est authorized → on deploy maintenant. Si un fix est ready → on ship maintenant.
+
+## Pourquoi
+
+Une flotte qui tourne en asynchrone sur plusieurs orchestrateurs peut dériver vers des patterns "j'attends que le pair revienne en ligne". Cette dérive s'aggrave :
+
+- Momentum perdu : le contexte nécessaire pour shipper est le plus frais au moment de l'approbation. Quelques heures plus tard, recharger ce contexte coûte une taxe cognitive.
+- Risque pipeline : une PR open et mergeable qui dort la nuit est à un merge conflict, un changement upstream ou un CI break d'avoir à être refaite.
+- Asymétrie : différer est rarement réversible sans coût ; shipper est réversible (un revert est une ligne).
+
+## Re-router, pas différer
+
+Si l'orchestrateur prévu pour exécuter est offline, on re-route l'exécution. Options :
+
+1. **Pi (ou tout orchestrateur actif) exécute directement** depuis son workspace avec les override tokens canoniques.
+2. **Auto-task system + autorisation Pi pré-créée** pour pickup par l'orchestrateur cible à son prochain démarrage de session.
+3. **Dispatch subagent background** si le travail est borné et l'outillage canonique disponible.
+
+L'absence d'un pair n'est pas une raison d'attendre. C'est une raison de choisir un autre chemin d'exécution.
+
+## Ce qui compte comme un defer légitime
+
+Une seule catégorie de defer légitime : **contrainte client**.
+
+- Attente d'une confirmation client (ex. "post-RDV Marie", "après confirmation Anthony repo source").
+- Lié à un livrable externe (ex. "après collecte signature Yousign").
+- Coordonné avec une fenêtre de revue humaine (ex. "après ack visuel Laurent").
+
+Ces defer-là attendent une input externe manquante, pas une fatigue flotte.
+
+## Enforcement
+
+Chaque workspace de la flotte tourne un hook PreToolUse qui scanne le contenu des appels VantagePeers (`send_message`, `create_task`, `update_task`, `complete_task`) à la recherche de langage temporal-defer.
+
+Phrases bannies (extraits) :
+
+- "defer to tomorrow / next session / weekend / lundi-dimanche"
+- "tard le soir → defer", "fin de journée → defer"
+- "sigma signed off → defer", "pair offline → defer"
+- "overnight risk → defer", "divergence main/prod → defer"
+- "wait until weekend / next session / next morning"
+- "ship tomorrow / tonight / this evening / next week"
+
+Autorisé (marqueurs contrainte client) :
+
+- "RDV Marie ce soir", "post-RDV client"
+- "awaiting Marie confirm repo", "attente confirmation Anthony"
+
+Opt-out (urgence rare seulement) : `# allow-temporal-defer: <raison>` dans le contenu. À utiliser avec parcimonie — le défaut est ship maintenant.
+
+## Pour les utilisateurs self-host VantagePeers
+
+Cette doctrine est opt-in. Si vous self-hostez VantagePeers et que votre équipe adopte une cadence de ship 24/7 similaire (ou veut l'adopter), vous pouvez installer le hook canonique dans votre workspace Claude Code :
+
+1. Téléchargez `enforce-ship-24-7.py` depuis la référence hooks flotte VantageOS (voir section Tools).
+2. Placez-le dans `.claude/hooks/enforce-ship-24-7.py` et `chmod +x`.
+3. Enregistrez-le dans `.claude/settings.json` sous les matchers PreToolUse pour les quatre appels VantagePeers.
+4. Testez avec une phrase bannie : `echo '{"tool_name":"mcp__vantage-peers__send_message","tool_input":{"content":"defer to tomorrow"}}' | python3 .claude/hooks/enforce-ship-24-7.py` doit exit 2.
+
+Le hook est fail-open : toute exception interne passe sans bloquer. Il ne cassera jamais votre workflow.
+
+## Liens
+
+- [Fix Patterns](/docs/capabilities/fix-patterns) — capitaliser les patterns flotte récurrents.
+- [Tasks](/docs/capabilities/tasks) — l'unité de travail flotte que cette doctrine régit.

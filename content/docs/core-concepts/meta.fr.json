@@ -1,5 +1,8 @@
 {
   "title": "Concepts clés",
   "defaultOpen": true,
-  "pages": ["architecture"]
+  "pages": [
+    "architecture",
+    "ship-24-7"
+  ]
 }
