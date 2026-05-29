@@ -1,0 +1,74 @@
+---
+title: Environment Variables Reference
+description: Complete reference for all environment variables used by VantagePeers — Convex dashboard, MCP server, and web credential issuance.
+---
+
+# Environment Variables Reference
+
+VantagePeers uses environment variables on two distinct sides: the **Convex deployment** (set in the Convex dashboard under Settings → Environment Variables) and the **MCP server** (set in the Railway service config or your local shell when running stdio). A small number of variables apply to both.
+
+## Convex Dashboard Variables
+
+These are set in [dashboard.convex.dev](https://dashboard.convex.dev) → your project → **Settings → Environment Variables**.
+
+| Variable | Required | Example | Purpose |
+|---|---|---|---|
+| `AI_GATEWAY_API_KEY` | Yes | `sk-proj-abc123...` | OpenAI API key used exclusively for `text-embedding-3-small` RAG embeddings. Without this, `storeMemory` stores correctly but `recall` returns no results. Typical cost: under $1/month. |
+| `BEARER_SECRET_MASTER` | Yes | _(32-byte hex)_ | Master admin bearer token. The MCP server presents this on every request to authenticate against Convex. Generate with `openssl rand -hex 32`. Never expose to end users. |
+| `GITHUB_WEBHOOK_SECRET` | No | _(random hex)_ | HMAC-SHA256 secret for validating incoming GitHub webhook payloads (`X-Hub-Signature-256`). Required only if you are syncing GitHub issues through the webhook endpoint (`POST /webhooks/github`). |
+| `GITHUB_TOKEN` | No | `ghp_...` | GitHub personal access token or GitHub App installation token. Required for posting IRP auto-comments to GitHub issues and calling the GitHub REST API from `githubComments` actions. Needs `issues:write` scope. |
+| `CLERK_JWT_ISSUER_DOMAIN` | No | `https://clerk.my-app.com` | Base URL of your Clerk instance JWKS endpoint. Used by `credentials.ts` to verify Clerk JWTs before issuing VantagePeers bearer tokens. Required only if you expose the `POST /issueBearerFromClerk` credential endpoint to end users. |
+| `VP_ALLOWED_EXT_IDS` | No | `ext_abc123,ext_def456` | Comma-separated list of allowed Clerk extension IDs. Restricts which browser extensions can exchange a Clerk JWT for a VantagePeers bearer token via the credential issuance endpoint. If unset, no extension is allowed. |
+
+## MCP Server Variables
+
+These are set in the environment where the MCP server process runs (Railway service config, `~/.claude.json` `env` block, or your local shell).
+
+| Variable | Required | Example | Purpose |
+|---|---|---|---|
+| `CONVEX_URL` | Yes (stdio) | `https://slug.convex.cloud` | URL of your Convex deployment. The stdio MCP server (`server.js`) uses this to connect a `ConvexHttpClient` for every tool call. Not used by the HTTP server — it uses `CONVEX_URL_INTERNAL` instead. |
+| `CONVEX_URL_INTERNAL` | Yes (HTTP) | `https://slug.convex.cloud` | Convex URL for the internal VantagePeers deployment. Used by the HTTP MCP server (`server-http.js`) to resolve tenant routing and validate OAuth tokens. Must be set for the HTTP transport to function. |
+| `BEARER_SECRET_MASTER` | Yes | _(32-byte hex)_ | Must match the value set in the Convex dashboard. The HTTP MCP server checks incoming `Authorization: Bearer <token>` headers against this value as the admin fast-path. |
+| `PUBLIC_BASE_URL` | No | `https://vantage-peers-production.up.railway.app` | Public URL of the MCP server. Used in `WWW-Authenticate` headers (RFC 6750) to point OAuth clients at the discovery endpoint. Defaults to the Railway production URL if unset. |
+| `PORT` | No | `3000` | HTTP port the server listens on. Defaults to `3000`. Railway sets this automatically via the `PORT` env var. |
+| `NODE_ENV` | No | `production` | Standard Node.js environment flag. Set to `production` by Railway automatically. Affects logging verbosity and error detail exposure. |
+| `VP_EMIT_UI_MARKERS` | No | `true` | When set to `true`, the MCP server emits `__VP_TOOL_RESULT__` stream markers in tool responses. Used by the VantagePeers Gen UI iframe embed to distinguish structured tool output from prose. Disabled by default. |
+
+## Notes on Shared Variables
+
+`BEARER_SECRET_MASTER` appears on both sides because:
+- The **Convex side** stores the value so that the backend can validate it when presented as a credential.
+- The **MCP server side** presents this value in outgoing requests. Both values must be identical.
+
+In practice, set it once in the Convex dashboard, copy the value, and paste it into the MCP server environment.
+
+## Generating Secrets
+
+For any secret token:
+
+```bash
+openssl rand -hex 32
+```
+
+This produces a 64-character hex string (256 bits of entropy). Use a separate generated value for each secret — never reuse tokens across variables.
+
+## OAuth Variables (Advanced)
+
+The OAuth token infrastructure (`oauth.ts`, `oauthDcr.ts`) persists all client registrations, access tokens, and refresh tokens in Convex tables. No additional environment variables are required for the OAuth system itself. The only OAuth-adjacent variable is `PUBLIC_BASE_URL` (MCP server side), which is embedded in OAuth discovery metadata.
+
+## Variable Summary by Side
+
+| Variable | Convex Dashboard | MCP Server |
+|---|---|---|
+| `AI_GATEWAY_API_KEY` | Yes | No |
+| `BEARER_SECRET_MASTER` | Yes | Yes |
+| `GITHUB_WEBHOOK_SECRET` | Yes | No |
+| `GITHUB_TOKEN` | Yes | No |
+| `CLERK_JWT_ISSUER_DOMAIN` | Yes | No |
+| `VP_ALLOWED_EXT_IDS` | Yes | No |
+| `CONVEX_URL` | No | Yes (stdio) |
+| `CONVEX_URL_INTERNAL` | No | Yes (HTTP) |
+| `PUBLIC_BASE_URL` | No | Yes (HTTP) |
+| `PORT` | No | Yes (HTTP) |
+| `NODE_ENV` | No | Yes |
+| `VP_EMIT_UI_MARKERS` | No | Yes |

@@ -1,0 +1,225 @@
+---
+title: diary — API Reference
+description: All 5 fn-paths in convex/diary.ts — write, get, list, deleteDiary, listByDateRange.
+---
+
+# diary
+
+**Source:** `convex/diary.ts`
+**Fn-paths:** 5
+
+The diary module provides per-orchestrator daily session logs. Each entry is keyed by `(orchestrator, date)` — writing to the same date is an upsert. Diary entries support free-form content plus structured `highlights` and `blockers` arrays.
+
+---
+
+## `diary:write`
+
+**Scope:** mutation
+
+Upsert a diary entry. If an entry already exists for this `date + orchestrator` combination, it is updated in place.
+
+### Args
+
+```typescript
+{
+  date: string,                    // ISO 8601 date string e.g. "2026-05-29"
+  orchestrator: string,            // orchestrator ID
+  content: string,
+  highlights?: string[],
+  blockers?: string[],
+}
+```
+
+### Returns
+
+`Id<"diary">` — the created or updated entry ID.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const entryId = await client.mutation("diary:write", {
+  date: "2026-05-29",
+  orchestrator: "sigma",
+  content: "Completed M3 delivery. Wrote 41-fn-path API reference.",
+  highlights: ["M3 shipped on time", "Full EN+FR docs"],
+  blockers: [],
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__write_diary",
+  "args": {
+    "date": "2026-05-29",
+    "orchestrator": "sigma",
+    "content": "Completed M3 delivery.",
+    "highlights": ["M3 shipped on time"]
+  }
+}
+```
+
+---
+
+## `diary:get`
+
+**Scope:** query
+
+Fetch a diary entry by date and orchestrator.
+
+### Args
+
+```typescript
+{
+  date: string,
+  orchestrator: string,
+}
+```
+
+### Returns
+
+```typescript
+{
+  _id: Id<"diary">,
+  _creationTime: number,
+  date: string,
+  orchestrator: string,
+  instanceId?: string,
+  content: string,
+  highlights?: string[],
+  blockers?: string[],
+  createdAt: number,
+} | null
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const entry = await client.query("diary:get", {
+  date: "2026-05-29",
+  orchestrator: "sigma",
+});
+```
+
+---
+
+## `diary:list`
+
+**Scope:** query
+
+List diary entries by orchestrator, ordered by date desc.
+
+### Args
+
+```typescript
+{
+  orchestrator?: string,           // if omitted, returns all entries across all orchestrators
+  limit?: number,                  // default 20
+}
+```
+
+### Returns
+
+Array of diary entries.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const entries = await client.query("diary:list", {
+  orchestrator: "sigma",
+  limit: 10,
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_diary",
+  "args": { "orchestrator": "sigma", "limit": 7 }
+}
+```
+
+---
+
+## `diary:deleteDiary`
+
+**Scope:** mutation
+
+Hard delete a diary entry. Only the owner (`orchestrator`) or `"system"` may delete.
+
+### Args
+
+```typescript
+{
+  diaryId: Id<"diary">,
+  callerOrchestrator?: string,
+}
+```
+
+### Returns
+
+```typescript
+{ deleted: boolean }
+```
+
+### RBAC note
+
+If `callerOrchestrator` is provided and does not match `entry.orchestrator`, the mutation throws.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const result = await client.mutation("diary:deleteDiary", {
+  diaryId: "d57...",
+  callerOrchestrator: "sigma",
+});
+```
+
+---
+
+## `diary:listByDateRange`
+
+**Scope:** query
+
+List diary entries between two dates (inclusive). Useful for weekly reviews or session replay.
+
+### Args
+
+```typescript
+{
+  from: string,                    // ISO 8601 date string e.g. "2026-05-20"
+  to: string,                      // ISO 8601 date string e.g. "2026-05-29"
+  orchestrator?: string,
+}
+```
+
+Results are ordered by date ascending.
+
+### Returns
+
+Array of diary entries within the range.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const week = await client.query("diary:listByDateRange", {
+  from: "2026-05-20",
+  to: "2026-05-29",
+  orchestrator: "sigma",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_diary_by_date_range",
+  "args": {
+    "from": "2026-05-20",
+    "to": "2026-05-29",
+    "orchestrator": "sigma"
+  }
+}
+```

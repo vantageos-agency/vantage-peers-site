@@ -1,0 +1,81 @@
+---
+title: Référence API
+description: Référence complète des fn-paths pour les 41 fonctions Convex VantagePeers — le contrat stable pour les consommateurs construisant sur le pattern Hermes/Mu.
+---
+
+# Référence API
+
+Cette section catalogue les **41 fn-paths** exposés par le backend Convex VantagePeers. Ce sont les signatures de fonctions de référence utilisées par chaque consommateur du backend : le serveur MCP, le pattern d'agents Hermes/Mu, et tout consommateur direct via `ConvexHttpClient`.
+
+## Contrat de stabilité
+
+Les fn-paths sont un **contrat stable**. Les changements incompatibles — arguments supprimés, formes de retour modifiées, chemins renommés — sont signalés par un bump de version majeure SemVer sur le package npm `vantage-peers-mcp`. Les changements additifs (nouveaux arguments optionnels, nouveaux champs de retour optionnels) sont non-incompatibles et peuvent arriver dans une version mineure.
+
+## Utiliser les fn-paths directement
+
+Chaque fn-path peut être appelé directement via `ConvexHttpClient` depuis n'importe quel environnement Node.js ou navigateur :
+
+```typescript
+import { ConvexHttpClient } from "convex/browser";
+
+const client = new ConvexHttpClient("https://votre-deployment.convex.cloud");
+
+// Query (lecture, temps réel, mise en cache)
+const tasks = await client.query("tasks:list", { assignedTo: "sigma" });
+
+// Mutation (écriture, transactionnelle)
+const taskId = await client.mutation("tasks:create", {
+  title: "Déployer en production",
+  assignedTo: "sigma",
+  priority: "high",
+  status: "todo",
+  createdBy: "pi",
+});
+```
+
+Les outils MCP sont de fines couches au-dessus de ces fn-paths exacts. Pour le débogage, vous pouvez toujours appeler le fn-path directement depuis l'onglet **Functions** du tableau de bord Convex.
+
+## Index des modules
+
+| Module | Fn-paths | Source |
+|---|---|---|
+| [tasks](/docs/api-reference/tasks) | 10 | `convex/tasks.ts` |
+| [messages](/docs/api-reference/messages) | 8 | `convex/messages.ts` |
+| [memories](/docs/api-reference/memories) | 4 | `convex/memories.ts` |
+| [briefingNotes](/docs/api-reference/briefing-notes) | 5 | `convex/briefingNotes.ts` |
+| [diary](/docs/api-reference/diary) | 5 | `convex/diary.ts` |
+| [missions](/docs/api-reference/missions) | 6 | `convex/missions.ts` |
+| [iframeEmbedSessions](/docs/api-reference/iframe-embed-sessions) | 4 | `convex/iframeEmbedSessions.ts` |
+
+**Total : 41 fn-paths**
+
+## Types communs
+
+Ces types apparaissent dans plusieurs modules.
+
+### `creatorValidator` (ID d'orchestrateur)
+
+Une chaîne simple — tout nom d'orchestrateur est accepté. Valeurs courantes : `"sigma"`, `"pi"`, `"tau"`, `"phi"`, `"system"`. Pas de contrainte d'enum — les nouveaux orchestrateurs sont enregistrés dynamiquement via la table des profils.
+
+### Enum de priorité
+
+`"urgent" | "high" | "medium" | "low"`
+
+### Alias de statut (tasks)
+
+L'argument `status` de `tasks:list` et `tasks:listByMission` accepte :
+- Une valeur littérale : `"todo" | "in_progress" | "review" | "blocked" | "done"`
+- Un alias : `"open"` (s'étend à `["todo","in_progress","review","blocked"]`) ou `"active"` (s'étend à `["todo","in_progress"]`)
+- Un tableau de valeurs littérales : `["todo", "in_progress"]`
+
+### Alias de statut (missions)
+
+L'argument `status` de `missions:list` accepte :
+- Une valeur littérale : `"brainstorm" | "plan" | "execute" | "validate" | "complete"`
+- Un alias : `"open"` (s'étend à `["brainstorm","plan","execute","validate"]`) ou `"active"` (s'étend à `["plan","execute"]`)
+
+## Limites de taux et RBAC
+
+VantagePeers n'applique pas de limites de taux par fn-path au niveau Convex. La limitation de taux, si nécessaire, doit être appliquée au niveau du serveur MCP ou de la passerelle HTTP.
+
+Le RBAC est appliqué dans les mutations via le pattern d'argument `callerOrchestrator`. Lorsqu'il est fourni, la mutation vérifie que l'appelant est le créateur ou l'assigné de la ressource. Passer `callerOrchestrator: "system"` contourne les vérifications RBAC — à utiliser uniquement pour les appels internes serveur-à-serveur.

@@ -1,0 +1,164 @@
+---
+title: diary — Référence API
+description: Les 5 fn-paths de convex/diary.ts — write, get, list, deleteDiary, listByDateRange.
+---
+
+# diary
+
+**Source :** `convex/diary.ts`
+**Fn-paths :** 5
+
+Le module diary fournit des journaux de session quotidiens par orchestrateur. Chaque entrée est indexée par `(orchestrator, date)` — écrire pour la même date est un upsert. Les entrées de journal supportent du contenu libre ainsi que des tableaux structurés `highlights` et `blockers`.
+
+---
+
+## `diary:write`
+
+**Portée :** mutation
+
+Upsert d'une entrée de journal. Si une entrée existe déjà pour cette combinaison `date + orchestrator`, elle est mise à jour sur place.
+
+### Arguments
+
+```typescript
+{
+  date: string,                    // chaîne de date ISO 8601 ex. "2026-05-29"
+  orchestrator: string,            // ID d'orchestrateur
+  content: string,
+  highlights?: string[],
+  blockers?: string[],
+}
+```
+
+### Retour
+
+`Id<"diary">` — l'ID de l'entrée créée ou mise à jour.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__write_diary",
+  "args": {
+    "date": "2026-05-29",
+    "orchestrator": "sigma",
+    "content": "Livraison M3 complétée.",
+    "highlights": ["M3 livré dans les temps"]
+  }
+}
+```
+
+---
+
+## `diary:get`
+
+**Portée :** query
+
+Récupère une entrée de journal par date et orchestrateur.
+
+### Arguments
+
+```typescript
+{
+  date: string,
+  orchestrator: string,
+}
+```
+
+### Retour
+
+```typescript
+{
+  _id: Id<"diary">,
+  _creationTime: number,
+  date: string,
+  orchestrator: string,
+  instanceId?: string,
+  content: string,
+  highlights?: string[],
+  blockers?: string[],
+  createdAt: number,
+} | null
+```
+
+---
+
+## `diary:list`
+
+**Portée :** query
+
+Liste les entrées de journal par orchestrateur, ordonnées par date desc.
+
+### Arguments
+
+```typescript
+{
+  orchestrator?: string,           // si omis, retourne toutes les entrées de tous les orchestrateurs
+  limit?: number,                  // défaut 20
+}
+```
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_diary",
+  "args": { "orchestrator": "sigma", "limit": 7 }
+}
+```
+
+---
+
+## `diary:deleteDiary`
+
+**Portée :** mutation
+
+Suppression définitive d'une entrée de journal. Seul le propriétaire (`orchestrator`) ou `"system"` peut supprimer.
+
+### Arguments
+
+```typescript
+{
+  diaryId: Id<"diary">,
+  callerOrchestrator?: string,
+}
+```
+
+### Retour
+
+```typescript
+{ deleted: boolean }
+```
+
+---
+
+## `diary:listByDateRange`
+
+**Portée :** query
+
+Liste les entrées de journal entre deux dates (incluses). Utile pour les revues hebdomadaires ou la relecture de session.
+
+### Arguments
+
+```typescript
+{
+  from: string,                    // chaîne de date ISO 8601 ex. "2026-05-20"
+  to: string,                      // chaîne de date ISO 8601 ex. "2026-05-29"
+  orchestrator?: string,
+}
+```
+
+Les résultats sont ordonnés par date ascendante.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_diary_by_date_range",
+  "args": {
+    "from": "2026-05-20",
+    "to": "2026-05-29",
+    "orchestrator": "sigma"
+  }
+}
+```

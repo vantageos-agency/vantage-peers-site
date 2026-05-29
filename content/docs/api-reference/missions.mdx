@@ -1,0 +1,292 @@
+---
+title: missions — API Reference
+description: All 6 fn-paths in convex/missions.ts — create, get, list, update, updateStatus, updateProgress.
+---
+
+# missions
+
+**Source:** `convex/missions.ts`
+**Fn-paths:** 6
+
+Missions are the top-level planning unit. A mission groups tasks, defines a pilot, tracks progress (0–100), and moves through a lifecycle: `brainstorm → plan → execute → validate → complete`. Missions are automatically completed when all their linked tasks reach `status="done"`.
+
+---
+
+## `missions:create`
+
+**Scope:** mutation
+
+Insert a new mission.
+
+### Args
+
+```typescript
+{
+  name: string,
+  description?: string,
+  project: string,
+  status: "brainstorm" | "plan" | "execute" | "validate" | "complete",
+  priority: "urgent" | "high" | "medium" | "low",
+  pilot: string,                   // lead orchestrator ID
+  agents: string[],                // participating orchestrator IDs
+  brief?: string,
+  startDate?: number,              // Unix ms
+  targetDate?: number,             // Unix ms
+  progress?: number,               // 0-100
+  createdBy: string,
+}
+```
+
+### Returns
+
+`Id<"missions">` — the new mission ID.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const missionId = await client.mutation("missions:create", {
+  name: "M3 iframe embed sessions",
+  project: "vantage-peers",
+  status: "plan",
+  priority: "high",
+  pilot: "sigma",
+  agents: ["sigma", "pi"],
+  createdBy: "pi",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__create_mission",
+  "args": {
+    "name": "M3 iframe embed sessions",
+    "project": "vantage-peers",
+    "status": "plan",
+    "priority": "high",
+    "pilot": "sigma",
+    "agents": ["sigma", "pi"],
+    "createdBy": "pi"
+  }
+}
+```
+
+---
+
+## `missions:get`
+
+**Scope:** query
+
+Fetch a single mission by ID.
+
+### Args
+
+```typescript
+{ missionId: Id<"missions"> }
+```
+
+### Returns
+
+```typescript
+{
+  _id: Id<"missions">,
+  _creationTime: number,
+  name: string,
+  description?: string,
+  project: string,
+  status: "brainstorm" | "plan" | "execute" | "validate" | "complete",
+  priority: "urgent" | "high" | "medium" | "low",
+  pilot: string,
+  agents: string[],
+  brief?: string,
+  startDate?: number,
+  targetDate?: number,
+  progress?: number,
+  createdBy: string,
+  createdAt: number,
+  updatedAt: number,
+} | null
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const mission = await client.query("missions:get", { missionId: "k57..." });
+```
+
+---
+
+## `missions:list`
+
+**Scope:** query
+
+List missions with optional filters. Supports lite projection and status aliases.
+
+### Args
+
+```typescript
+{
+  project?: string,
+  pilot?: string,
+  status?: string | string[],      // "brainstorm"|"open"|"active"|["plan","execute"]
+  limit?: number,                  // default 50 (auto-clamped to 30 for fields=full)
+  fields?: "lite" | "full",
+  updatedSince?: number,           // Unix ms
+}
+```
+
+**Status aliases:**
+- `"open"` → `["brainstorm","plan","execute","validate"]`
+- `"active"` → `["plan","execute"]`
+
+**`fields="lite"` projection:** `{ _id, _creationTime, name, status, pilot, priority, project }`
+
+### Returns
+
+Array of full mission docs (default) or lite projections.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const missions = await client.query("missions:list", {
+  project: "vantage-peers",
+  status: "active",
+  fields: "lite",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_missions",
+  "args": { "project": "vantage-peers", "status": "open" }
+}
+```
+
+### Source file
+
+`convex/missions.ts:177`
+
+---
+
+## `missions:update`
+
+**Scope:** mutation
+
+Partial update of any mutable mission field. All fields except `missionId` are optional.
+
+### Args
+
+```typescript
+{
+  missionId: Id<"missions">,
+  name?: string,
+  description?: string,
+  project?: string,
+  status?: "brainstorm" | "plan" | "execute" | "validate" | "complete",
+  priority?: "urgent" | "high" | "medium" | "low",
+  pilot?: string,
+  agents?: string[],
+  brief?: string,
+  startDate?: number,
+  targetDate?: number,
+  progress?: number,
+}
+```
+
+### Returns
+
+`null`
+
+### Example (ConvexHttpClient)
+
+```typescript
+await client.mutation("missions:update", {
+  missionId: "k57...",
+  status: "execute",
+  progress: 40,
+});
+```
+
+---
+
+## `missions:updateStatus`
+
+**Scope:** mutation
+
+Shortcut: sets `status` and `updatedAt=now`.
+
+### Args
+
+```typescript
+{
+  missionId: Id<"missions">,
+  status: "brainstorm" | "plan" | "execute" | "validate" | "complete",
+}
+```
+
+### Returns
+
+`null`
+
+### Example (ConvexHttpClient)
+
+```typescript
+await client.mutation("missions:updateStatus", {
+  missionId: "k57...",
+  status: "validate",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__update_mission_status",
+  "args": {
+    "missionId": "k57...",
+    "status": "validate"
+  }
+}
+```
+
+---
+
+## `missions:updateProgress`
+
+**Scope:** mutation
+
+Shortcut: sets `progress` (0–100) and `updatedAt=now`.
+
+### Args
+
+```typescript
+{
+  missionId: Id<"missions">,
+  progress: number,               // 0-100
+}
+```
+
+### Returns
+
+`null`
+
+### Example (ConvexHttpClient)
+
+```typescript
+await client.mutation("missions:updateProgress", {
+  missionId: "k57...",
+  progress: 75,
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__update_mission_progress",
+  "args": { "missionId": "k57...", "progress": 75 }
+}
+```

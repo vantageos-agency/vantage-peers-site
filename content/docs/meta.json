@@ -6,9 +6,17 @@
     "core-concepts",
     "capabilities",
     "infrastructure",
+    "---Deploy & Integrate---",
     "self-host",
+    "auth",
+    "cli",
     "---Reference---",
     "tools",
-    "changelog"
+    "api-reference",
+    "paradigm-b",
+    "toolkit",
+    "changelog",
+    "---Support---",
+    "troubleshooting"
   ]
 }

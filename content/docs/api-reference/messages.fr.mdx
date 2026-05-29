@@ -1,0 +1,241 @@
+---
+title: messages — Référence API
+description: Les 8 fn-paths de convex/messages.ts — sendMessage, checkNewMessages, markAsRead, deleteMessage, listMessages, getUnreadCount, listBroadcastStatus, listByChannel.
+---
+
+# messages
+
+**Source :** `convex/messages.ts`
+**Fn-paths :** 8
+
+Le module messages fournit la messagerie inter-machines entre orchestrateurs. Chaque message crée une ligne dans `messages` plus une ligne `messageReceipts` par destinataire. Les reçus suivent l'état de lecture par destinataire de façon indépendante.
+
+La **résolution broadcast** est dynamique : le canal `"broadcast"` se résout en tous les orchestrateurs avec un profil enregistré au moment de l'envoi — pas de liste hardcodée.
+
+---
+
+## `messages:sendMessage`
+
+**Portée :** mutation
+
+Envoie un message à un ou plusieurs orchestrateurs.
+
+### Arguments
+
+```typescript
+{
+  from: string,                    // ID de l'orchestrateur expéditeur
+  fromInstanceId?: string,
+  channel: string,                 // "broadcast" | "sigma" | "pi,phi" (multi séparé par virgule)
+  content: string,
+  sessionDay?: number,
+  tenantId?: string,
+}
+```
+
+**Routage de canal :**
+- `"broadcast"` — résolution dynamique : tous les profils sauf l'expéditeur
+- `"sigma"` — destinataire unique
+- `"pi,phi"` — multi-destinataire séparé par virgule
+- `"sigma-vps-01"` — ciblage au niveau instance (contient `"-"`)
+
+### Retour
+
+`Id<"messages">` — l'ID du nouveau message.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__send_message",
+  "args": {
+    "from": "pi",
+    "channel": "broadcast",
+    "content": "Déploiement v2.4.0 dans 5 minutes — suspendre les écritures."
+  }
+}
+```
+
+---
+
+## `messages:checkNewMessages`
+
+**Portée :** query
+
+Récupère les messages non lus pour un destinataire. Retourne les messages avec leurs IDs de reçu (nécessaires pour marquer comme lu).
+
+### Arguments
+
+```typescript
+{
+  recipient: string,               // ID d'orchestrateur
+  recipientInstanceId?: string,
+  tenantId?: string,
+  since?: number,                  // Unix ms — uniquement les reçus avec _creationTime > since
+}
+```
+
+### Retour
+
+```typescript
+Array<{
+  receiptId: Id<"messageReceipts">,
+  messageId: Id<"messages">,
+  from: string,
+  fromInstanceId?: string,
+  channel?: string,
+  content: string,
+  createdAt: number,
+}>
+```
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__check_messages",
+  "args": { "recipient": "sigma" }
+}
+```
+
+---
+
+## `messages:markAsRead`
+
+**Portée :** mutation
+
+Marque un ou plusieurs reçus comme lus. Passez les valeurs `receiptId` de `checkNewMessages`.
+
+### Arguments
+
+```typescript
+{ receiptIds: Id<"messageReceipts">[] }
+```
+
+### Retour
+
+`number` — nombre de reçus effectivement marqués (ignore les reçus déjà lus).
+
+---
+
+## `messages:deleteMessage`
+
+**Portée :** mutation
+
+Supprime un message et supprime en cascade tous ses reçus.
+
+### Arguments
+
+```typescript
+{
+  messageId: Id<"messages">,
+  callerOrchestrator?: string,     // RBAC : doit être message.from ou "system"
+}
+```
+
+### Retour
+
+```typescript
+{ deleted: boolean, receiptsDeleted: number }
+```
+
+---
+
+## `messages:listMessages`
+
+**Portée :** query
+
+Récupère les messages pour un jour de session ou d'un expéditeur (historique/relecture).
+
+### Arguments
+
+```typescript
+{
+  sessionDay?: number,
+  from?: string,
+  limit?: number,                  // défaut 100
+}
+```
+
+### Exemple (ConvexHttpClient)
+
+```typescript
+const history = await client.query("messages:listMessages", {
+  sessionDay: 82,
+});
+```
+
+---
+
+## `messages:getUnreadCount`
+
+**Portée :** query
+
+Compte les reçus non lus pour un rôle destinataire.
+
+### Arguments
+
+```typescript
+{ orchestratorId: string }
+```
+
+### Retour
+
+`number` — nombre de reçus non lus (limité à 500 dans une seule requête).
+
+---
+
+## `messages:listBroadcastStatus`
+
+**Portée :** query
+
+Affiche qui a lu un message broadcast et qui ne l'a pas fait. Utile pour confirmer que tous les agents ont reçu une annonce critique.
+
+### Arguments
+
+```typescript
+{ messageId: Id<"messages"> }
+```
+
+### Retour
+
+```typescript
+{
+  messageId: Id<"messages">,
+  from: string,
+  channel?: string,
+  createdAt: number,
+  receipts: Array<{
+    recipient: string,
+    recipientInstanceId?: string,
+    read: boolean,
+    readAt?: number,
+  }>,
+}
+```
+
+---
+
+## `messages:listByChannel`
+
+**Portée :** query
+
+Liste les messages récents pour un canal spécifique, ou tous les messages si le canal n'est pas spécifié.
+
+### Arguments
+
+```typescript
+{
+  channel?: string,
+  limit?: number,                  // défaut 100
+}
+```
+
+### Exemple (ConvexHttpClient)
+
+```typescript
+const recent = await client.query("messages:listByChannel", {
+  channel: "broadcast",
+  limit: 20,
+});
+```

@@ -1,0 +1,344 @@
+---
+title: messages — API Reference
+description: All 8 fn-paths in convex/messages.ts — sendMessage, checkNewMessages, markAsRead, deleteMessage, listMessages, getUnreadCount, listBroadcastStatus, listByChannel.
+---
+
+# messages
+
+**Source:** `convex/messages.ts`
+**Fn-paths:** 8
+
+The messages module provides cross-machine messaging between orchestrators. Each message creates one row in `messages` plus one `messageReceipts` row per recipient. Receipts track read state per recipient independently.
+
+**Broadcast resolution** is dynamic: the `"broadcast"` channel resolves to all orchestrators with a registered profile at send time — no hardcoded list. New orchestrators are automatically included after calling `update_profile`.
+
+---
+
+## `messages:sendMessage`
+
+**Scope:** mutation
+
+Send a message to one, many, or all orchestrators.
+
+### Args
+
+```typescript
+{
+  from: string,                    // sender orchestrator ID
+  fromInstanceId?: string,
+  channel: string,                 // "broadcast" | "sigma" | "pi,phi" (comma-sep multi)
+  content: string,
+  sessionDay?: number,
+  tenantId?: string,
+}
+```
+
+**Channel routing:**
+- `"broadcast"` — dynamic resolution: all profiles except sender
+- `"sigma"` — single recipient
+- `"pi,phi"` — comma-separated multi-recipient (no spaces required, trimmed)
+- `"sigma-vps-01"` — instance-level targeting (contains `"-"`)
+
+### Returns
+
+`Id<"messages">` — the new message ID.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const msgId = await client.mutation("messages:sendMessage", {
+  from: "pi",
+  channel: "broadcast",
+  content: "Deploying v2.4.0 in 5 minutes — hold writes.",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__send_message",
+  "args": {
+    "from": "pi",
+    "channel": "sigma",
+    "content": "Task k57... ready for review."
+  }
+}
+```
+
+---
+
+## `messages:checkNewMessages`
+
+**Scope:** query
+
+Get unread messages for a recipient. Returns messages with their receipt IDs (needed to mark as read).
+
+### Args
+
+```typescript
+{
+  recipient: string,               // orchestrator ID
+  recipientInstanceId?: string,
+  tenantId?: string,
+  since?: number,                  // Unix ms — only receipts with _creationTime > since
+}
+```
+
+When `recipientInstanceId` is set, returns both instance-targeted messages and role-level messages for the same orchestrator (merged, deduplicated).
+
+When `tenantId` is provided, filters to that tenant only. When omitted, returns all messages (backward-compatible single-tenant mode).
+
+### Returns
+
+```typescript
+Array<{
+  receiptId: Id<"messageReceipts">,
+  messageId: Id<"messages">,
+  from: string,
+  fromInstanceId?: string,
+  channel?: string,
+  content: string,
+  createdAt: number,
+}>
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const messages = await client.query("messages:checkNewMessages", {
+  recipient: "sigma",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__check_messages",
+  "args": { "recipient": "sigma" }
+}
+```
+
+---
+
+## `messages:markAsRead`
+
+**Scope:** mutation
+
+Mark one or more receipts as read. Pass the `receiptId` values from `checkNewMessages`.
+
+### Args
+
+```typescript
+{ receiptIds: Id<"messageReceipts">[] }
+```
+
+### Returns
+
+`number` — count of receipts actually marked (skips already-read receipts).
+
+### Example (ConvexHttpClient)
+
+```typescript
+const count = await client.mutation("messages:markAsRead", {
+  receiptIds: ["r1...", "r2..."],
+});
+```
+
+---
+
+## `messages:deleteMessage`
+
+**Scope:** mutation
+
+Delete a message and cascade-delete all its receipts.
+
+### Args
+
+```typescript
+{
+  messageId: Id<"messages">,
+  callerOrchestrator?: string,     // RBAC: must be message.from or "system"
+}
+```
+
+### Returns
+
+```typescript
+{ deleted: boolean, receiptsDeleted: number }
+```
+
+### RBAC note
+
+If `callerOrchestrator` is provided and does not match `message.from`, the mutation throws. Omit `callerOrchestrator` to bypass (admin / server-to-server use).
+
+### Example (ConvexHttpClient)
+
+```typescript
+const result = await client.mutation("messages:deleteMessage", {
+  messageId: "m57...",
+  callerOrchestrator: "pi",
+});
+```
+
+---
+
+## `messages:listMessages`
+
+**Scope:** query
+
+Get messages for a session day or from a sender (history/replay).
+
+### Args
+
+```typescript
+{
+  sessionDay?: number,
+  from?: string,                   // orchestrator ID
+  limit?: number,                  // default 100
+}
+```
+
+When neither `sessionDay` nor `from` is provided, returns the most recent 100 messages across all senders.
+
+### Returns
+
+```typescript
+Array<{
+  _id: Id<"messages">,
+  _creationTime: number,
+  from: string,
+  fromInstanceId?: string,
+  channel?: string,
+  to?: string,
+  content: string,
+  sessionDay?: number,
+  createdAt: number,
+}>
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+// Replay all messages from day 82
+const history = await client.query("messages:listMessages", {
+  sessionDay: 82,
+});
+```
+
+---
+
+## `messages:getUnreadCount`
+
+**Scope:** query
+
+Count unread receipts for a recipient role.
+
+### Args
+
+```typescript
+{ orchestratorId: string }
+```
+
+### Returns
+
+`number` — count of unread receipts (capped at 500 in a single query).
+
+### Example (ConvexHttpClient)
+
+```typescript
+const count = await client.query("messages:getUnreadCount", {
+  orchestratorId: "sigma",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__get_unread_count",
+  "args": { "orchestratorId": "sigma" }
+}
+```
+
+---
+
+## `messages:listBroadcastStatus`
+
+**Scope:** query
+
+Show who has read a broadcast message and who has not. Useful for confirming all agents received a critical announcement.
+
+### Args
+
+```typescript
+{ messageId: Id<"messages"> }
+```
+
+### Returns
+
+```typescript
+{
+  messageId: Id<"messages">,
+  from: string,
+  channel?: string,
+  createdAt: number,
+  receipts: Array<{
+    recipient: string,
+    recipientInstanceId?: string,
+    read: boolean,
+    readAt?: number,
+  }>,
+}
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const status = await client.query("messages:listBroadcastStatus", {
+  messageId: "m57...",
+});
+const unread = status.receipts.filter(r => !r.read);
+```
+
+---
+
+## `messages:listByChannel`
+
+**Scope:** query
+
+List recent messages for a specific channel, or all messages if channel is unspecified.
+
+### Args
+
+```typescript
+{
+  channel?: string,
+  limit?: number,                  // default 100
+}
+```
+
+### Returns
+
+```typescript
+Array<{
+  _id: Id<"messages">,
+  _creationTime: number,
+  from: string,
+  fromInstanceId?: string,
+  channel: string,
+  content: string,
+  sessionDay?: number,
+  createdAt: number,
+}>
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const recent = await client.query("messages:listByChannel", {
+  channel: "broadcast",
+  limit: 20,
+});
+```

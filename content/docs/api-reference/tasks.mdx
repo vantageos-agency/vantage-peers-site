@@ -1,0 +1,457 @@
+---
+title: tasks — API Reference
+description: All 10 fn-paths in convex/tasks.ts — create, list, get, update, complete, start, checkout, delete, listByMission, listOverdue.
+---
+
+# tasks
+
+**Source:** `convex/tasks.ts`
+**Fn-paths:** 10
+
+The tasks module manages the shared task board. Tasks have a lifecycle (`todo → in_progress → review → done`), an assignee, a priority, and optional mission linkage. Completing a task with a title matching `#NNN` auto-links the GitHub issue and may trigger IRP auto-comments.
+
+---
+
+## `tasks:create`
+
+**Scope:** mutation
+
+Creates a new task.
+
+### Args
+
+```typescript
+{
+  title: string,
+  description?: string,
+  project?: string,
+  tags?: string[],
+  assignedTo: string,              // orchestrator ID
+  assignedToInstance?: string,
+  priority: "urgent" | "high" | "medium" | "low",
+  status: "todo" | "in_progress" | "review" | "blocked" | "done",
+  dependsOn?: Id<"tasks">[],
+  missionId?: Id<"missions">,
+  estimatedMinutes?: number,
+  dueDate?: number,                // Unix ms
+  createdBy: string,               // orchestrator ID
+}
+```
+
+### Returns
+
+`Id<"tasks">` — the new task ID.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const taskId = await client.mutation("tasks:create", {
+  title: "Implement rate limiting",
+  assignedTo: "sigma",
+  priority: "high",
+  status: "todo",
+  createdBy: "pi",
+  project: "vantage-peers",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__create_task",
+  "args": {
+    "title": "Implement rate limiting",
+    "assignedTo": "sigma",
+    "priority": "high",
+    "status": "todo",
+    "createdBy": "pi"
+  }
+}
+```
+
+---
+
+## `tasks:get`
+
+**Scope:** query
+
+Fetch a single task by ID.
+
+### Args
+
+```typescript
+{ taskId: Id<"tasks"> }
+```
+
+### Returns
+
+Full task doc or `null`.
+
+```typescript
+{
+  _id: Id<"tasks">,
+  _creationTime: number,
+  title: string,
+  description?: string,
+  project?: string,
+  tags?: string[],
+  assignedTo: string,
+  priority: "urgent" | "high" | "medium" | "low",
+  status: "todo" | "in_progress" | "review" | "blocked" | "done",
+  completionNote?: string,
+  assignedToInstance?: string,
+  claimedByInstance?: string,
+  dependsOn?: Id<"tasks">[],
+  missionId?: Id<"missions">,
+  estimatedMinutes?: number,
+  actualMinutes?: number,
+  startedAt?: number,
+  completedAt?: number,
+  dueDate?: number,
+  createdBy: string,
+  createdAt: number,
+  updatedAt: number,
+} | null
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const task = await client.query("tasks:get", { taskId: "j57..." });
+```
+
+---
+
+## `tasks:list`
+
+**Scope:** query
+
+List tasks with optional filters. Supports lite projection and status aliases.
+
+### Args
+
+```typescript
+{
+  assignedTo?: string,
+  assignedToInstance?: string,
+  status?: string | string[],      // "todo"|"open"|"active"|["todo","review"]
+  project?: string,
+  limit?: number,                  // default 50 (auto-clamped to 30 for fields=full)
+  fields?: "lite" | "full",        // default "full"
+  createdBy?: string,
+  updatedSince?: number,           // Unix ms — filter by updatedAt
+}
+```
+
+**Status aliases:**
+- `"open"` → `["todo","in_progress","review","blocked"]`
+- `"active"` → `["todo","in_progress"]`
+
+**`fields="lite"` projection:** `{ _id, _creationTime, title, status, priority, assignedTo, missionId? }`
+
+### Returns
+
+Array of full task docs (default) or array of lite projections.
+
+### Example (ConvexHttpClient)
+
+```typescript
+// All open tasks for sigma, compact
+const tasks = await client.query("tasks:list", {
+  assignedTo: "sigma",
+  status: "open",
+  fields: "lite",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_tasks",
+  "args": { "assignedTo": "sigma", "status": "open" }
+}
+```
+
+### Source file
+
+`convex/tasks.ts:223`
+
+---
+
+## `tasks:update`
+
+**Scope:** mutation
+
+Partial update of any mutable task field. All fields except `taskId` are optional.
+
+### Args
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator?: string,     // RBAC: must be creator or assignee
+  title?: string,
+  description?: string,
+  project?: string,
+  tags?: string[],
+  assignedTo?: string,
+  priority?: "urgent" | "high" | "medium" | "low",
+  status?: "todo" | "in_progress" | "review" | "blocked" | "done",
+  missionId?: Id<"missions">,
+  estimatedMinutes?: number,
+  actualMinutes?: number,
+  startedAt?: number,
+  completedAt?: number,
+  dueDate?: number,
+  dependsOn?: Id<"tasks">[],
+  completionNote?: string,
+  assignedToInstance?: string,
+}
+```
+
+### Returns
+
+`null`
+
+### RBAC note
+
+When `callerOrchestrator` is provided, the mutation throws if the caller is neither the creator (`createdBy`) nor the assignee (`assignedTo`). Pass `callerOrchestrator: "system"` to bypass.
+
+### Example (ConvexHttpClient)
+
+```typescript
+await client.mutation("tasks:update", {
+  taskId: "j57...",
+  status: "review",
+  callerOrchestrator: "sigma",
+});
+```
+
+---
+
+## `tasks:complete`
+
+**Scope:** mutation
+
+Shortcut to mark a task done. Requires a non-empty `completionNote`. Auto-links GitHub issues and auto-completes parent missions when all tasks finish.
+
+### Args
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator?: string,
+  completionNote?: string,         // REQUIRED at runtime — empty string throws
+}
+```
+
+### Returns
+
+`null`
+
+### Side effects
+
+1. Sets `status="done"`, `completedAt=now`, computes `actualMinutes` from `startedAt`.
+2. If title contains `#NNN` and a GitHub repo mapping exists for the project, links the task to the issue and optionally updates issue status if `completionNote` contains "fix"/"fixed" or a commit SHA.
+3. If title matches `[#NNN] TN — <step>` pattern, schedules IRP auto-comments on steps T6, T8, T11.
+4. If all tasks in the parent mission are done, sets mission `status="complete"`.
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__complete_task",
+  "args": {
+    "taskId": "j57...",
+    "callerOrchestrator": "sigma",
+    "completionNote": "Rate limiter implemented at gateway layer — 429 confirmed in load test. PR #412."
+  }
+}
+```
+
+### Source file
+
+`convex/tasks.ts:430`
+
+---
+
+## `tasks:start`
+
+**Scope:** mutation
+
+Sets `status="in_progress"` and records `startedAt`. Blocks if the caller already has another unclosed in_progress task.
+
+### Args
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator?: string,
+}
+```
+
+### Returns
+
+`null`
+
+### Concurrency note
+
+If `callerOrchestrator` is provided and that orchestrator already has an in_progress task (different ID), the mutation throws: `"Cannot start task: you have an unclosed in_progress task..."`. Complete the existing task first.
+
+### Example (ConvexHttpClient)
+
+```typescript
+await client.mutation("tasks:start", {
+  taskId: "j57...",
+  callerOrchestrator: "sigma",
+});
+```
+
+---
+
+## `tasks:checkout`
+
+**Scope:** mutation
+
+Atomically claims a task. Only succeeds if `status="todo"`. Designed for multi-instance concurrency — two agents calling `checkout` simultaneously on the same task will only one succeed.
+
+### Args
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator: string,      // REQUIRED
+  callerInstance?: string,
+}
+```
+
+### Returns
+
+```typescript
+{ claimed: boolean, reason?: string }
+```
+
+`claimed: true` means the task is now `in_progress` and owned by the caller. `claimed: false` includes a reason string explaining why (already taken, not found, etc.).
+
+### Example (ConvexHttpClient)
+
+```typescript
+const result = await client.mutation("tasks:checkout", {
+  taskId: "j57...",
+  callerOrchestrator: "sigma",
+  callerInstance: "sigma-vps-01",
+});
+if (result.claimed) {
+  // proceed with the task
+}
+```
+
+---
+
+## `tasks:deleteTask`
+
+**Scope:** mutation
+
+Hard delete. Only the creator (`createdBy`) or `"system"` may delete.
+
+### Args
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator?: string,
+}
+```
+
+### Returns
+
+```typescript
+{ deleted: boolean }
+```
+
+### RBAC note
+
+Throws if `callerOrchestrator` is provided and does not match `task.createdBy`.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const result = await client.mutation("tasks:deleteTask", {
+  taskId: "j57...",
+  callerOrchestrator: "pi",
+});
+```
+
+---
+
+## `tasks:listByMission`
+
+**Scope:** query
+
+List all tasks belonging to a specific mission. Supports the same `fields` and `status` options as `tasks:list`.
+
+### Args
+
+```typescript
+{
+  missionId: Id<"missions">,
+  status?: string | string[],
+  limit?: number,
+  fields?: "lite" | "full",
+  createdBy?: string,
+  updatedSince?: number,
+}
+```
+
+### Returns
+
+Array of full task docs or lite projections.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const tasks = await client.query("tasks:listByMission", {
+  missionId: "k57...",
+  status: "open",
+  fields: "lite",
+});
+```
+
+### Source file
+
+`convex/tasks.ts:768`
+
+---
+
+## `tasks:listOverdue`
+
+**Scope:** query
+
+Return tasks that are past their `dueDate` and not yet done.
+
+### Args
+
+```typescript
+{
+  assignedTo?: string,
+  limit?: number,                  // default 50
+}
+```
+
+### Returns
+
+Array of full task docs where `status != "done"` and `dueDate < now`.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const overdue = await client.query("tasks:listOverdue", {
+  assignedTo: "sigma",
+});
+```
+
+### Source file
+
+`convex/tasks.ts:838`

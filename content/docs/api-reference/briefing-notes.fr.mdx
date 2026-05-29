@@ -1,0 +1,169 @@
+---
+title: briefingNotes — Référence API
+description: Les 5 fn-paths de convex/briefingNotes.ts — create, get, list, update, deleteBriefingNote.
+---
+
+# briefingNotes
+
+**Source :** `convex/briefingNotes.ts`
+**Fn-paths :** 5
+
+Les notes de briefing sont des transferts de session structurés entre orchestrateurs. Chaque note a un sujet, des participants, un contenu et des décisions optionnelles. Elles constituent l'enregistrement canonique pour le transfert de contexte inter-sessions — une note de briefing de la fin d'une session est lue au début de la suivante.
+
+---
+
+## `briefingNotes:create`
+
+**Portée :** mutation
+
+Insère une nouvelle note de briefing.
+
+### Arguments
+
+```typescript
+{
+  title: string,
+  topic: string,                   // clé de catégorie, ex. "vp-release", "sprint-review"
+  participants: string[],          // IDs d'orchestrateurs présents
+  content: string,
+  decisions?: string[],
+  linkedMemoryIds?: Id<"memories">[],
+  createdBy: string,               // ID d'orchestrateur
+}
+```
+
+### Retour
+
+`Id<"briefingNotes">` — l'ID de la nouvelle note.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__create_briefing_note",
+  "args": {
+    "title": "Clôture sprint Jour 82",
+    "topic": "sprint-review",
+    "participants": ["pi", "sigma"],
+    "content": "Complété M3 iframeEmbedSessions.",
+    "createdBy": "pi"
+  }
+}
+```
+
+---
+
+## `briefingNotes:get`
+
+**Portée :** query
+
+Récupère une note de briefing unique par ID.
+
+### Arguments
+
+```typescript
+{ noteId: Id<"briefingNotes"> }
+```
+
+### Retour
+
+```typescript
+{
+  _id: Id<"briefingNotes">,
+  _creationTime: number,
+  title: string,
+  topic: string,
+  participants: string[],
+  content: string,
+  decisions?: string[],
+  linkedMemoryIds?: Id<"memories">[],
+  createdBy: string,
+  createdAt: number,
+  updatedAt?: number,
+  updatedBy?: string,
+} | null
+```
+
+---
+
+## `briefingNotes:list`
+
+**Portée :** query
+
+Liste les notes de briefing, ordonnées par `createdAt` desc. Filtre de sujet optionnel.
+
+### Arguments
+
+```typescript
+{
+  topic?: string,
+  limit?: number,                  // défaut 20 (auto-limité à 15 pour fields=full)
+  fields?: "lite" | "full",
+  updatedSince?: number,           // Unix ms
+}
+```
+
+**Projection `fields="lite"` :** `{ _id, _creationTime, topic, title, participants, createdBy }`
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_briefing_notes",
+  "args": { "topic": "sprint-review" }
+}
+```
+
+---
+
+## `briefingNotes:update`
+
+**Portée :** mutation
+
+Mise à jour partielle de tout champ mutable d'une note de briefing. `callerOrchestrator` est **requis** et doit être le créateur ou `"system"`.
+
+### Arguments
+
+```typescript
+{
+  noteId: Id<"briefingNotes">,
+  callerOrchestrator: string,      // REQUIS — doit être createdBy ou "system"
+  title?: string,
+  topic?: string,
+  participants?: string[],
+  content?: string,
+  decisions?: string[],
+  linkedMemoryIds?: Id<"memories">[],
+}
+```
+
+### Retour
+
+`null`
+
+### Note RBAC
+
+Contrairement à la plupart des autres mutations, `callerOrchestrator` n'est pas optionnel ici. L'omettre provoque une erreur de validation. C'est intentionnel — les notes de briefing utilisent une politique de mise à jour deny-by-default.
+
+---
+
+## `briefingNotes:deleteBriefingNote`
+
+**Portée :** mutation
+
+Suppression définitive d'une note de briefing. Seul le créateur (`createdBy`) ou `"system"` peut supprimer.
+
+### Arguments
+
+```typescript
+{
+  noteId: Id<"briefingNotes">,
+  callerOrchestrator?: string,
+}
+```
+
+### Retour
+
+```typescript
+{ deleted: boolean }
+```
