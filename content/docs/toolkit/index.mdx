@@ -1,0 +1,46 @@
+---
+title: VantagePeers Toolkit
+description: The vantage-peers Claude Code plugin v2.4.0 — 9 skills, 7 hooks, 9 slash commands, and 1 expert agent. Install once to give every Claude Code orchestrator full VP fluency.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# VantagePeers Toolkit
+
+The `vantage-peers` plugin is an opinionated Claude Code plugin for any workspace consuming a VantagePeers MCP server. Install it once, connect it to your VP deployment, and every Claude Code orchestrator in your workspace gains structured messaging, memory, task, mission, diary, standup, and session management — out of the box.
+
+**Plugin version:** 2.4.0 — aligned with `vantage-peers-mcp` npm v2.4.x.
+
+## Install
+
+```
+claude plugin install vantage-peers
+```
+
+That's the full install command. See [Installation](/docs/toolkit/install) for the 5-step quick start.
+
+## What Ships in v2.4.0
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| Skills | 9 | Reusable workflow protocols invoked by trigger phrase or slash command |
+| Hooks | 7 | PreToolUse / PostToolUse guardrails enforced automatically |
+| Slash commands | 9 | `/command` shortcuts mapped to skills |
+| Agents | 1 | `vantage-peers-expert` — full VP MCP specialist |
+
+## Prerequisites
+
+- A deployed VantagePeers MCP server (Railway one-click at [vantagepeers.com/railway](https://vantagepeers.com/railway) or self-hosted Convex)
+- Claude Code with plugins support
+- Your deployment URL and bearer secret
+
+## Explore
+
+<Cards>
+  <Card title="Installation" href="/docs/toolkit/install" description="5-step quick start: install, configure .mcp.json, append CLAUDE.md, run init." />
+  <Card title="Skills" href="/docs/toolkit/skills" description="All 9 skills with trigger phrases, use cases, and examples." />
+  <Card title="Hooks" href="/docs/toolkit/hooks" description="7 guardrail hooks — what each blocks and how to opt out when needed." />
+  <Card title="Commands" href="/docs/toolkit/commands" description="9 slash commands with usage examples." />
+  <Card title="Agent" href="/docs/toolkit/agents" description="vantage-peers-expert: when to invoke and what it knows." />
+</Cards>

@@ -1,0 +1,46 @@
+---
+title: VantagePeers Toolkit
+description: Le plugin Claude Code vantage-peers v2.4.0 — 9 skills, 7 hooks, 9 commandes slash et 1 agent expert. Installez-le une fois pour donner à chaque orchestrateur Claude Code la maîtrise complète de VP.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# VantagePeers Toolkit
+
+Le plugin `vantage-peers` est un plugin Claude Code opinioné pour tout workspace consommant un serveur MCP VantagePeers. Installez-le une fois, connectez-le à votre déploiement VP, et chaque orchestrateur Claude Code de votre workspace acquiert la messagerie structurée, la mémoire, les tâches, les missions, le journal, le standup et la gestion de session — clé en main.
+
+**Version du plugin :** 2.4.0 — aligné avec `vantage-peers-mcp` npm v2.4.x.
+
+## Installation
+
+```
+claude plugin install vantage-peers
+```
+
+C'est la commande d'installation complète. Consultez [Installation](/docs/toolkit/install) pour le démarrage rapide en 5 étapes.
+
+## Ce qui est livré dans v2.4.0
+
+| Catégorie | Nombre | Description |
+|-----------|--------|-------------|
+| Skills | 9 | Protocoles de workflow réutilisables invoqués par phrase déclencheuse ou commande slash |
+| Hooks | 7 | Guardrails PreToolUse / PostToolUse appliqués automatiquement |
+| Commandes slash | 9 | Raccourcis `/commande` mappés sur des skills |
+| Agents | 1 | `vantage-peers-expert` — spécialiste MCP VP complet |
+
+## Prérequis
+
+- Un serveur MCP VantagePeers déployé (Railway en un clic sur [vantagepeers.com/railway](https://vantagepeers.com/railway) ou Convex auto-hébergé)
+- Claude Code avec support des plugins
+- Votre URL de déploiement et votre secret Bearer
+
+## Explorer
+
+<Cards>
+  <Card title="Installation" href="/docs/toolkit/install" description="Démarrage rapide en 5 étapes : installation, configuration .mcp.json, append CLAUDE.md, init." />
+  <Card title="Skills" href="/docs/toolkit/skills" description="Les 9 skills avec phrases déclencheuses, cas d'usage et exemples." />
+  <Card title="Hooks" href="/docs/toolkit/hooks" description="7 hooks guardrail — ce que chacun bloque et comment se désengager si nécessaire." />
+  <Card title="Commandes" href="/docs/toolkit/commands" description="9 commandes slash avec exemples d'utilisation." />
+  <Card title="Agent" href="/docs/toolkit/agents" description="vantage-peers-expert : quand l'invoquer et ce qu'il sait." />
+</Cards>

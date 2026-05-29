@@ -1,4 +1,4 @@
 {
-  "title": "Auth",
-  "pages": []
+  "title": "Authentication",
+  "pages": ["index", "clerk-flow", "bearer-tokens", "oauth-dcr"]
 }

@@ -1,0 +1,180 @@
+---
+title: OAuth Dynamic Client Registration
+description: OAuth 2.0 Dynamic Client Registration for MCP clients connecting to a VantagePeers HTTP server. Covers registration, token grant, scope profiles, and the master scope security boundary.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Steps, Step } from 'fumadocs-ui/components/steps'
+
+# OAuth Dynamic Client Registration
+
+VantagePeers implements OAuth 2.0 Dynamic Client Registration (DCR) for MCP clients — Claude.ai web, Claude Desktop, and custom MCP SDK consumers. DCR allows a client to self-register and obtain credentials without admin intervention for the default `client-generic` scope profile.
+
+## Use Case
+
+| Scenario | Recommended |
+|----------|-------------|
+| Claude.ai web connecting to a self-hosted VP HTTP server | Yes — DCR is built into the Claude.ai MCP integration |
+| Claude Desktop connecting via HTTP transport | Yes — use DCR for credential-free setup |
+| Custom MCP SDK client with scoped access | Yes |
+| Admin service account requiring full access | No — use `BEARER_SECRET_MASTER` directly |
+
+## Scope Profiles
+
+All tokens in VP carry a **scope profile** that controls what the token holder can do. Scope profiles are defined in `oauth_scope_profiles` in Convex.
+
+| Profile | Access level | Who gets it |
+|---------|-------------|-------------|
+| `master` | Full admin — all namespaces, all from-addresses | Env var only (`BEARER_SECRET_MASTER`). Never issued via DCR. |
+| `client-generic` | Deny-by-default template | All public DCR self-registrations |
+| Custom profiles | Admin-configured | Assigned by admin post-registration |
+
+<Callout type="warn">
+Public DCR self-registration always yields `client-generic` scope. This profile has **empty** `fromAllowList`, `namespaceReadPrefixes`, and `namespaceWritePrefixes` by default. The client can connect and authenticate, but cannot read or write any namespaces until an admin elevates the scope profile. This is intentional — deny-by-default prevents a freshly registered client from accessing production data.
+</Callout>
+
+<Callout type="error">
+**Master scope is blocked at the Convex layer for DCR.** Any self-registration attempt with `scopeProfile="master"` is rejected with `ScopeViolation`. This is enforced in `oauth.ts:registerPublicClient` as defense-in-depth — even if the HTTP layer is bypassed, a direct Convex call cannot yield master scope via DCR.
+</Callout>
+
+## Flow
+
+<Steps>
+<Step>
+**Client calls POST /oauth/register**
+
+The client submits its metadata to the DCR endpoint. No authentication required for public registration.
+
+```http
+POST https://your-deployment.railway.app/oauth/register
+Content-Type: application/json
+
+{
+  "client_name": "cedar-trinity-agent",
+  "redirect_uris": ["https://your-app.com/oauth/callback"],
+  "grant_types": ["client_credentials"],
+  "token_endpoint_auth_method": "client_secret_post"
+}
+```
+
+The server generates a `client_id` and `client_secret` (32-byte random hex), stores the SHA-256 hash of the secret, and returns the raw secret once.
+</Step>
+
+<Step>
+**Server responds with credentials**
+
+```json
+{
+  "client_id": "vp_client_a1b2c3d4",
+  "client_secret": "e5f6g7h8...64-char-hex",
+  "client_name": "cedar-trinity-agent",
+  "redirect_uris": ["https://your-app.com/oauth/callback"],
+  "scope_profile": "client-generic",
+  "token_endpoint": "https://your-deployment.railway.app/oauth/token"
+}
+```
+
+Store `client_secret` immediately. It is returned once and never derivable from the database.
+</Step>
+
+<Step>
+**Client requests an access token**
+
+```http
+POST https://your-deployment.railway.app/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id=vp_client_a1b2c3d4
+&client_secret=e5f6g7h8...64-char-hex
+```
+
+The server validates the secret hash, checks the client is not revoked, and issues an access token scoped to the client's profile.
+</Step>
+
+<Step>
+**Client uses the access token**
+
+```http
+GET /health HTTP/1.1
+Host: your-deployment.railway.app
+Authorization: Bearer <access_token>
+```
+
+All subsequent MCP requests use this token. The token is validated via `by_tokenHash` index on `oauth_access_tokens`, checking `revokedAt` and `expiresAt`.
+</Step>
+</Steps>
+
+## Admin: Elevating a Client's Scope
+
+After a client self-registers with `client-generic`, an admin can elevate its scope profile to grant actual access:
+
+```ts
+// Requires BEARER_SECRET_MASTER
+await convex.mutation(api.oauth.createClient, {
+  callerToken: process.env.BEARER_SECRET_MASTER,
+  clientId: 'vp_client_a1b2c3d4',
+  clientSecretHash: sha256('the-client-secret'),
+  name: 'cedar-trinity-agent',
+  redirectUris: ['https://your-app.com/oauth/callback'],
+  scopeProfile: 'your-custom-profile',  // must exist in oauth_scope_profiles
+})
+```
+
+Or update the scope profile directly in the Convex dashboard.
+
+## Admin: Creating a Custom Scope Profile
+
+```ts
+// Seed default profiles (master, marie-iris-rh, client-generic)
+await convex.mutation(api.oauth.seedDefaultProfiles, {
+  callerToken: process.env.BEARER_SECRET_MASTER,
+})
+
+// Then insert a custom profile via Convex dashboard or admin mutation
+```
+
+A scope profile shape:
+
+```ts
+{
+  profileId: 'cedar-agent',
+  description: 'Cedar Trinity agent — read/write project/cedar namespace',
+  fromAllowList: ['cedar'],          // allowed send_message from-names
+  namespaceReadPrefixes: ['project/cedar', 'global'],
+  namespaceWritePrefixes: ['project/cedar'],
+}
+```
+
+## Revoking a Client
+
+Admin-only. Revokes the client record and all associated access and refresh tokens atomically:
+
+```ts
+await convex.mutation(api.oauth.deleteClient, {
+  callerToken: process.env.BEARER_SECRET_MASTER,
+  clientId: 'vp_client_a1b2c3d4',
+})
+// Returns: { revokedClient: true, revokedTokens: N, revokedRefresh: N }
+```
+
+The client must re-register via DCR to reconnect.
+
+## Environment Variables
+
+| Variable | Where to set | Required for |
+|----------|-------------|-------------|
+| `BEARER_SECRET_MASTER` | MCP server environment | All admin OAuth operations |
+
+See [Bearer Tokens](/docs/auth/bearer-tokens) for the master token lifecycle and rotation procedure.
+
+## Claude.ai Web Integration
+
+Claude.ai web supports MCP servers via OAuth 2.1 with DCR natively. Once your Railway MCP server is running:
+
+1. Go to claude.ai → Settings → Integrations → Custom MCP servers.
+2. Paste your Railway URL (e.g. `https://vantage-peers-abc123.railway.app`).
+3. Claude.ai auto-discovers the DCR endpoint and registers itself.
+4. Authorize the connection.
+
+No bearer token or plugin install required for this flow.

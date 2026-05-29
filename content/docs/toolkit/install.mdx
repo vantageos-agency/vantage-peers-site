@@ -1,0 +1,125 @@
+---
+title: Installation
+description: Install the vantage-peers Claude Code plugin, configure .mcp.json, append CLAUDE.md, and verify your setup in 5 steps.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Steps, Step } from 'fumadocs-ui/components/steps'
+
+# Installation
+
+## Prerequisites
+
+Before installing the plugin:
+
+- A running VantagePeers MCP server. Deploy to Railway: [vantagepeers.com/railway](https://vantagepeers.com/railway). Note your URL (e.g. `https://vantage-peers-abc123.railway.app`) and `BEARER_SECRET`.
+- Claude Code installed and working in your workspace.
+
+<Steps>
+<Step>
+**Install the plugin**
+
+```
+claude plugin install vantage-peers
+```
+
+This installs skills, hooks, commands, and the `vantage-peers-expert` agent into your Claude Code workspace.
+</Step>
+
+<Step>
+**Configure .mcp.json**
+
+Copy the template from the plugin:
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://your-deployment.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer your-bearer-secret"
+      }
+    }
+  }
+}
+```
+
+Save as `.mcp.json` in your workspace root. Restart Claude Code after saving.
+
+See [Bearer Tokens](/docs/auth/bearer-tokens) for the bearer secret format and how to obtain one.
+</Step>
+
+<Step>
+**Append CLAUDE.md template**
+
+The plugin ships a `templates/CLAUDE.md.append` file with VP workflow protocols (recall-before-assumptions, task protocol, namespace conventions). Append its contents to the bottom of your workspace `CLAUDE.md`:
+
+```bash
+cat "$(claude plugin path vantage-peers)/templates/CLAUDE.md.append" >> CLAUDE.md
+```
+
+This installs the VP protocol context that skills rely on (orchestrator identity detection, mode switching, namespace conventions).
+</Step>
+
+<Step>
+**Run init and verify**
+
+```
+/vantage-peers-init
+```
+
+This runs 3 checks:
+
+1. MCP registration — confirms `vantage-peers` server is visible in Claude Code's tool list
+2. Connectivity — calls `/health` on your deployment URL, expects `{ status: "ok" }`
+3. Auth — smoke-tests bearer authentication via a `recall` call
+
+All 3 checks must show `PASS`. If any fail, the skill outputs a fix suggestion for each failure.
+</Step>
+
+<Step>
+**First commands**
+
+```
+/check-messages
+/check-tasks
+/daily-start
+```
+
+- `/check-messages` — polls your inbox; expect "No new messages" on a fresh deployment
+- `/check-tasks` — lists your assigned task queue
+- `/daily-start` — loads VP context and presents your session plan
+</Step>
+</Steps>
+
+## Verify Skills and Hooks Are Active
+
+After install, confirm the plugin is loaded:
+
+```
+claude plugin list
+```
+
+You should see `vantage-peers` with version `2.4.0`.
+
+To check that hooks are running, create a test task without VERIFICATION/TESTS blocks:
+
+```
+/vantage-peers-init
+```
+
+The `enforce-task-quality` hook will block any `create_task` call missing the required structure.
+
+<Callout type="info">
+Hooks run silently on every matching tool call. They do not appear in the conversation unless they block an action. If a hook blocks, it outputs the reason and the fix — read the message before retrying.
+</Callout>
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `/vantage-peers-init` fails check 1 (MCP registration) | `.mcp.json` not found or malformed | Verify `.mcp.json` exists in workspace root and JSON is valid |
+| `/vantage-peers-init` fails check 2 (connectivity) | Wrong URL or Railway service sleeping | Check Railway dashboard — wake service, verify URL ends in `/mcp` |
+| `/vantage-peers-init` fails check 3 (auth) | Wrong bearer secret | Verify `BEARER_SECRET` matches `BEARER_SECRET_MASTER` env var on Railway |
+| Hook blocks unexpectedly | Content matches a hook pattern | Read the block message — it explains the rule and the fix |

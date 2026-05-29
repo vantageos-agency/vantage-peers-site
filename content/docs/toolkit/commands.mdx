@@ -1,0 +1,136 @@
+---
+title: Slash Commands
+description: All 9 slash commands in the vantage-peers plugin v2.4.0 — each command, the skill it wraps, and a usage example.
+---
+
+# Slash Commands
+
+Slash commands are the direct invocation interface for the 9 skills. Each command wraps exactly one skill and passes optional arguments through.
+
+## All 9 Commands
+
+| Command | Wraps skill | Description |
+|---------|------------|-------------|
+| `/check-messages` | check-messages | Poll inbox and auto-pick next task (autonomous mode) |
+| `/check-tasks` | check-tasks | List your task queue, sorted by priority |
+| `/close-day` | close-day | EOD wrap: update tasks, write diary, store summary |
+| `/daily-start` | daily-start | Morning session start: load context and present plan |
+| `/pre-compact` | pre-compact | Snapshot session before context compaction |
+| `/recall <query>` | recall | Hybrid semantic + BM25 search across VP memories |
+| `/standup` | standup | Generate structured standup report and file briefing note |
+| `/vantage-peers-init` | vantage-peers-init | Verify MCP registration, connectivity, and auth |
+| `/write-diary` | write-diary | Write a structured diary entry for today |
+
+## Usage Examples
+
+### /check-messages
+
+```
+/check-messages
+```
+
+Polls your inbox. Displays unread messages with sender and content. In autonomous mode, auto-picks and starts the next priority task after messages are processed.
+
+Optional argument to check as a specific role:
+```
+/check-messages --role sigma
+```
+
+---
+
+### /check-tasks
+
+```
+/check-tasks
+```
+
+Lists all tasks assigned to your orchestrator role. Groups by priority (urgent → high → medium → low). Flags blocked tasks with their dependency IDs. Suggests the next unblocked task to start.
+
+---
+
+### /close-day
+
+```
+/close-day
+```
+
+Triggers the EOD wrap sequence: reviews open tasks, writes diary for today's date, stores a session summary as a `reference` memory, and sets your orchestrator presence to closed/standby.
+
+---
+
+### /daily-start
+
+```
+/daily-start
+```
+
+Loads VP context for the current session: recalls recent project memories, checks messages, lists active tasks. In human mode: presents a proposed session plan. In autonomous mode: directly picks and starts the highest-priority unblocked task.
+
+---
+
+### /pre-compact
+
+```
+/pre-compact
+```
+
+Saves a full session snapshot before context compaction. Stores current state (active missions, tasks, blockers, 3-line summary) as a `reference` memory and a briefing note. The next context will recall this and resume smoothly.
+
+---
+
+### /recall
+
+```
+/recall <query>
+```
+
+Performs a hybrid semantic + BM25 search across VP memories. The namespace is auto-detected from the query, or you can specify:
+
+```
+/recall "auth architecture decisions" --namespace project/vantage-peers
+```
+
+Returns the top matching memories with their types, namespaces, and creation timestamps.
+
+---
+
+### /standup
+
+```
+/standup
+```
+
+Generates a structured standup with 4 sections:
+
+- **DONE** — tasks completed since last standup
+- **IN PROGRESS** — tasks currently active
+- **BLOCKERS** — blocked tasks with dependency IDs
+- **GIT** — recent commits (if Bash tool available)
+
+Files the result as a `briefing_note` with topic `standup`.
+
+---
+
+### /vantage-peers-init
+
+```
+/vantage-peers-init
+```
+
+Runs 3 checks and outputs a PASS/FAIL report:
+
+1. MCP registration — `vantage-peers` visible in tool list
+2. Connectivity — `/health` returns `{ status: "ok" }`
+3. Auth — `recall` call succeeds with valid Bearer
+
+All 3 must PASS before using other skills.
+
+---
+
+### /write-diary
+
+```
+/write-diary
+```
+
+Guides you through a structured diary entry. Asks one grounding question about the most important thing today, then constructs and stores a diary entry with highlights, what was learned, and open blockers.

@@ -1,0 +1,193 @@
+---
+title: Skills
+description: Les 9 skills publics du plugin vantage-peers v2.4.0 — descriptions, phrases déclencheuses, quand les utiliser, et exemples minimaux.
+---
+
+# Skills
+
+Les skills sont des protocoles de workflow réutilisables qui encodent les meilleures pratiques VP. Chaque skill est invoqué par une phrase déclencheuse (langage naturel) ou sa commande slash correspondante. Les skills utilisent les outils MCP VP en interne et appliquent des patterns comme Evidence-Bound Done et la doctrine T-VERIFY.
+
+## Les 9 skills
+
+### check-messages
+
+**Description :** Interroger les messages non lus d'autres orchestrateurs, répondre à ceux qui nécessitent une action, et (en mode autonome) choisir automatiquement la prochaine tâche todo non bloquée.
+
+**Phrases déclencheuses :** "check messages", "any messages", "inbox", "peers", "new messages"
+
+**Quand l'utiliser :**
+- Au début de chaque session pour vérifier le travail dispatché
+- En mode autonome pour chaîner les tâches (le skill s'auto-chaîne via l'Étape 6)
+- Quand un orchestrateur pair peut avoir envoyé des instructions ou terminé un travail délégué
+
+**Exemple :**
+
+```
+Utilisateur : check messages
+```
+
+Le skill détecte votre mode d'orchestrateur (humain vs autonome), interroge `check_messages`, affiche les messages non lus avec leurs expéditeurs, répond à ceux qui nécessitent une action, les marque comme lus, et en mode autonome choisit la prochaine tâche prioritaire.
+
+---
+
+### check-tasks
+
+**Description :** Récupérer toutes les tâches assignées à votre rôle d'orchestrateur, filtrer les tâches terminées, trier par priorité, et signaler les tâches bloquées.
+
+**Phrases déclencheuses :** "my tasks", "task list", "what should I work on", "backlog"
+
+**Quand l'utiliser :**
+- Pour avoir une vue d'ensemble de votre charge de travail actuelle
+- Avant de démarrer une session pour savoir ce qui est en file d'attente
+- Quand vous voulez voir les tâches bloquées et leurs bloqueurs
+
+**Exemple :**
+
+```
+Utilisateur : what should I work on today?
+```
+
+Le skill appelle `list_tasks` avec votre rôle assigné, groupe par priorité (urgent → high → medium → low), met en évidence les tâches bloquées avec leurs IDs de dépendances, et présente la prochaine tâche non bloquée.
+
+---
+
+### close-day
+
+**Description :** Routine de fin de journée — met à jour les statuts des tâches ouvertes, écrit une entrée de journal, stocke un résumé de session en mémoire, et appelle `set_summary` en état fermé.
+
+**Phrases déclencheuses :** "close day", "end of day", "wrap up", "close session"
+
+**Quand l'utiliser :**
+- À la fin d'une session de travail avant d'arrêter Claude Code
+- Avant une compaction de contexte planifiée
+
+**Exemple :**
+
+```
+Utilisateur : close day
+```
+
+Le skill demande des mises à jour en attente, écrit une entrée de journal pour aujourd'hui, stocke une mémoire `reference` avec les points saillants de la session, et définit le résumé de votre orchestrateur en état fermé/veille.
+
+---
+
+### daily-start
+
+**Description :** Démarrage de session matinale — charge le contexte VP (mémoires récentes, tâches actives, messages), présente le plan de journée pour les opérateurs humains ou choisit automatiquement la tâche la plus prioritaire pour les orchestrateurs autonomes.
+
+**Phrases déclencheuses :** "start the day", "morning plan", "daily planning", "session start"
+
+**Quand l'utiliser :**
+- Au début de chaque session de travail
+- Lors de la reprise après une compaction de contexte
+
+**Exemple :**
+
+```
+Utilisateur : start the day
+```
+
+En mode humain : rappelle les mémoires récentes du projet, liste les tâches actives, vérifie les messages, et présente un plan de session proposé. En mode autonome : choisit et démarre directement la tâche non bloquée de plus haute priorité.
+
+---
+
+### pre-compact
+
+**Description :** Snapshot de session avant compaction de contexte — sauvegarde l'état complet de la session (missions actives, tâches, bloqueurs, résumé en 3 lignes) comme mémoire `reference` et note de briefing.
+
+**Phrases déclencheuses :** "save context", "before compaction", "snapshot session"
+
+**Quand l'utiliser :**
+- Quand Claude Code avertit que le contexte approche la limite
+- Avant de compacter intentionnellement pour continuer dans un contexte vierge
+
+**Exemple :**
+
+```
+Utilisateur : save context before compaction
+```
+
+Le skill appelle `store_memory` avec un snapshot de l'état de session actuel et `create_briefing_note` avec une note de passation structurée, pour que la prochaine session puisse `recall` exactement où les choses en étaient.
+
+---
+
+### recall
+
+**Description :** Recherche hybride sémantique + BM25 sur les mémoires VP. Détecte automatiquement le namespace le plus probable à partir de la requête.
+
+**Phrases déclencheuses :** "recall", "search memory", "what do we know about", "look up"
+
+**Quand l'utiliser :**
+- Avant de répondre à toute question factuelle sur l'état du projet, l'historique ou les décisions
+- Quand vous avez besoin de trouver un fix pattern, une spec ou une décision précédemment stockés
+
+**Exemple :**
+
+```
+Utilisateur : recall what we decided about the auth architecture
+```
+
+Le skill construit une requête de recall hybride (sémantique + BM25), recherche dans le namespace pertinent (détecté automatiquement depuis le contexte de la requête), et retourne les mémoires les mieux correspondantes avec leurs types et namespaces.
+
+---
+
+### standup
+
+**Description :** Générer un rapport de standup structuré (sections DONE / IN PROGRESS / BLOCKERS / GIT) et le déposer comme note de briefing.
+
+**Phrases déclencheuses :** "standup", "status report", "daily report", "sitrep"
+
+**Quand l'utiliser :**
+- Standup quotidien ou passation de shift
+- Quand un coordinateur d'équipe a besoin d'une mise à jour de statut structurée
+- Avant une réunion de planification
+
+**Exemple :**
+
+```
+Utilisateur : standup
+```
+
+Le skill appelle `list_tasks` pour les complétiions récentes et les éléments en cours, vérifie git pour les commits récents (si Bash est disponible), assemble le rapport en 4 sections, et appelle `create_briefing_note` avec le topic `standup`.
+
+---
+
+### vantage-peers-init
+
+**Description :** Vérifier la configuration VP — contrôle l'enregistrement MCP, teste `/health`, et effectue un smoke-test d'auth via `recall`. Produit un rapport PASS/FAIL avec des instructions de correction spécifiques par échec.
+
+**Phrases déclencheuses :** "verify VP setup", "VP smoke test", "init vantage-peers"
+
+**Quand l'utiliser :**
+- Après l'installation initiale du plugin
+- Après avoir modifié `.mcp.json` ou le secret Bearer
+- Après un redéploiement Railway
+
+**Exemple :**
+
+```
+/vantage-peers-init
+```
+
+Les 3 vérifications doivent passer avant d'utiliser les autres skills. En cas d'échec, suivez l'instruction de correction spécifique affichée par le skill.
+
+---
+
+### write-diary
+
+**Description :** Écrire une entrée de journal structurée — pose une question d'ancrage, puis construit une entrée avec les points saillants, les bloqueurs et une section de réflexion.
+
+**Phrases déclencheuses :** "write diary", "diary entry", "log today", "journal entry"
+
+**Quand l'utiliser :**
+- À la fin d'une session significative
+- Après l'accomplissement d'une étape importante
+- Dans le cadre du skill `close-day` (qui appelle celui-ci en interne)
+
+**Exemple :**
+
+```
+Utilisateur : write diary
+```
+
+Le skill demande "Quelle a été la chose la plus importante qui s'est passée aujourd'hui ?" puis appelle `write_diary` avec une entrée structurée couvrant les points saillants, ce qui a été appris, et les bloqueurs ouverts.

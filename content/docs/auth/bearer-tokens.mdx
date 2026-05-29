@@ -1,0 +1,141 @@
+---
+title: Bearer Tokens
+description: Bearer token format, SHA-256 storage model, TTL, validation path, rotation, revocation, and the Authorization header format for VantagePeers.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# Bearer Tokens
+
+Bearer tokens are the primary credential for all VantagePeers MCP server calls. This page covers the token format, security model, validation path, and how to rotate or revoke tokens.
+
+## Token Format
+
+A VP Bearer token is a **64-character lowercase hexadecimal string** generated from 32 cryptographically random bytes:
+
+```
+a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890
+```
+
+Generation:
+```ts
+const rawBytes = new Uint8Array(32)
+crypto.getRandomValues(rawBytes)
+const bearer = Array.from(rawBytes).map(b => b.toString(16).padStart(2, '0')).join('')
+```
+
+## Storage Model
+
+<Callout type="error">
+The raw Bearer token is **never stored** in Convex. Only its SHA-256 hash is persisted. The token is returned to the caller exactly once at issuance. If lost, it cannot be recovered — revoke and reissue.
+</Callout>
+
+At issuance:
+
+1. 32 random bytes are generated.
+2. `sha256(raw_token)` is computed as a 64-char hex string.
+3. The hash is written to either `userBearerTokens.tokenHash` (Clerk flow) or `oauth_access_tokens.tokenHash` (OAuth flow).
+4. The raw token is returned in the HTTP response body and discarded server-side.
+
+## Token Lifetime
+
+| Token type | Default TTL | Configurable? |
+|------------|------------|---------------|
+| Clerk-issued (user-grade) | `TTL_7_DAYS` (7 × 24 × 60 × 60 × 1000 ms) | No — hardcoded in `credentials.ts` | // allow-time-estimate: factual TTL constant
+| OAuth access token | Configurable by admin | Yes — set at `createAccessToken` call |
+| `BEARER_SECRET_MASTER` | No expiry | Rotated manually via env var update |
+
+## Validation Path
+
+When the MCP server receives a request with `Authorization: Bearer <token>`:
+
+1. The raw token value is extracted from the header.
+2. `sha256(token)` is computed.
+3. The hash is looked up in Convex via the `by_token_hash` index on `userBearerTokens` (for Clerk-issued tokens) or `by_tokenHash` on `oauth_access_tokens` (for OAuth tokens).
+4. If found: check `revoked` flag and `expiresAt` timestamp.
+5. If all checks pass: request is authorized.
+
+Source reference: `mcp-server/src/auth.ts:275` — Bearer sha256 lookup via `by_token_hash` index.
+
+The `BEARER_SECRET_MASTER` token follows a simpler path: constant-time string comparison against the env var value (no database lookup).
+
+## Header Format
+
+All MCP server requests must include:
+
+```
+Authorization: Bearer <64-char-hex-token>
+```
+
+Example:
+
+```http
+GET /health HTTP/1.1
+Host: your-deployment.railway.app
+Authorization: Bearer a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890
+```
+
+For Claude Code `.mcp.json` configuration:
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://your-deployment.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer your-bearer-secret"
+      }
+    }
+  }
+}
+```
+
+## BEARER_SECRET_MASTER
+
+`BEARER_SECRET_MASTER` is the admin master token. It is:
+
+- Set as an environment variable on the MCP server (Railway env vars or equivalent)
+- Used for admin operations: OAuth client provisioning, token issuance gating, Convex admin mutations
+- Validated via constant-time comparison (no database lookup) to prevent timing attacks
+- Required for all `oauth.ts` admin mutations (`createClient`, `listClients`, `deleteClient`, `seedDefaultProfiles`)
+
+<Callout type="warn">
+`BEARER_SECRET_MASTER` grants full admin access. Never expose it in client-side code, browser extensions, or version control. Use the Clerk JWT exchange flow to issue scoped user-grade tokens instead.
+</Callout>
+
+### Rotation procedure for BEARER_SECRET_MASTER
+
+1. Generate a new secret: `openssl rand -hex 32`
+2. Update `BEARER_SECRET_MASTER` in Railway environment variables (or your MCP server host).
+3. Restart the MCP server process to pick up the new value.
+4. Update any service accounts or automation that use the master token.
+5. The old value is immediately invalid once the env var is updated and the process restarted.
+
+## Revoking a Clerk-Issued Token
+
+There is no API endpoint to revoke individual Clerk-issued tokens in V0.0.2. To revoke:
+
+1. Contact your VP admin or use the Convex dashboard to directly update `userBearerTokens.revoked = true` for the matching `tokenHash`.
+2. The token will fail validation on the next request once `revoked: true`.
+
+A revocation API endpoint is planned for V0.0.3.
+
+## Revoking an OAuth Token
+
+OAuth tokens are revoked via the `deleteClient` mutation in `oauth.ts`, which sets `revokedAt` on both the client record and all associated access/refresh tokens:
+
+```ts
+// Admin call — requires BEARER_SECRET_MASTER
+oauth.deleteClient({ callerToken: masterToken, clientId: 'your-client-id' })
+```
+
+This revokes the client and all its tokens atomically. The client must re-register via DCR to get new credentials.
+
+## Token Issuance Sources
+
+| Source | Table | Index |
+|--------|-------|-------|
+| Clerk JWT exchange (`credentials.ts`) | `userBearerTokens` | `by_token_hash` |
+| OAuth DCR + token grant (`oauth.ts`) | `oauth_access_tokens` | `by_tokenHash` |
+| Master token | Environment variable only | N/A |

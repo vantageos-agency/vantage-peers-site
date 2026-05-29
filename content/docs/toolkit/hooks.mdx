@@ -1,0 +1,175 @@
+---
+title: Hooks
+description: The 7 guardrail hooks shipped in vantage-peers v2.4.0 — triggers, enforcement scope, and opt-out patterns.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# Hooks
+
+Hooks run automatically on every matching tool call in Claude Code. They enforce VP workflow quality standards silently — they only surface when they block an action. When a hook blocks, it outputs a clear reason and a fix.
+
+<Callout type="info">
+Hooks in this plugin are **BU-agnostic quality gates** — task evidence, message discipline, brief and mission structure, time-estimate hygiene. They run automatically across all your workspaces once the plugin is installed.
+</Callout>
+
+## All 7 Hooks
+
+### enforce-evidence-bound-completion
+
+**Trigger:** `PreToolUse` — matches `mcp__vantage-peers__complete_task` and `mcp__vantage-peers__update_task`
+
+**What it enforces:** Every task closure or update to `review`/`done` status must include a `completionNote` of at least 40 characters containing at least one verifiable proof token:
+
+| Proof token type | Examples |
+|-----------------|---------|
+| URL | PR link, deploy URL, dashboard URL |
+| Commit SHA | 7-40 hex characters |
+| PR / issue number | `#546`, `#113` |
+| VP / Convex ID | task ID, memory ID, message ID |
+| Test ratio | `311/314`, `69/69` |
+| Counted artifact | `18 tests`, `7 files`, `2900 rows` |
+| File path | `analysis/report.md`, `qa/screenshots/x.png` |
+
+**What it blocks:** Completion notes that only contain claim words without evidence — "done", "merged", "PASS", "all good", "fixed".
+
+**Example blocked call:**
+```
+complete_task({ taskId: '...', completionNote: 'done' })
+# BLOCKED: "done" is a claim, not evidence.
+```
+
+**Example passing call:**
+```
+complete_task({ taskId: '...', completionNote: 'PR #546 merged, build passes, commit acc0092' })
+# PASS: contains PR#, build confirmation, commit SHA
+```
+
+**Opt-out:** Add `// allow-no-evidence: <reason>` to the tool call's context comment. Use only when genuinely blocked (e.g., a task completed with no digital artifact). Fix the source if you opt out frequently.
+
+---
+
+### enforce-no-task-in-message
+
+**Trigger:** `PreToolUse` — matches `mcp__vantage-peers__send_message`
+
+**What it enforces:** Inter-orchestrator messages that contain imperative instructions ("implement", "fix", "build", "deploy", "create", "update") must reference a task ID. The work lives in a task — messages coordinate, tasks assign.
+
+**What it blocks:** Messages that give instructions without pointing to a formally tracked task.
+
+**Example blocked call:**
+```
+send_message({ to: 'sigma', content: 'Please implement the retry logic for the HTTP client.' })
+# BLOCKED: imperative instruction without task reference
+```
+
+**Example passing call:**
+```
+send_message({ to: 'sigma', content: 'Task k170xxx is ready for your review — #546 is open.' })
+# PASS: references a task ID and PR
+```
+
+**Why this rule exists:** When instructions live only in messages, they are invisible to the task queue, cannot be prioritized, and have no completion accountability. Creating a task first makes the work trackable.
+
+---
+
+### enforce-task-quality
+
+**Trigger:** `PreToolUse` — matches `mcp__vantage-peers__create_task`
+
+**What it enforces:** Every new task must include `VERIFICATION` and `TESTS` sections in its description. This is the T-VERIFY doctrine — a task without these sections cannot be reliably completed or reviewed.
+
+**Required sections:**
+
+```
+VERIFICATION:
+- [ ] <specific check that proves the work is done>
+- [ ] <second check if applicable>
+
+TESTS:
+- [ ] <concrete test command or action>
+```
+
+**What it blocks:** Tasks whose `description` field lacks `VERIFICATION:` and `TESTS:` markers.
+
+**Example passing task description:**
+```
+Implement Bearer token rotation endpoint.
+
+VERIFICATION:
+- [ ] POST /rotate-token returns 200 with new bearer
+- [ ] Old bearer returns 401 after rotation
+
+TESTS:
+- [ ] npm test -- --grep "bearer rotation"
+```
+
+---
+
+### block-time-estimates
+
+**Trigger:** `PreToolUse` — matches `Edit`, `Write`, `mcp__vantage-peers__send_message`, `mcp__vantage-peers__create_task`, `mcp__vantage-peers__update_task`, `mcp__vantage-peers__create_mission`
+
+**What it enforces:** Effort and duration estimates in content are blocked. Vague duration phrases in tasks, messages, missions, and written files are not allowed.
+
+**Override for legitimate config values:** Add `// allow-time-estimate: <reason>` on the line. Valid: factual configuration values (cron intervals, animation durations, TTL constants). Not valid: work effort estimates.
+
+**Why this rule exists:** Effort estimates in tasks and messages have a poor track record of accuracy and anchor expectations incorrectly. Work is scoped by VERIFICATION criteria, not by estimated duration.
+
+---
+
+### auto-compact-reminder
+
+**Trigger:** `PostToolUse` — matches `.*` (all tools)
+
+**What it enforces:** Tracks tool call count per session. Reminds to compact at 35 tool calls, then every 15 tool calls thereafter. // allow-time-estimate: factual tool-call count thresholds
+
+**What it does:** Outputs a reminder message when the threshold is reached: "Context is growing — consider running the `pre-compact` skill before context window is full."
+
+**Scope:** Session-level counter. Resets on session start.
+
+**Why this rule exists:** Claude Code context windows are finite. Running `pre-compact` before hitting the limit ensures session state is preserved and the next context can resume without loss.
+
+**No opt-out needed** — reminders are advisory, not blocking.
+
+---
+
+### enforce-mission-template
+
+**Trigger:** `PreToolUse` — matches `mcp__vantage-peers__create_mission`
+
+**What it enforces:** Every `create_mission` call must reference a Mission Template via the `templateId` field. Missions without structured templates degrade fast — they drift from their stated outcome.
+
+**What it blocks:** Calls to `mcp__vantage-peers__create_mission` where `templateId` is absent or empty. Output: a clear refusal pointing to the template requirement.
+
+**Fix:** Pick a Mission Template (`mcp__vantage-registry__list_templates` or your local catalogue), pass its ID in `templateId`. If genuinely freeform, create your own template first via `upsert_template`, then reference it.
+
+**Why this rule exists:** Templated missions ship at predictable cadence and survive handoffs. Untemplated ones don't.
+
+---
+
+### enforce-brief-template
+
+**Trigger:** `PreToolUse` — matches `Task` (Claude Code subagent dispatch tool)
+
+**What it enforces:** Every Task tool brief (subagent delegation) must include a `Template reference:` line near the top, pointing at the brief template you derived the prompt from (e.g. `resources/templates/brief-backend.md`).
+
+**What it blocks:** Task calls whose `prompt` body has no `Template reference:` marker. Output: a refusal with the expected format.
+
+**Fix:** Add a single line like `Template reference: resources/templates/brief-backend.md` at the top of the prompt. If no template applies (rare), reference `resources/templates/agent-brief-template.md` as the generic fallback and adapt the brief.
+
+**Why this rule exists:** Subagents work on briefs they did not write. A `Template reference:` makes the brief auditable and reproducible — and gives subagents the structure they actually need (FILES / EXACT CHANGES / ACCEPTANCE CRITERIA).
+
+---
+
+## Hook Trigger Reference
+
+| Hook | Trigger type | Matched tools |
+|------|-------------|---------------|
+| `enforce-evidence-bound-completion` | PreToolUse | `complete_task`, `update_task` |
+| `enforce-no-task-in-message` | PreToolUse | `send_message` |
+| `enforce-task-quality` | PreToolUse | `create_task` |
+| `block-time-estimates` | PreToolUse | `Edit`, `Write`, `send_message`, `create_task`, `update_task`, `create_mission` |
+| `auto-compact-reminder` | PostToolUse | All tools (`.*`) |
+| `enforce-mission-template` | PreToolUse | `create_mission` |
+| `enforce-brief-template` | PreToolUse | `Task` (subagent dispatch) |

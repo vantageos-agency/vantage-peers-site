@@ -1,4 +1,4 @@
 {
-  "title": "Toolkit",
-  "pages": []
+  "title": "Toolkit Plugin",
+  "pages": ["index", "install", "skills", "hooks", "commands", "agents"]
 }

@@ -1,0 +1,163 @@
+---
+title: Clerk JWT Exchange
+description: How a browser extension or webapp authenticates a Clerk user and receives a 7-day Bearer token via the credentials:issueBearerFromClerk action. Ships in PR #546 (V0.0.2).
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Steps, Step } from 'fumadocs-ui/components/steps'
+
+# Clerk JWT Exchange
+
+The Clerk JWT exchange flow issues a user-grade Bearer token to a browser extension or webapp. It is the primary auth path for VP integrations that run in the context of a logged-in Clerk user.
+
+This flow ships in V0.0.2 (PR #546).
+
+## Use Case
+
+A browser extension or webapp that:
+
+- Has authenticated the user via Clerk (standard Clerk SDK or hosted sign-in page)
+- Needs to call the VP MCP server on behalf of that user
+- Does not want to expose `BEARER_SECRET_MASTER` to the browser
+
+The extension exchanges the short-lived Clerk JWT for a 7-day VP Bearer token. All subsequent MCP calls use the VP Bearer — the Clerk JWT is never sent to the MCP server.
+
+## Flow Diagram
+
+```
+Extension                vantagepeers.com              Convex backend
+────────                 ────────────────              ──────────────
+  │                              │                            │
+  │  User opens auth tab         │                            │
+  │─────────────────────────────>│                            │
+  │                              │                            │
+  │  GET /auth/extension-callback│                            │
+  │<─────────────────────────────│                            │
+  │                              │                            │
+  │  Clerk sign-in / already     │                            │
+  │  authenticated (Clerk JWT)   │                            │
+  │                              │                            │
+  │  POST /issueBearerFromClerk  │                            │
+  │  {clerkJwt, extId, extVersion│                            │
+  │─────────────────────────────────────────────────────────>│
+  │                              │  1. Verify JWT (JWKS)      │
+  │                              │  2. Check extId whitelist  │
+  │                              │  3. Rate-limit check       │
+  │                              │  4. Resolve workspace      │
+  │                              │  5. Issue Bearer (32 bytes)│
+  │                              │  6. Store sha256 only      │
+  │                              │  7. Audit log              │
+  │<─────────────────────────────────────────────────────────│
+  │  {workspaceId, bearer,       │                            │
+  │   expiresAt, userName,       │                            │
+  │   workspaceName}             │                            │
+  │                              │                            │
+  │  Extension stores Bearer     │                            │
+  │  MCP calls use Bearer header │                            │
+```
+
+## Prerequisites
+
+Before calling this endpoint:
+
+1. Configure the Clerk JWT template named `convex` in your Clerk dashboard (Clerk → JWT Templates → New template → Convex). This ensures the token audience matches what VP expects.
+2. Set `CLERK_JWT_ISSUER_DOMAIN` in Convex to your Clerk Frontend API domain (e.g. `clerk.yourdomain.com`).
+3. Add your extension's Chrome extension ID to `VP_ALLOWED_EXT_IDS` in Convex (comma-separated list).
+
+See [Authentication Overview — Prerequisites](/docs/auth/index) for the full env var checklist.
+
+## Request
+
+```
+POST {convexUrl}/issueBearerFromClerk
+Content-Type: application/json
+Origin: https://vantagepeers.com   (or whitelisted extension origin)
+```
+
+### Body
+
+```json
+{
+  "clerkJwt": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "extId": "mhfnnhkmnclmnnllhmoidkflgpkogjpe",
+  "extVersion": "1.2.0"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `clerkJwt` | string | Yes | JWT issued by Clerk for the `convex` template |
+| `extId` | string | Yes | Chrome extension ID — must be in `VP_ALLOWED_EXT_IDS` |
+| `extVersion` | string | No | Extension version string — recorded in audit log only |
+
+## Response
+
+### 200 OK — Success
+
+```json
+{
+  "workspaceId": "user_2abc123def456",
+  "bearer": "a1b2c3d4e5f6...64-char-hex-string",
+  "expiresAt": 1749081600000,
+  "userName": "cedric",
+  "workspaceName": "cedric"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `workspaceId` | string | Stable Clerk user ID — use as namespace prefix |
+| `bearer` | string | Raw 64-char hex Bearer token. **Returned once, never again.** |
+| `expiresAt` | number | Unix ms timestamp when the token expires (7 days from issuance) |
+| `userName` | string | Derived from Clerk claims (name, email prefix, or `user-<id>`) |
+| `workspaceName` | string | Same as `userName` in V0.0.2; will be workspace-aware in V0.0.3 |
+
+<Callout type="warn">
+Store the `bearer` value immediately and securely (e.g. Chrome extension `chrome.storage.local`). It is returned exactly once. The VP backend stores only the SHA-256 hash — there is no recovery endpoint.
+</Callout>
+
+### Error Responses
+
+| Status | Error | Cause |
+|--------|-------|-------|
+| 400 | `Missing required field: clerkJwt` | Body missing `clerkJwt` |
+| 400 | `Missing required field: extId` | Body missing `extId` |
+| 401 | `Invalid Clerk JWT` | JWT expired, bad signature, or issuer mismatch |
+| 403 | `Extension not authorized` | `extId` not in `VP_ALLOWED_EXT_IDS` |
+| 429 | `Rate limit exceeded. Try again in 1 minute.` | More than 5 requests per minute from this Clerk user |
+| 500 | `Server misconfigured: CLERK_JWT_ISSUER_DOMAIN not set` | Missing env var on backend |
+
+## Rate Limit
+
+5 requests per minute per Clerk user ID. The `Retry-After: 60` header is included in 429 responses.
+
+## Audit Log Fields
+
+Every successful issuance writes to `credentialsAuditLog`:
+
+| Field | Value |
+|-------|-------|
+| `clerkUserId` | JWT `sub` claim |
+| `workspaceId` | Resolved workspace ID |
+| `extId` | Submitted extension ID |
+| `extVersion` | Submitted extension version (if provided) |
+| `issuedAt` | Unix ms timestamp |
+| `ip` | First value from `x-forwarded-for` header |
+| `userAgent` | Request `User-Agent` header |
+
+## Environment Variables
+
+| Variable | Where to set | Description |
+|----------|-------------|-------------|
+| `CLERK_JWT_ISSUER_DOMAIN` | Convex dashboard | Your Clerk Frontend API domain |
+| `VP_ALLOWED_EXT_IDS` | Convex dashboard | Comma-separated list of whitelisted extension IDs |
+
+## Using the Token
+
+Once you have the `bearer` value, include it in the `Authorization` header for all MCP server calls:
+
+```
+Authorization: Bearer a1b2c3d4e5f6...64-char-hex-string
+```
+
+See [Bearer Tokens](/docs/auth/bearer-tokens) for the full validation path, rotation procedure, and revocation.
