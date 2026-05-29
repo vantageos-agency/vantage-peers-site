@@ -1,6 +1,6 @@
 ---
 title: Hooks
-description: The 5 guardrail hooks shipped in vantage-peers v2.4.0 — triggers, enforcement scope, and opt-out patterns.
+description: The 7 guardrail hooks shipped in vantage-peers v2.4.0 — triggers, enforcement scope, and opt-out patterns.
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout'
@@ -10,10 +10,10 @@ import { Callout } from 'fumadocs-ui/components/callout'
 Hooks run automatically on every matching tool call in Claude Code. They enforce VP workflow quality standards silently — they only surface when they block an action. When a hook blocks, it outputs a clear reason and a fix.
 
 <Callout type="info">
-Hooks in the public plugin are **BU-agnostic quality gates**. They do not enforce VantageOS fleet-specific conventions (signatures, delegation, IRP cascades). See the [Toolkit overview](/docs/toolkit/index) for the full transparency breakdown.
+Hooks in this plugin are **BU-agnostic quality gates** — task evidence, message discipline, brief and mission structure, time-estimate hygiene. They run automatically across all your workspaces once the plugin is installed.
 </Callout>
 
-## All 5 Hooks
+## All 7 Hooks
 
 ### enforce-evidence-bound-completion
 
@@ -132,6 +132,36 @@ TESTS:
 
 **No opt-out needed** — reminders are advisory, not blocking.
 
+---
+
+### enforce-mission-template
+
+**Trigger:** `PreToolUse` — matches `mcp__vantage-peers__create_mission`
+
+**What it enforces:** Every `create_mission` call must reference a Mission Template via the `templateId` field. Missions without structured templates degrade fast — they drift from their stated outcome.
+
+**What it blocks:** Calls to `mcp__vantage-peers__create_mission` where `templateId` is absent or empty. Output: a clear refusal pointing to the template requirement.
+
+**Fix:** Pick a Mission Template (`mcp__vantage-registry__list_templates` or your local catalogue), pass its ID in `templateId`. If genuinely freeform, create your own template first via `upsert_template`, then reference it.
+
+**Why this rule exists:** Templated missions ship at predictable cadence and survive handoffs. Untemplated ones don't.
+
+---
+
+### enforce-brief-template
+
+**Trigger:** `PreToolUse` — matches `Task` (Claude Code subagent dispatch tool)
+
+**What it enforces:** Every Task tool brief (subagent delegation) must include a `Template reference:` line near the top, pointing at the brief template you derived the prompt from (e.g. `resources/templates/brief-backend.md`).
+
+**What it blocks:** Task calls whose `prompt` body has no `Template reference:` marker. Output: a refusal with the expected format.
+
+**Fix:** Add a single line like `Template reference: resources/templates/brief-backend.md` at the top of the prompt. If no template applies (rare), reference `resources/templates/agent-brief-template.md` as the generic fallback and adapt the brief.
+
+**Why this rule exists:** Subagents work on briefs they did not write. A `Template reference:` makes the brief auditable and reproducible — and gives subagents the structure they actually need (FILES / EXACT CHANGES / ACCEPTANCE CRITERIA).
+
+---
+
 ## Hook Trigger Reference
 
 | Hook | Trigger type | Matched tools |
@@ -141,3 +171,5 @@ TESTS:
 | `enforce-task-quality` | PreToolUse | `create_task` |
 | `block-time-estimates` | PreToolUse | `Edit`, `Write`, `send_message`, `create_task`, `update_task`, `create_mission` |
 | `auto-compact-reminder` | PostToolUse | All tools (`.*`) |
+| `enforce-mission-template` | PreToolUse | `create_mission` |
+| `enforce-brief-template` | PreToolUse | `Task` (subagent dispatch) |

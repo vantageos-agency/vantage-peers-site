@@ -1,6 +1,6 @@
 ---
 title: Hooks
-description: Les 5 hooks guardrail livrés dans vantage-peers v2.4.0 — déclencheurs, portée d'application et patterns de désactivation.
+description: Les 7 hooks guardrail livrés dans vantage-peers v2.4.0 — déclencheurs, portée d'application et patterns de désactivation.
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout'
@@ -10,10 +10,10 @@ import { Callout } from 'fumadocs-ui/components/callout'
 Les hooks s'exécutent automatiquement sur chaque appel d'outil correspondant dans Claude Code. Ils appliquent silencieusement les standards de qualité du workflow VP — ils ne se manifestent que lorsqu'ils bloquent une action. Quand un hook bloque, il affiche une raison claire et un correctif.
 
 <Callout type="info">
-Les hooks du plugin public sont des **gates de qualité BU-agnostiques**. Ils n'appliquent pas les conventions spécifiques au fleet VantageOS (signatures, délégation, cascades IRP). Consultez la [vue d'ensemble du Toolkit](/docs/toolkit/index) pour le détail de transparence complet.
+Les hooks de ce plugin sont des **gates de qualité BU-agnostiques** — preuve d'évidence sur les tâches, discipline de messagerie, structure des briefs et missions, hygiène d'estimation temporelle. Ils s'exécutent automatiquement sur tous vos workspaces une fois le plugin installé.
 </Callout>
 
-## Les 5 hooks
+## Les 7 hooks
 
 ### enforce-evidence-bound-completion
 
@@ -132,6 +132,36 @@ TESTS:
 
 **Aucune désactivation nécessaire** — les rappels sont consultatifs, pas bloquants.
 
+---
+
+### enforce-mission-template
+
+**Déclencheur :** `PreToolUse` — correspond à `mcp__vantage-peers__create_mission`
+
+**Ce qu'il applique :** Tout appel à `create_mission` doit référencer un Mission Template via le champ `templateId`. Les missions sans template structuré dérivent rapidement de leur objectif annoncé.
+
+**Ce qu'il bloque :** Les appels à `mcp__vantage-peers__create_mission` où `templateId` est absent ou vide. Sortie : un refus clair pointant vers l'exigence du template.
+
+**Correctif :** Choisissez un Mission Template (`mcp__vantage-registry__list_templates` ou votre catalogue local), passez son ID dans `templateId`. Si la mission est réellement libre, créez d'abord votre propre template via `upsert_template` puis référencez-le.
+
+**Pourquoi cette règle existe :** Les missions templates livrent à une cadence prévisible et survivent aux passations. Les missions non-templates non.
+
+---
+
+### enforce-brief-template
+
+**Déclencheur :** `PreToolUse` — correspond à `Task` (outil de dispatch de subagents Claude Code)
+
+**Ce qu'il applique :** Chaque brief de l'outil Task (délégation à un subagent) doit inclure une ligne `Template reference:` proche du sommet, pointant vers le brief template dont vous avez dérivé le prompt (ex : `resources/templates/brief-backend.md`).
+
+**Ce qu'il bloque :** Les appels Task dont le corps `prompt` n'a pas de marqueur `Template reference:`. Sortie : un refus avec le format attendu.
+
+**Correctif :** Ajoutez une seule ligne comme `Template reference: resources/templates/brief-backend.md` en haut du prompt. Si aucun template ne s'applique (rare), référencez `resources/templates/agent-brief-template.md` comme fallback générique et adaptez le brief.
+
+**Pourquoi cette règle existe :** Les subagents travaillent sur des briefs qu'ils n'ont pas écrits. Une `Template reference:` rend le brief auditable et reproductible — et donne aux subagents la structure dont ils ont réellement besoin (FILES / EXACT CHANGES / ACCEPTANCE CRITERIA).
+
+---
+
 ## Référence des déclencheurs de hooks
 
 | Hook | Type de déclencheur | Outils correspondants |
@@ -141,3 +171,5 @@ TESTS:
 | `enforce-task-quality` | PreToolUse | `create_task` |
 | `block-time-estimates` | PreToolUse | `Edit`, `Write`, `send_message`, `create_task`, `update_task`, `create_mission` |
 | `auto-compact-reminder` | PostToolUse | Tous les outils (`.*`) |
+| `enforce-mission-template` | PreToolUse | `create_mission` |
+| `enforce-brief-template` | PreToolUse | `Task` (dispatch de subagent) |
