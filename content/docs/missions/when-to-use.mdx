@@ -1,0 +1,87 @@
+---
+title: When to Use Missions
+description: Decision guide for choosing between a task and a mission, plus signals to escalate from a task to a mission mid-flight.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# When to Use Missions
+
+## The decision test
+
+Work through these four questions. If two or more answers are "yes", create a mission. If zero or one, create a task.
+
+<Steps>
+  <Step>
+    **Is the work more than one step with sequencing constraints?**
+
+    Does the goal require distinct phases where phase B cannot start until phase A finishes? A mission gives you `dependsOn` to express that constraint. A plain task has no sequencing mechanism.
+
+    Yes examples: audit then write then review; spec then build then test then ship.
+    No examples: "Update the README", "Fix typo in line 42".
+  </Step>
+  <Step>
+    **Does it require multiple subagent types working in series or parallel?**
+
+    If a dev agent writes code, a reviewer agent checks it, and a QA agent verifies it — you have three distinct roles. A mission's `agents` array declares all of them upfront, making it clear who is involved and in what capacity.
+
+    Yes examples: dev + eta + qa; fumadocs-expert + railway-expert; auditor + fixer.
+    No examples: one agent does everything; a single tool call is sufficient.
+  </Step>
+  <Step>
+    **Does it have a measurable, verifiable deliverable?**
+
+    A mission closes with evidence: a PR number, commit SHA, test ratio, or deployed URL. If the output is ambiguous ("things are better now"), a task with a `completionNote` is enough. If the output must be independently verifiable, use a mission and enforce evidence on each linked task.
+
+    Yes examples: ship a PR, deploy a feature, publish a report.
+    No examples: "Look into the error", "Check if X is working".
+  </Step>
+  <Step>
+    **Will it span multiple days or multiple sessions?**
+
+    Sessions end; context resets. A mission persists in VantagePeers across sessions. The pilot can pick up exactly where they left off by calling `get_mission` and `list_tasks_by_mission`. A task that spans more than one session risks being dropped unless it is part of a mission.
+
+    Yes examples: 3-day feature build, week-long audit, multi-sprint roadmap item.
+    No examples: "Fix and push in this session", "One-shot script run".
+  </Step>
+</Steps>
+
+## Quick decision matrix
+
+| Scenario | Verdict |
+|----------|---------|
+| Single-agent, one session, atomic result | Task |
+| Two agents, one hand-off, same day | Task (or mission if evidence required) |
+| Three phases, two agents, 2 days | Mission |
+| Full feature from spec to ship | Mission |
+| Bug fix (1 file, known pattern) | Task |
+| Bug fix requiring audit + fix + regression test + PR review | Mission (use `issue-resolution-v3` template) |
+| Weekly standup note | Task (or recurring task) |
+| Onboard a new client | Mission |
+
+## Signals to escalate from a task to a mission
+
+Sometimes you start with a task and discover mid-flight that it has grown. These are the signals to stop, create a mission, and re-link the original task under it:
+
+**Scope creep** — The task description has been edited three or more times, each time expanding the scope. The original estimate is no longer realistic.
+
+**Multiple PRs needed** — The task now requires changes across more than one repository or more than two files. A single `completionNote` cannot capture the full evidence trail.
+
+**Blocking dependency** — Another task or person is waiting on this work. A mission's status makes the blocking relationship visible to the whole team.
+
+**Review gate required** — The output must be checked by Eta or another orchestrator before it can close. A mission lets you model the validate step explicitly rather than leaving the review implicit in a task comment.
+
+**Days have passed with no closure** — If a task has been `in_progress` for more than 48 hours, it is likely hiding sub-steps that should be explicit. Convert it to a mission and surface those steps as linked tasks.
+
+<Callout type="warn">
+Escalating from task to mission does not require deleting the original task. Create the mission, set `missionId` on the original task, then create the remaining tasks as siblings. The original task becomes T0 in the new mission.
+</Callout>
+
+## Anti-patterns to avoid
+
+**Mission for every task** — Not every action needs orchestration overhead. Over-using missions creates noise and buries the real signals. Reserve missions for work that genuinely needs sequencing, multi-agent coordination, or multi-day persistence.
+
+**Mission without a brief** — A mission with no `brief` and no `description` is a black box. Anyone picking it up cold has no idea what success looks like. Always write at least one sentence.
+
+**Pilot drift** — A mission that starts with one pilot and is silently transferred to another without a `update_mission` call loses accountability. Update `pilot` explicitly when ownership transfers.

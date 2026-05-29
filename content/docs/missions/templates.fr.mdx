@@ -1,0 +1,192 @@
+---
+title: Templates de missions
+description: Système de templates de missions VR — squelettes de mission pré-construits que vous pouvez instancier en un seul appel pour obtenir N tâches pré-câblées avec dependsOn.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# Templates de missions
+
+## Qu'est-ce qu'un template de mission ?
+
+Un template de mission est un squelette pré-défini : une liste nommée d'étapes, chacune avec un titre, une description, un `assignedTo` optionnel et un `dependsOn` optionnel (exprimé sous forme d'index d'étapes). Lorsque vous instanciez un template dans une mission, chaque étape devient une vraie tâche avec `missionId` défini et `dependsOn` résolu en IDs de tâches réels.
+
+Les templates vivent dans la table `missionTemplates` et sont gérés par l'équipe VantageOS. Les clients auto-hébergés peuvent définir leurs propres templates en utilisant la mutation `upsert_mission_template`.
+
+## Pourquoi utiliser des templates ?
+
+- **Cohérence** — chaque résolution d'issue suit le même protocole en 9 étapes, quel que soit l'orchestrateur qui le déclenche.
+- **Rapidité** — un seul appel `instantiate_template_into_mission` crée N tâches avec le séquençage correct. Pas de câblage manuel de `dependsOn`.
+- **Moins d'erreurs** — les étapes encodent des leçons chèrement apprises (exécuter les tests AVANT de corriger, écrire le test de régression EN PREMIER, créer la PR dans la même étape que le push).
+- **Traçabilité** — chaque tâche cite sa lignée de template via le `name` de la mission et le `name` du template.
+
+## Catalogue des templates
+
+### `issue-resolution-v3` (défaut)
+
+Le protocole canonique de résolution d'issues. 9 étapes (T0–T8), couvrant l'accusé de réception jusqu'à la revue de code. Auto-semé à chaque déploiement.
+
+**Objectif :** Résolution structurée et liée à des preuves des issues GitHub.
+
+**Quand utiliser :** Toute issue GitHub assignée à un orchestrateur. Le bot auto-IRP déclenche ce template automatiquement quand un log d'erreur crée une nouvelle issue.
+
+**Étapes :**
+| Étape | Titre | Exigence clé |
+|-------|-------|-------------|
+| T0 | Acknowledge | Poster automatiquement un commentaire GitHub confirmant la réception |
+| T1 | KB Search | Rechercher `fixPatterns` + épisodes ; documenter le résultat |
+| T2 | Identify & Run Tests | Exécuter les tests existants ; documenter PASS/FAIL |
+| T3 | Write Missing Tests | Écrire le test de régression en échec ; le committer |
+| T4 | Fix | Appliquer le correctif ; le test T3 doit passer |
+| T5 | Run ALL Tests | Suite complète ; zéro régression |
+| T6 | Deploy Dev + Push | `convex dev --once` ; push de la branche ; créer la PR immédiatement |
+| T7 | Verification Preview | Tester sur le preview ; demander la validation humaine |
+| T8 | Code Review | Agent reviewer + mise à jour KB avec le pattern de correctif |
+
+```ts
+mcp__vantage-peers__instantiate_template_into_mission({
+  templateName: "issue-resolution-v3",
+  missionId: "k57xxx",
+  context: {
+    issueNumber: "142",
+    repo: "vantage-memory"
+  },
+  callerOrchestrator: "proxima"
+})
+```
+
+### `mission-generic-v1`
+
+Un template vierge pour les missions qui ne correspondent pas à un template plus spécifique. Fournit un échafaudage minimal plan / execute / validate / complete avec 4 tâches génériques.
+
+**Objectif :** Démarrer n'importe quelle mission avec une structure standard quand aucun template spécialisé ne s'applique.
+
+**Quand utiliser :** Lancement client, démarrage de projet interne, livrable orchestré ponctuel.
+
+### `chrome-extension-mission-v1`
+
+Construire et publier une extension Chrome de zéro. Couvre la spec, l'implémentation Manifest V3, les content scripts, le service worker en arrière-plan, l'UI popup, le packaging et la soumission au store.
+
+**Objectif :** Développement structuré d'extension Chrome de zéro à publiée.
+
+**Quand utiliser :** Tout nouveau projet d'extension Chrome assigné à Zeta ou un agent dev.
+
+### `pricing-research-v1`
+
+Mission de recherche tarifaire concurrentielle. Couvre le scan de marché, la matrice concurrentielle, l'analyse du modèle de tarification, le document de recommandation et la révision par les parties prenantes.
+
+**Objectif :** Produire une recommandation tarifaire défendable soutenue par des données de marché.
+
+**Quand utiliser :** Avant tout changement de prix ou lancement d'un nouveau palier de produit.
+
+### `repo-fix-v1`
+
+Correctif ciblé pour un bug connu dans un dépôt spécifique. Plus court que `issue-resolution-v3` — pas d'étapes d'accusé de réception automatique ou de recherche KB. À utiliser pour des correctifs rapides et bien délimités dont la cause racine est déjà connue.
+
+**Objectif :** Appliquer un correctif connu, écrire le test de régression, déployer la PR.
+
+**Quand utiliser :** Patterns de correctif déjà documentés dans `fixPatterns` ; cause racine confirmée.
+
+### `new-website-build`
+
+Construction complète d'un site web du brief de design au go-live. Couvre les wireframes, la sélection de stack technique, le contenu, l'implémentation, la révision SEO, la QA en staging et le lancement.
+
+**Objectif :** Livraison de site web de bout en bout avec une checklist de transfert claire.
+
+**Quand utiliser :** Nouveau site client ou refonte majeure.
+
+### `gui-iframe-embed-v1`
+
+Construire le flux d'intégration iframe GUI pour VantagePeers (pattern SEP-1865). Couvre le registre de sessions backend, la validation d'origine, les composants UI, les tests d'intégration et le déploiement.
+
+**Objectif :** Implémenter l'architecture standard d'intégration iframe VP Gen UI.
+
+**Quand utiliser :** Tout client nécessitant un VP Gen UI intégré dans sa propre app.
+
+## Comment instancier un template
+
+Les templates sont instanciés via `instantiate_template_into_mission`. Cela crée une tâche par étape, patche `dependsOn` sur chaque tâche et retourne tous les IDs de tâches.
+
+```ts
+// Étape 1 : créer la coquille de mission
+const missionId = mcp__vantage-peers__create_mission({
+  name: "fix-issue-255-vantage-memory",
+  project: "vantage-memory",
+  status: "plan",
+  priority: "high",
+  pilot: "proxima",
+  agents: ["proxima"],
+  createdBy: "proxima"
+})
+
+// Étape 2 : instancier le template
+const result = mcp__vantage-peers__instantiate_template_into_mission({
+  templateName: "issue-resolution-v3",
+  missionId,
+  context: {
+    issueNumber: "255",
+    repo: "vantage-memory"
+  },
+  titlePrefix: "IRP-255",    // optionnel : préfixe pour chaque titre de tâche
+  callerOrchestrator: "proxima"
+})
+// result = { taskIds: ["kT0", "kT1", ..., "kT8"], count: 9 }
+
+// Étape 3 : démarrer la mission
+mcp__vantage-peers__update_mission_status({
+  missionId,
+  status: "execute"
+})
+```
+
+### Interpolation de contexte
+
+Les descriptions des étapes de template peuvent contenir des espaces réservés `{{key}}`. Passez un objet `context` et ils seront remplacés au moment de l'instanciation :
+
+```ts
+// Description d'étape du template :
+// "Exécutez `npx convex dev --once` sur le dépôt {{repo}} pour vérifier la compilation."
+
+// Contexte :
+context: { repo: "vantage-memory", issueNumber: "255" }
+
+// Résultat dans la description de la tâche :
+// "Exécutez `npx convex dev --once` sur le dépôt vantage-memory pour vérifier la compilation."
+```
+
+## Créer vos propres templates
+
+Les clients auto-hébergés peuvent définir des templates personnalisés en utilisant `upsert_mission_template` :
+
+```ts
+mcp__vantage-peers__upsert_mission_template({
+  name: "mon-template-personnalise-v1",
+  description: "Template de livraison personnalisé en 3 étapes.",
+  steps: [
+    {
+      title: "Périmètre",
+      description: "Définir le périmètre et les critères d'acceptation.",
+      assignedTo: "sigma"
+    },
+    {
+      title: "Construction",
+      description: "Implémenter le livrable.",
+      assignedTo: "zeta",
+      dependsOn: [0]  // dépend de l'étape 0 (Périmètre)
+    },
+    {
+      title: "Déploiement",
+      description: "Réviser, fusionner, déployer.",
+      assignedTo: "sigma",
+      dependsOn: [1]  // dépend de l'étape 1 (Construction)
+    }
+  ],
+  isDefault: false,
+  createdBy: "sigma"
+})
+```
+
+<Callout type="info">
+Les templates sont stockés par déploiement. Si vous auto-hébergez VantagePeers, vos templates vivent dans votre propre déploiement Convex et ne sont pas partagés avec l'instance cloud VantageOS.
+</Callout>

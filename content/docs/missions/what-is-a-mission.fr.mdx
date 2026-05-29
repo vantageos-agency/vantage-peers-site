@@ -1,0 +1,142 @@
+---
+title: Qu'est-ce qu'une mission ?
+description: Anatomie d'une mission VantagePeers — chaque champ, le cycle de vie du statut, et la différence entre missions et tâches.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { TypeTable } from 'fumadocs-ui/components/type-table'
+
+# Qu'est-ce qu'une mission ?
+
+Une mission est un corps de travail persistant et orchestré stocké dans VantagePeers. Elle regroupe des tâches liées sous un seul objet de suivi avec un pilote, un cycle de vie du statut, un indicateur de progression et une lignée de template optionnelle.
+
+## Anatomie des champs
+
+<TypeTable
+  type={{
+    name: {
+      description: 'Identifiant de type slug pour la mission. Utilisez le kebab-case avec un préfixe pilote pour l\'unicité (ex. sigma-doc-completion-cedric).',
+      type: 'string',
+      default: 'requis',
+    },
+    description: {
+      description: 'Ce que la mission livre — l\'état final, pas le processus. Une phrase suffit.',
+      type: 'string',
+      default: 'optionnel',
+    },
+    project: {
+      description: 'Périmètre du dépôt ou produit auquel cette mission appartient (ex. "vantage-peers-site", "myreeldream").',
+      type: 'string',
+      default: 'requis',
+    },
+    pilot: {
+      description: 'L\'orchestrateur qui possède la coordination de bout en bout. Le pilote est responsable des transitions de statut et de la preuve finale.',
+      type: 'string (nom d\'orchestrateur)',
+      default: 'requis',
+    },
+    agents: {
+      description: 'Tableau des types de sous-agents ou rôles d\'orchestrateur qui seront déployés pendant l\'exécution (ex. ["dev-fumadocs-expert", "eta"]).',
+      type: 'string[]',
+      default: 'requis',
+    },
+    status: {
+      description: 'Phase actuelle du cycle de vie. Voir Cycle de vie du statut ci-dessous.',
+      type: '"brainstorm" | "plan" | "execute" | "validate" | "complete"',
+      default: 'requis',
+    },
+    priority: {
+      description: 'Niveau d\'urgence, cohérent avec les priorités des tâches.',
+      type: '"urgent" | "high" | "medium" | "low"',
+      default: 'requis',
+    },
+    brief: {
+      description: 'Brief de mission en texte libre — contexte, contraintes, critères d\'acceptation. Markdown supporté.',
+      type: 'string',
+      default: 'optionnel',
+    },
+    startDate: {
+      description: 'Horodatage Unix (ms) quand le travail a commencé ou est prévu de commencer.',
+      type: 'number',
+      default: 'optionnel',
+    },
+    targetDate: {
+      description: 'Délai en horodatage Unix (ms). Utilisé pour le suivi SLA.',
+      type: 'number',
+      default: 'optionnel',
+    },
+    progress: {
+      description: 'Pourcentage de complétion (0–100). Mis à jour manuellement via update_mission_progress.',
+      type: 'number',
+      default: 'optionnel',
+    },
+    createdBy: {
+      description: 'Orchestrateur qui a créé la mission.',
+      type: 'string',
+      default: 'requis',
+    },
+  }}
+/>
+
+## Cycle de vie du statut
+
+Les statuts de mission passent de l'idéation à la complétion. Chaque transition doit être pilotée explicitement par le pilote via `update_mission_status`.
+
+```
+brainstorm  →  plan  →  execute  →  validate  →  complete
+```
+
+| Statut | Signification |
+|--------|---------------|
+| `brainstorm` | Idée capturée, pas encore planifiée. Aucune tâche requise. |
+| `plan` | Tâches définies et séquencées. Le pilote prépare la charge de travail. |
+| `execute` | Travail actif en cours. Les sous-agents sont déployés. |
+| `validate` | Toutes les tâches terminées. Le pilote ou un évaluateur vérifie les preuves. |
+| `complete` | Mission clôturée avec preuves. Aucun changement ultérieur attendu. |
+
+**Alias de statut** (pour les requêtes uniquement, pas pour les écritures) :
+
+- `"open"` — s'étend en `["brainstorm", "plan", "execute", "validate"]`
+- `"active"` — s'étend en `["plan", "execute"]`
+
+<Callout type="info">
+Il n'y a pas de statut `blocked` ou `cancelled` sur les missions. Pour mettre en pause une mission, laissez-la en `plan` ou `execute` et ajoutez une note dans le `brief`. Pour l'abandonner, passez à `complete` et documentez la raison dans le brief.
+</Callout>
+
+## Comment les tâches se lient aux missions
+
+Chaque tâche possède un champ optionnel `missionId`. Lorsqu'il est défini, la tâche fait partie de la charge de travail de cette mission. Les tâches ont également `dependsOn` — un tableau d'IDs de tâches qui doivent atteindre le statut `done` avant que cette tâche puisse commencer.
+
+```
+Mission  ──┬──  Tâche A  (pas de dépendances)
+           ├──  Tâche B  dependsOn: [Tâche A]
+           ├──  Tâche C  dependsOn: [Tâche A]
+           └──  Tâche D  dependsOn: [Tâche B, Tâche C]  ← barrière
+```
+
+La combinaison `missionId + dependsOn` vous donne un séquençage DAG complet dans une mission.
+
+## Mission vs Tâche — tableau comparatif
+
+| Aspect | Tâche | Mission |
+|--------|-------|---------|
+| Périmètre | Étape atomique unique | Corps de travail orchestré en plusieurs étapes |
+| Suivi | Statut uniquement | Statut + % de progression + agents + pilote + brief |
+| Séquençage | Aucun (les tâches sont indépendantes) | `dependsOn` chaîne les tâches dans un DAG |
+| Templates | Aucun | Templates de mission VR — instancier N tâches en un appel |
+| Idéal pour | Corriger un bug, écrire un fichier, exécuter une vérification | Livraison de bout en bout sur plusieurs jours ou équipes |
+| Cycle de vie | `todo → in_progress → review → done` | `brainstorm → plan → execute → validate → complete` |
+| Preuve | `completionNote` sur la tâche | Preuve sur chaque tâche liée + transition de statut finale |
+
+## Suivi de la progression
+
+La progression est un entier `0–100` géré manuellement. Le pilote le met à jour après des jalons significatifs (ex. après la clôture de chaque phase). Elle ne se calcule pas automatiquement à partir des statuts des tâches — le pilote est l'autorité.
+
+```ts
+// Mettre à jour la progression après la clôture d'une phase
+mcp__vantage-peers__update_mission_progress({
+  missionId: "k57xxxxx",
+  progress: 50
+})
+```
+
+Une convention courante : définir la progression par multiples de 25 pour une mission à 4 phases (25 / 50 / 75 / 100).

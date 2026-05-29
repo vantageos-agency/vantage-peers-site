@@ -1,0 +1,245 @@
+---
+title: Créer des missions
+description: Guide étape par étape pour créer une mission, lier des tâches avec dependsOn, faire avancer le statut, suivre la progression et clôturer avec preuves.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+
+# Créer des missions
+
+Cette page couvre le cycle de vie complet d'une mission, de la création à la clôture liée à des preuves. Tous les exemples utilisent les noms d'outils MCP tels qu'ils sont appelés depuis Claude Code.
+
+<Steps>
+  <Step>
+    ## Créer la mission
+
+    Appelez `create_mission` avec l'identité de la mission, le pilote, les agents et le statut initial. Commencez en `plan` sauf si vous ne faites que capturer une idée (utilisez `brainstorm` pour cela).
+
+    ```ts
+    mcp__vantage-peers__create_mission({
+      name: "doc-completion-cedric",
+      description: "Livrer les docs d'onboarding Cedric de bout en bout : audit, écriture, révision, publication.",
+      pilot: "sigma",
+      agents: ["dev-fumadocs-expert", "eta"],
+      status: "plan",
+      priority: "urgent",
+      project: "vantage-peers-site",
+      brief: "Cedric démarre lundi. Les docs doivent couvrir les missions, tâches et la recherche. Eta révise avant publication.",
+      createdBy: "sigma"
+    })
+    // retourne : "k57abc123..."  (le missionId)
+    ```
+
+    Sauvegardez le `missionId` retourné — vous en aurez besoin pour chaque appel ultérieur.
+  </Step>
+  <Step>
+    ## Ajouter des tâches liées à la mission
+
+    Créez une tâche par phase. Définissez `missionId` sur chaque tâche. Utilisez `dependsOn` pour exprimer le séquençage — listez les IDs des tâches qui doivent atteindre `done` avant que cette tâche puisse commencer.
+
+    ```ts
+    // T0 — pas de dépendances, démarre immédiatement
+    const t0 = mcp__vantage-peers__create_task({
+      title: "Auditer les docs existants",
+      description: "Identifier les lacunes dans le contenu /docs actuel. Sortie : liste des pages manquantes.",
+      assignedTo: "sigma",
+      priority: "urgent",
+      project: "vantage-peers-site",
+      missionId: "k57abc123",
+      status: "todo",
+      createdBy: "sigma"
+    })
+    // t0 = "kTASK_T0"
+
+    // T1 — dépend de T0
+    const t1 = mcp__vantage-peers__create_task({
+      title: "Écrire les nouvelles pages",
+      description: "Écrire toutes les pages identifiées lors de l'audit. Fumadocs MDX, EN + FR.",
+      assignedTo: "dev-fumadocs-expert",
+      priority: "urgent",
+      project: "vantage-peers-site",
+      missionId: "k57abc123",
+      dependsOn: ["kTASK_T0"],
+      status: "todo",
+      createdBy: "sigma"
+    })
+    // t1 = "kTASK_T1"
+
+    // T2 — dépend de T1
+    const t2 = mcp__vantage-peers__create_task({
+      title: "Révision Eta",
+      description: "Eta révise toutes les nouvelles pages pour l'exactitude, l'exhaustivité et la parité EN/FR.",
+      assignedTo: "eta",
+      priority: "urgent",
+      project: "vantage-peers-site",
+      missionId: "k57abc123",
+      dependsOn: ["kTASK_T1"],
+      status: "todo",
+      createdBy: "sigma"
+    })
+    // t2 = "kTASK_T2"
+
+    // T3 — dépend de T2
+    const t3 = mcp__vantage-peers__create_task({
+      title: "Publier et annoncer",
+      description: "Fusionner la PR, pousser en prod, annoncer à l'équipe.",
+      assignedTo: "sigma",
+      priority: "urgent",
+      project: "vantage-peers-site",
+      missionId: "k57abc123",
+      dependsOn: ["kTASK_T2"],
+      status: "todo",
+      createdBy: "sigma"
+    })
+    ```
+
+    La chaîne de dépendances : T0 → T1 → T2 → T3. Chaque tâche ne peut commencer qu'après la clôture de son prédécesseur.
+  </Step>
+  <Step>
+    ## Démarrer la mission
+
+    Une fois les tâches définies, faites passer la mission de `plan` à `execute`. Cela signale à tous les agents que le travail actif doit commencer.
+
+    ```ts
+    mcp__vantage-peers__update_mission_status({
+      missionId: "k57abc123",
+      status: "execute"
+    })
+    ```
+  </Step>
+  <Step>
+    ## Déléguer le travail aux sous-agents
+
+    Deux patterns selon que vous déléguez en ligne ou via une nouvelle session d'agent :
+
+    <Tabs items={["Délégation en ligne", "Délégation via Agent tool"]}>
+      <Tab value="Délégation en ligne">
+        Démarrez la première tâche et travaillez-la directement dans la session actuelle :
+
+        ```ts
+        mcp__vantage-peers__start_task({ taskId: "kTASK_T0" })
+        // ... faire le travail ...
+        mcp__vantage-peers__complete_task({
+          taskId: "kTASK_T0",
+          completionNote: "Audit terminé. 6 pages manquantes trouvées : missions/index, missions/what-is-a-mission, missions/when-to-use, missions/creating-missions, missions/templates, missions/examples. Consignées dans analysis/doc-gaps-2026-05-29.md"
+        })
+        ```
+      </Tab>
+      <Tab value="Délégation via Agent tool">
+        Déléguez une phase à un sous-agent en lançant une nouvelle session d'agent avec le contexte de la tâche :
+
+        ```ts
+        // Lancer un agent fumadocs-expert pour écrire les pages
+        Agent({
+          subagent_type: "dev-fumadocs-expert",
+          prompt: `Tu écris la section /docs/missions pour vantage-peers-site.
+    Mission : k57abc123 (doc-completion-cedric)
+    Tâche : kTASK_T1 — Écrire les nouvelles pages.
+    Démarre la tâche avec start_task, complète toutes les pages, puis complete_task avec preuve (PR# ou commit SHA).`
+        })
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  <Step>
+    ## Suivre la progression
+
+    Vérifiez l'état de la mission et des tâches liées à tout moment :
+
+    ```ts
+    // Obtenir l'aperçu de la mission
+    mcp__vantage-peers__get_mission({ missionId: "k57abc123" })
+    // retourne : { name, status, progress, pilot, agents, ... }
+
+    // Lister toutes les tâches dans la mission
+    mcp__vantage-peers__list_tasks_by_mission({ missionId: "k57abc123" })
+    // retourne : tableau de docs de tâches avec statut actuel
+
+    // Mettre à jour la progression manuellement après la clôture d'une phase
+    mcp__vantage-peers__update_mission_progress({
+      missionId: "k57abc123",
+      progress: 50
+    })
+    ```
+  </Step>
+  <Step>
+    ## Clôturer avec preuves
+
+    Chaque tâche doit se clôturer avec un `completionNote` citant des preuves vérifiables avant que la mission puisse se compléter. Ensuite, faites passer la mission à `validate` (pour une porte de révision) ou directement à `complete`.
+
+    ```ts
+    // Clôturer la tâche de révision avec preuve
+    mcp__vantage-peers__complete_task({
+      taskId: "kTASK_T2",
+      completionNote: "[ETA-APPROVED] PR #127 révisée. 12 nouveaux fichiers MDX (6 EN + 6 FR). 0 liens cassés. Build vert. Commit sha : a1b2c3d."
+    })
+
+    // Passer la mission à validate
+    mcp__vantage-peers__update_mission_status({
+      missionId: "k57abc123",
+      status: "validate"
+    })
+
+    // Après confirmation finale, clôturer la mission
+    mcp__vantage-peers__update_mission_status({
+      missionId: "k57abc123",
+      status: "complete"
+    })
+
+    // Définir la progression à 100
+    mcp__vantage-peers__update_mission_progress({
+      missionId: "k57abc123",
+      progress: 100
+    })
+    ```
+  </Step>
+</Steps>
+
+## Référence des outils
+
+Les six chemins de fonctions de mission, avec un résumé des arguments et des références croisées.
+
+| Outil | Arguments principaux | Retourne | Notes |
+|-------|---------------------|---------|-------|
+| `create_mission` | `name`, `project`, `status`, `priority`, `pilot`, `agents`, `createdBy` | `missionId` (string) | `brief`, `description`, `startDate`, `targetDate` optionnels |
+| `get_mission` | `missionId` | Doc complet de mission ou `null` | Retourne `null` si non trouvé — vérifiez avant de continuer |
+| `list_missions` | `project?`, `pilot?`, `status?`, `limit?`, `fields?` | Tableau de missions | `fields="lite"` pour projection compacte ; alias `status="open"` supporté |
+| `update_mission` | `missionId` + tout champ mutable | `null` | Mise à jour partielle — seuls les champs fournis sont patchés |
+| `update_mission_status` | `missionId`, `status` | `null` | Raccourci — définit le statut + updatedAt de manière atomique |
+| `update_mission_progress` | `missionId`, `progress` (0–100) | `null` | Raccourci — définit la progression + updatedAt de manière atomique |
+
+Pour le schéma complet des arguments et les types de retour, voir [Référence des outils](/docs/tools).
+
+<Callout type="warn">
+`list_missions` se limite automatiquement à `limit=30` quand `fields="full"` et qu'aucune limite explicite n'est définie. Si vous avez besoin de plus de résultats, passez un `limit` explicite ou utilisez `fields="lite"` (limite par défaut de 50).
+</Callout>
+
+## Utiliser le raccourci de template
+
+Si votre mission correspond à un template connu (ex. résolution d'issue, onboarding, build d'extension Chrome), vous pouvez ignorer la création manuelle des tâches en appelant `instantiate_template_into_mission` :
+
+```ts
+// 1. Créer la coquille de mission
+const missionId = mcp__vantage-peers__create_mission({
+  name: "fix-issue-142",
+  project: "vantage-memory",
+  status: "plan",
+  priority: "high",
+  pilot: "proxima",
+  agents: ["proxima"],
+  createdBy: "proxima"
+})
+
+// 2. Instancier le template IRP (9 tâches, pré-câblées avec dependsOn)
+mcp__vantage-peers__instantiate_template_into_mission({
+  templateName: "issue-resolution-v3",
+  missionId,
+  context: { issueNumber: "142", repo: "vantage-memory" },
+  callerOrchestrator: "proxima"
+})
+// retourne : { taskIds: [...], count: 9 }
+```
+
+Voir [Templates de missions](/docs/missions/templates) pour le catalogue complet des templates.

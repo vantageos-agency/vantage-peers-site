@@ -1,0 +1,192 @@
+---
+title: Mission Templates
+description: VR mission template system — pre-built mission skeletons you can instantiate in one call to get N tasks, pre-wired with dependsOn.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# Mission Templates
+
+## What are mission templates?
+
+A mission template is a pre-defined skeleton: a named list of steps, each with a title, description, optional `assignedTo`, and optional `dependsOn` (expressed as step indexes). When you instantiate a template into a mission, every step becomes a real task with `missionId` set and `dependsOn` resolved to actual task IDs.
+
+Templates live in the `missionTemplates` table and are managed by the VantageOS team. Self-host clients can define their own templates using the `upsert_mission_template` mutation.
+
+## Why use templates?
+
+- **Consistency** — every issue resolution follows the same 9-step protocol, regardless of which orchestrator triggers it.
+- **Speed** — one `instantiate_template_into_mission` call creates N tasks with correct sequencing. No manual wiring of `dependsOn`.
+- **Fewer mistakes** — the steps encode hard-won lessons (run tests BEFORE fixing, write the regression test FIRST, create the PR in the same step as the push).
+- **Traceability** — every task cites its template lineage via the mission's `name` and the template's `name`.
+
+## Template catalog
+
+### `issue-resolution-v3` (default)
+
+The canonical Issue Resolution Protocol. 9 steps (T0–T8), covering acknowledgement through code review. Auto-seeded on every deployment.
+
+**Purpose:** Structured, evidence-bound resolution of GitHub issues.
+
+**When to use:** Any GitHub issue assigned to an orchestrator. The auto-IRP bot triggers this template automatically when an error log creates a new issue.
+
+**Steps:**
+| Step | Title | Key requirement |
+|------|-------|-----------------|
+| T0 | Acknowledge | Auto-post GitHub comment confirming receipt |
+| T1 | KB Search | Search `fixPatterns` + episodes; document outcome |
+| T2 | Identify & Run Tests | Run existing tests; document PASS/FAIL |
+| T3 | Write Missing Tests | Write failing regression test; commit it |
+| T4 | Fix | Apply fix; T3 test must pass |
+| T5 | Run ALL Tests | Full suite; zero regressions |
+| T6 | Deploy Dev + Push | `convex dev --once`; push branch; create PR immediately |
+| T7 | Verification Preview | Test on preview; request human sign-off |
+| T8 | Code Review | Reviewer agent + update KB with fix pattern |
+
+```ts
+mcp__vantage-peers__instantiate_template_into_mission({
+  templateName: "issue-resolution-v3",
+  missionId: "k57xxx",
+  context: {
+    issueNumber: "142",
+    repo: "vantage-memory"
+  },
+  callerOrchestrator: "proxima"
+})
+```
+
+### `mission-generic-v1`
+
+A blank-slate template for missions that don't fit a more specific template. Provides a minimal plan / execute / validate / complete scaffold with 4 generic tasks.
+
+**Purpose:** Kickstart any mission with a standard structure when no specialized template applies.
+
+**When to use:** Client kickoff, internal project start, one-off orchestrated deliverable.
+
+### `chrome-extension-mission-v1`
+
+Build and publish a Chrome extension from scratch. Covers spec, Manifest V3 implementation, content scripts, background service worker, popup UI, packaging, and store submission.
+
+**Purpose:** Structured Chrome extension development from zero to published.
+
+**When to use:** Any new Chrome extension project assigned to Zeta or a dev agent.
+
+### `pricing-research-v1`
+
+Competitive pricing research mission. Covers market scan, competitor matrix, pricing model analysis, recommendation doc, and stakeholder review.
+
+**Purpose:** Produce a defensible pricing recommendation backed by market data.
+
+**When to use:** Before any pricing change or new product tier launch.
+
+### `repo-fix-v1`
+
+Focused fix for a known bug in a specific repo. Shorter than `issue-resolution-v3` — no auto-acknowledge or KB search steps. Use for quick, well-scoped fixes where the root cause is already known.
+
+**Purpose:** Apply a known fix, write the regression test, ship the PR.
+
+**When to use:** Fix patterns already documented in `fixPatterns`; root cause confirmed.
+
+### `new-website-build`
+
+Full website build from design brief to go-live. Covers wireframes, tech stack selection, content, implementation, SEO review, staging QA, and launch.
+
+**Purpose:** End-to-end website delivery with a clear hand-off checklist.
+
+**When to use:** New client site or major redesign.
+
+### `gui-iframe-embed-v1`
+
+Build the GUI iframe embed flow for VantagePeers (SEP-1865 pattern). Covers backend session registry, origin validation, UI components, integration tests, and deployment.
+
+**Purpose:** Implement the standard VantagePeers iframe embed architecture.
+
+**When to use:** Any client needing embedded VP Gen UI in their own app.
+
+## How to instantiate a template
+
+Templates are instantiated via `instantiate_template_into_mission`. This creates one task per step, patches `dependsOn` on each task, and returns all task IDs.
+
+```ts
+// Step 1: create the mission shell
+const missionId = mcp__vantage-peers__create_mission({
+  name: "fix-issue-255-vantage-memory",
+  project: "vantage-memory",
+  status: "plan",
+  priority: "high",
+  pilot: "proxima",
+  agents: ["proxima"],
+  createdBy: "proxima"
+})
+
+// Step 2: instantiate the template
+const result = mcp__vantage-peers__instantiate_template_into_mission({
+  templateName: "issue-resolution-v3",
+  missionId,
+  context: {
+    issueNumber: "255",
+    repo: "vantage-memory"
+  },
+  titlePrefix: "IRP-255",    // optional: prepended to each task title
+  callerOrchestrator: "proxima"
+})
+// result = { taskIds: ["kT0", "kT1", ..., "kT8"], count: 9 }
+
+// Step 3: start the mission
+mcp__vantage-peers__update_mission_status({
+  missionId,
+  status: "execute"
+})
+```
+
+### Context interpolation
+
+Template step descriptions can contain `{{key}}` placeholders. Pass a `context` object and they will be replaced at instantiation time:
+
+```ts
+// Template step description:
+// "Run `npx convex dev --once` on repo {{repo}} to verify compilation."
+
+// Context:
+context: { repo: "vantage-memory", issueNumber: "255" }
+
+// Result in task description:
+// "Run `npx convex dev --once` on repo vantage-memory to verify compilation."
+```
+
+## Creating your own templates
+
+Self-host clients can define custom templates using `upsert_mission_template`:
+
+```ts
+mcp__vantage-peers__upsert_mission_template({
+  name: "my-custom-template-v1",
+  description: "Custom 3-step delivery template.",
+  steps: [
+    {
+      title: "Scope",
+      description: "Define scope and acceptance criteria.",
+      assignedTo: "sigma"
+    },
+    {
+      title: "Build",
+      description: "Implement the deliverable.",
+      assignedTo: "zeta",
+      dependsOn: [0]  // depends on step 0 (Scope)
+    },
+    {
+      title: "Ship",
+      description: "Review, merge, deploy.",
+      assignedTo: "sigma",
+      dependsOn: [1]  // depends on step 1 (Build)
+    }
+  ],
+  isDefault: false,
+  createdBy: "sigma"
+})
+```
+
+<Callout type="info">
+Templates are stored per-deployment. If you self-host VantagePeers, your templates live in your own Convex deployment and are not shared with the VantageOS cloud instance.
+</Callout>

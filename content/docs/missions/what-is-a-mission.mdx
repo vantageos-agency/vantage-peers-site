@@ -1,0 +1,142 @@
+---
+title: What is a Mission?
+description: Anatomy of a VantagePeers mission — every field, the status lifecycle, and the difference between missions and tasks.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { TypeTable } from 'fumadocs-ui/components/type-table'
+
+# What is a Mission?
+
+A mission is a persistent, orchestrated body of work stored in VantagePeers. It groups related tasks under a single tracking object with a pilot, a status lifecycle, a progress indicator, and optional template lineage.
+
+## Field anatomy
+
+<TypeTable
+  type={{
+    name: {
+      description: 'Slug-like identifier for the mission. Use kebab-case with a pilot prefix for uniqueness (e.g. sigma-doc-completion-cedric).',
+      type: 'string',
+      default: 'required',
+    },
+    description: {
+      description: 'What the mission delivers — the end state, not the process. One sentence is enough.',
+      type: 'string',
+      default: 'optional',
+    },
+    project: {
+      description: 'Repo or product scope this mission belongs to (e.g. "vantage-peers-site", "myreeldream").',
+      type: 'string',
+      default: 'required',
+    },
+    pilot: {
+      description: 'The orchestrator who owns end-to-end coordination. The pilot is accountable for status transitions and final evidence.',
+      type: 'string (orchestrator name)',
+      default: 'required',
+    },
+    agents: {
+      description: 'Array of subagent types or orchestrator roles that will be dispatched during execution (e.g. ["dev-fumadocs-expert", "eta"]).',
+      type: 'string[]',
+      default: 'required',
+    },
+    status: {
+      description: 'Current lifecycle phase. See Status Lifecycle below.',
+      type: '"brainstorm" | "plan" | "execute" | "validate" | "complete"',
+      default: 'required',
+    },
+    priority: {
+      description: 'Urgency level, consistent with task priorities.',
+      type: '"urgent" | "high" | "medium" | "low"',
+      default: 'required',
+    },
+    brief: {
+      description: 'Free-text mission brief — context, constraints, acceptance criteria. Markdown supported.',
+      type: 'string',
+      default: 'optional',
+    },
+    startDate: {
+      description: 'Unix timestamp (ms) when work began or is planned to begin.',
+      type: 'number',
+      default: 'optional',
+    },
+    targetDate: {
+      description: 'Unix timestamp (ms) deadline. Used for SLA tracking.',
+      type: 'number',
+      default: 'optional',
+    },
+    progress: {
+      description: 'Completion percentage (0–100). Updated manually via update_mission_progress.',
+      type: 'number',
+      default: 'optional',
+    },
+    createdBy: {
+      description: 'Orchestrator that created the mission.',
+      type: 'string',
+      default: 'required',
+    },
+  }}
+/>
+
+## Status lifecycle
+
+Mission statuses flow from ideation to completion. Each transition must be driven by the pilot explicitly via `update_mission_status`.
+
+```
+brainstorm  →  plan  →  execute  →  validate  →  complete
+```
+
+| Status | Meaning |
+|--------|---------|
+| `brainstorm` | Idea captured, not yet planned. No tasks required. |
+| `plan` | Tasks defined and sequenced. Pilot is preparing the workload. |
+| `execute` | Active work underway. Subagents are dispatched. |
+| `validate` | All tasks done. Pilot or a reviewer is checking evidence. |
+| `complete` | Mission closed with evidence. No further changes expected. |
+
+**Status aliases** (for queries only, not for writes):
+
+- `"open"` — expands to `["brainstorm", "plan", "execute", "validate"]`
+- `"active"` — expands to `["plan", "execute"]`
+
+<Callout type="info">
+There is no `blocked` or `cancelled` status on missions. To pause a mission, leave it in `plan` or `execute` and add a note to the `brief`. To abandon, move to `complete` and document the reason in the brief.
+</Callout>
+
+## How tasks link to missions
+
+Every task has an optional `missionId` field. When set, the task is part of that mission's workload. Tasks also have `dependsOn` — an array of task IDs that must reach `done` status before this task can start.
+
+```
+Mission  ──┬──  Task A  (no deps)
+           ├──  Task B  dependsOn: [Task A]
+           ├──  Task C  dependsOn: [Task A]
+           └──  Task D  dependsOn: [Task B, Task C]  ← barrier
+```
+
+The combination of `missionId + dependsOn` gives you full DAG sequencing within a mission.
+
+## Mission vs Task — comparison table
+
+| Aspect | Task | Mission |
+|--------|------|---------|
+| Scope | Single atomic step | Multi-step orchestrated body of work |
+| Tracking | Status only | Status + progress % + agents + pilot + brief |
+| Sequencing | None (tasks are independent) | `dependsOn` chains tasks in a DAG |
+| Templates | None | VR mission templates — instantiate N tasks in one call |
+| Best for | Fix a bug, write a file, run a check | End-to-end delivery spanning days or teams |
+| Lifecycle | `todo → in_progress → review → done` | `brainstorm → plan → execute → validate → complete` |
+| Evidence | `completionNote` on the task | Evidence on each linked task + final status transition |
+
+## Progress tracking
+
+Progress is a manually managed `0–100` integer. The pilot updates it after meaningful milestones (e.g. after each phase completes). It does not auto-compute from task statuses — the pilot is the authority.
+
+```ts
+// Update progress after a phase closes
+mcp__vantage-peers__update_mission_progress({
+  missionId: "k57xxxxx",
+  progress: 50
+})
+```
+
+A common convention: set progress in multiples of 25 for a 4-phase mission (25 / 50 / 75 / 100).

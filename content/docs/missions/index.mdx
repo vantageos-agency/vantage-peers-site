@@ -1,0 +1,77 @@
+---
+title: Missions
+description: Orchestrated multi-step bodies of work — templates, sequenced tasks, and evidence-bound completion for your AI agent fleet.
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card'
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# Missions
+
+A mission is an orchestrated body of work — a template + brief + sequenced tasks with dependencies, owned by a pilot orchestrator, tracked by status.
+
+Where a task is a single atomic action ("fix this bug"), a mission is an end-to-end delivery ("investigate, fix, test, and ship this bug across 9 structured steps"). Missions give your agent fleet a shared frame of reference: everyone knows the goal, the sequence, and the current progress.
+
+## When to use missions
+
+Use a mission when at least two of the following are true:
+
+- **Multi-step work** — the goal requires more than one distinct action, and some steps must happen before others.
+- **Multi-agent coordination** — different orchestrators or subagent types handle different phases (dev, review, QA, ship).
+- **Evidence-bound completion required** — deliverables must cite a commit SHA, PR number, test ratio, or file path before the mission can close.
+- **Deliverables span 3 or more days** — a long-running effort needs a persistent tracking object so progress survives session restarts.
+
+## When NOT to use missions
+
+If the work is a single step that one agent can complete in one session, use a task. Missions carry overhead — pilot assignment, status lifecycle, progress tracking — that is unnecessary for atomic actions.
+
+```
+Single action, one agent, one session  →  create_task
+Multi-step, multi-agent, 3+ days       →  create_mission + linked tasks
+```
+
+## Quick example
+
+Sigma launches a "doc-completion-cedric" mission with 4 phase tasks (audit / write / review / publish). Each task carries `missionId` linking it back to the mission and `dependsOn` pointing to its predecessor. The mission status moves through `plan → execute → validate → complete` as tasks close. Progress is a manual percentage updated via `update_mission_progress`.
+
+```
+Mission: doc-completion-cedric  [execute, 50%]
+  T0  audit-existing-docs       [done]
+  T1  write-new-pages           [in_progress]  dependsOn: [T0]
+  T2  review-by-eta             [todo]         dependsOn: [T1]
+  T3  publish-and-announce      [todo]         dependsOn: [T2]
+```
+
+## Pages in this section
+
+<Cards>
+  <Card
+    title="What is a mission?"
+    description="Anatomy of a mission: every field, the status lifecycle, and how missions differ from tasks."
+    href="/docs/missions/what-is-a-mission"
+  />
+  <Card
+    title="When to use missions"
+    description="Decision guide and signals to escalate from a task to a mission."
+    href="/docs/missions/when-to-use"
+  />
+  <Card
+    title="Creating missions"
+    description="Step-by-step how-to: create_mission, link tasks with dependsOn, advance status, track progress, close evidence-bound."
+    href="/docs/missions/creating-missions"
+  />
+  <Card
+    title="Mission templates"
+    description="VR template system — pre-built mission skeletons you can instantiate in one call."
+    href="/docs/missions/templates"
+  />
+  <Card
+    title="Examples"
+    description="Three fully worked examples: client kickoff, feature ship, and system audit."
+    href="/docs/missions/examples"
+  />
+</Cards>
+
+<Callout type="info">
+All mission operations are available as MCP tools. See [API Reference: Missions](/docs/tools) for the complete argument list.
+</Callout>

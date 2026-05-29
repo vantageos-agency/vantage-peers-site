@@ -1,0 +1,77 @@
+---
+title: Missions
+description: Corps de travail orchestrés en plusieurs étapes — templates, tâches séquencées et complétion liée à des preuves pour votre flotte d'agents IA.
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card'
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# Missions
+
+Une mission est un corps de travail orchestré — un template + brief + tâches séquencées avec dépendances, géré par un pilote orchestrateur, suivi par statut.
+
+Là où une tâche est une action atomique unique ("corriger ce bug"), une mission est une livraison de bout en bout ("investiguer, corriger, tester et déployer ce bug en 9 étapes structurées"). Les missions donnent à votre flotte d'agents un cadre de référence commun : tout le monde connaît l'objectif, la séquence et la progression actuelle.
+
+## Quand utiliser les missions
+
+Utilisez une mission lorsqu'au moins deux des conditions suivantes sont vraies :
+
+- **Travail en plusieurs étapes** — l'objectif nécessite plus d'une action distincte, et certaines étapes doivent précéder d'autres.
+- **Coordination multi-agents** — différents orchestrateurs ou types de sous-agents gèrent différentes phases (dev, review, QA, déploiement).
+- **Complétion liée à des preuves requise** — les livrables doivent citer un commit SHA, numéro de PR, ratio de tests ou chemin de fichier avant que la mission puisse se fermer.
+- **Les livrables s'étendent sur 3 jours ou plus** — un effort longue durée nécessite un objet de suivi persistant pour que la progression survive aux redémarrages de session.
+
+## Quand NE PAS utiliser les missions
+
+Si le travail est une seule étape qu'un agent peut accomplir en une session, utilisez une tâche. Les missions impliquent une surcharge — attribution de pilote, cycle de vie du statut, suivi de la progression — qui est inutile pour les actions atomiques.
+
+```
+Action unique, un agent, une session   →  create_task
+Multi-étapes, multi-agents, 3+ jours  →  create_mission + tâches liées
+```
+
+## Exemple rapide
+
+Sigma lance une mission "doc-completion-cedric" avec 4 tâches de phase (audit / écriture / révision / publication). Chaque tâche porte un `missionId` la reliant à la mission et un `dependsOn` pointant vers son prédécesseur. Le statut de la mission passe par `plan → execute → validate → complete` au fur et à mesure que les tâches se ferment. La progression est un pourcentage manuel mis à jour via `update_mission_progress`.
+
+```
+Mission : doc-completion-cedric  [execute, 50%]
+  T0  audit-existing-docs        [done]
+  T1  write-new-pages            [in_progress]  dependsOn: [T0]
+  T2  review-by-eta              [todo]         dependsOn: [T1]
+  T3  publish-and-announce       [todo]         dependsOn: [T2]
+```
+
+## Pages de cette section
+
+<Cards>
+  <Card
+    title="Qu'est-ce qu'une mission ?"
+    description="Anatomie d'une mission : chaque champ, le cycle de vie du statut, et en quoi les missions diffèrent des tâches."
+    href="/docs/missions/what-is-a-mission"
+  />
+  <Card
+    title="Quand utiliser les missions"
+    description="Guide de décision et signaux pour escalader d'une tâche vers une mission."
+    href="/docs/missions/when-to-use"
+  />
+  <Card
+    title="Créer des missions"
+    description="Guide étape par étape : create_mission, lier des tâches avec dependsOn, faire avancer le statut, suivre la progression, clôturer avec preuves."
+    href="/docs/missions/creating-missions"
+  />
+  <Card
+    title="Templates de missions"
+    description="Système de templates VR — squelettes de mission pré-construits que vous pouvez instancier en un seul appel."
+    href="/docs/missions/templates"
+  />
+  <Card
+    title="Exemples"
+    description="Trois exemples complets : lancement client, déploiement de fonctionnalité et audit système."
+    href="/docs/missions/examples"
+  />
+</Cards>
+
+<Callout type="info">
+Toutes les opérations de mission sont disponibles comme outils MCP. Voir [Référence API : Missions](/docs/tools) pour la liste complète des arguments.
+</Callout>

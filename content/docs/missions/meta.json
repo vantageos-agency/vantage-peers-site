@@ -1,0 +1,12 @@
+{
+  "title": "Missions",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "what-is-a-mission",
+    "when-to-use",
+    "creating-missions",
+    "templates",
+    "examples"
+  ]
+}
