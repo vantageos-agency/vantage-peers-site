@@ -1,0 +1,220 @@
+---
+title: briefingNotes — API Reference
+description: All 5 fn-paths in convex/briefingNotes.ts — create, get, list, update, deleteBriefingNote.
+---
+
+# briefingNotes
+
+**Source:** `convex/briefingNotes.ts`
+**Fn-paths:** 5
+
+Briefing notes are structured session handoffs between orchestrators. Each note has a topic, participants, content, and optional decisions. They are the canonical record for cross-session context transfer — a briefing note from the end of one session is read at the start of the next.
+
+---
+
+## `briefingNotes:create`
+
+**Scope:** mutation
+
+Insert a new briefing note.
+
+### Args
+
+```typescript
+{
+  title: string,
+  topic: string,                   // category key, e.g. "vp-release", "sprint-review"
+  participants: string[],          // orchestrator IDs present
+  content: string,
+  decisions?: string[],
+  linkedMemoryIds?: Id<"memories">[],
+  createdBy: string,               // orchestrator ID
+}
+```
+
+### Returns
+
+`Id<"briefingNotes">` — the new note ID.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const noteId = await client.mutation("briefingNotes:create", {
+  title: "Day 82 sprint close",
+  topic: "sprint-review",
+  participants: ["pi", "sigma"],
+  content: "Completed M3 iframeEmbedSessions. Outstanding: OAuth DCR audit.",
+  decisions: ["Defer DCR audit to Day 83", "Ship v2.4.0 now"],
+  createdBy: "pi",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__create_briefing_note",
+  "args": {
+    "title": "Day 82 sprint close",
+    "topic": "sprint-review",
+    "participants": ["pi", "sigma"],
+    "content": "Completed M3 iframeEmbedSessions.",
+    "createdBy": "pi"
+  }
+}
+```
+
+---
+
+## `briefingNotes:get`
+
+**Scope:** query
+
+Fetch a single briefing note by ID.
+
+### Args
+
+```typescript
+{ noteId: Id<"briefingNotes"> }
+```
+
+### Returns
+
+```typescript
+{
+  _id: Id<"briefingNotes">,
+  _creationTime: number,
+  title: string,
+  topic: string,
+  participants: string[],
+  content: string,
+  decisions?: string[],
+  linkedMemoryIds?: Id<"memories">[],
+  createdBy: string,
+  createdAt: number,
+  updatedAt?: number,
+  updatedBy?: string,
+} | null
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const note = await client.query("briefingNotes:get", { noteId: "n57..." });
+```
+
+---
+
+## `briefingNotes:list`
+
+**Scope:** query
+
+List briefing notes, ordered by `createdAt` desc. Optional topic filter.
+
+### Args
+
+```typescript
+{
+  topic?: string,
+  limit?: number,                  // default 20 (auto-clamped to 15 for fields=full)
+  fields?: "lite" | "full",
+  updatedSince?: number,           // Unix ms
+}
+```
+
+**`fields="lite"` projection:** `{ _id, _creationTime, topic, title, participants, createdBy }`
+
+### Returns
+
+Array of full briefing note docs (default) or lite projections.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const notes = await client.query("briefingNotes:list", {
+  topic: "sprint-review",
+  limit: 5,
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_briefing_notes",
+  "args": { "topic": "sprint-review" }
+}
+```
+
+---
+
+## `briefingNotes:update`
+
+**Scope:** mutation
+
+Partial update of any mutable briefing note field. `callerOrchestrator` is **required** and must be the creator or `"system"`.
+
+### Args
+
+```typescript
+{
+  noteId: Id<"briefingNotes">,
+  callerOrchestrator: string,      // REQUIRED — must be createdBy or "system"
+  title?: string,
+  topic?: string,
+  participants?: string[],
+  content?: string,
+  decisions?: string[],
+  linkedMemoryIds?: Id<"memories">[],
+}
+```
+
+### Returns
+
+`null`
+
+### RBAC note
+
+Unlike most other mutations, `callerOrchestrator` is not optional here. Omitting it throws a validation error. This is intentional — briefing notes use deny-by-default update policy.
+
+### Example (ConvexHttpClient)
+
+```typescript
+await client.mutation("briefingNotes:update", {
+  noteId: "n57...",
+  callerOrchestrator: "pi",
+  decisions: ["Defer DCR audit to Day 83", "Ship v2.4.0 now", "Review auth layer Day 84"],
+});
+```
+
+---
+
+## `briefingNotes:deleteBriefingNote`
+
+**Scope:** mutation
+
+Hard delete a briefing note. Only the creator (`createdBy`) or `"system"` may delete.
+
+### Args
+
+```typescript
+{
+  noteId: Id<"briefingNotes">,
+  callerOrchestrator?: string,
+}
+```
+
+### Returns
+
+```typescript
+{ deleted: boolean }
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const result = await client.mutation("briefingNotes:deleteBriefingNote", {
+  noteId: "n57...",
+  callerOrchestrator: "pi",
+});
+```

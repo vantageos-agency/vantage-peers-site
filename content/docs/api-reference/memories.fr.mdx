@@ -1,0 +1,171 @@
+---
+title: memories — Référence API
+description: Les 4 fn-paths de convex/memories.ts — storeMemory, getMemory, listMemories, softDeleteMemory.
+---
+
+# memories
+
+**Source :** `convex/memories.ts`
+**Fn-paths :** 4
+
+Le module memories est le magasin de connaissances central. Chaque mémoire stockée est automatiquement embeddée via `text-embedding-3-small` (1536 dims) et indexée pour la recherche vectorielle sémantique. Les mémoires supportent les namespaces, les types, les relations, l'expiration TTL et un flag `isLatest` pour le versionnage.
+
+L'embedding RAG est asynchrone — il est planifié via `ctx.scheduler.runAfter(0, ...)` immédiatement après la complétion de la mutation `storeMemory`. Il n'y a pas d'attente synchrone ; l'embedding est disponible en quelques secondes.
+
+---
+
+## `memories:storeMemory`
+
+**Portée :** mutation
+
+Crée une ligne de mémoire et planifie l'embedding RAG asynchrone.
+
+### Arguments
+
+```typescript
+{
+  namespace: string,               // ex. "global", "sigma/feedback", "project/vp"
+  type: MemoryType,                // voir enum de types ci-dessous
+  content: string,
+  createdBy: string,               // ID d'orchestrateur
+  relations?: Array<{
+    targetId: Id<"memories">,
+    type: RelationType,            // "updates" | "references" | "contradicts" | "extends"
+  }>,
+  isLatest?: boolean,              // défaut true côté serveur
+  ttl?: string,                    // datetime ISO 8601 — expire automatiquement à ce moment
+  episode?: {
+    context: string,
+    goal: string,
+    action: string,
+    outcome: string,
+    insight: string,
+    severity: "low" | "medium" | "high" | "critical",
+  },
+}
+```
+
+**Enum `type` :** `"fact"` | `"decision"` | `"feedback"` | `"project"` | `"architecture"` | `"note"` | `"warning"` | `"procedure"` | `"episode"` | `"observation"`
+
+**Enum `relations[].type` :** `"updates"` | `"references"` | `"contradicts"` | `"extends"`
+
+Quand une relation a `type: "updates"`, la mémoire cible est marquée `isLatest: false` et retirée des résultats de recherche futurs.
+
+### Retour
+
+`Id<"memories">` — l'ID de la nouvelle mémoire.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__store_memory",
+  "args": {
+    "namespace": "sigma/feedback",
+    "type": "feedback",
+    "content": "La limitation de taux au niveau gateway est la bonne approche.",
+    "createdBy": "pi"
+  }
+}
+```
+
+---
+
+## `memories:getMemory`
+
+**Portée :** query
+
+Récupère une mémoire unique par ID.
+
+### Arguments
+
+```typescript
+{ memoryId: Id<"memories"> }
+```
+
+### Retour
+
+Document de mémoire complet ou `null`.
+
+---
+
+## `memories:listMemories`
+
+**Portée :** query
+
+Liste les mémoires actives par namespace, avec un filtre de type optionnel. Supporte la pagination par curseur.
+
+### Arguments
+
+```typescript
+{
+  namespace: string,
+  type?: MemoryType,
+  includeSuperseded?: boolean,     // défaut false — uniquement isLatest=true
+  limit?: number,                  // défaut 50
+  paginationOpts?: {
+    numItems: number,
+    cursor: string | null,
+  },
+}
+```
+
+### Retour
+
+```typescript
+{
+  value: MemoryDoc[],
+  continueCursor: string | null,
+  isDone: boolean,
+}
+```
+
+### Exemple (ConvexHttpClient)
+
+```typescript
+// Première page
+const page1 = await client.query("memories:listMemories", {
+  namespace: "sigma/feedback",
+  paginationOpts: { numItems: 20, cursor: null },
+});
+
+// Page suivante
+if (!page1.isDone) {
+  const page2 = await client.query("memories:listMemories", {
+    namespace: "sigma/feedback",
+    paginationOpts: { numItems: 20, cursor: page1.continueCursor },
+  });
+}
+```
+
+---
+
+## `memories:softDeleteMemory`
+
+**Portée :** mutation
+
+Marque une mémoire comme `isLatest: false`. La ligne de mémoire est préservée (piste d'audit) mais n'apparaîtra plus dans `listMemories` ni dans les résultats de recherche sémantique.
+
+### Arguments
+
+```typescript
+{ memoryId: Id<"memories"> }
+```
+
+### Retour
+
+`null`
+
+### Effets secondaires
+
+1. Patch la mémoire à `isLatest: false`.
+2. Planifie `internal.ragSync.markRagEntrySuperseded` — retire de la recherche vectorielle de façon asynchrone.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__soft_delete_memory",
+  "args": { "memoryId": "m57..." }
+}
+```

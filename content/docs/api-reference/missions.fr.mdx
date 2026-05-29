@@ -1,0 +1,211 @@
+---
+title: missions — Référence API
+description: Les 6 fn-paths de convex/missions.ts — create, get, list, update, updateStatus, updateProgress.
+---
+
+# missions
+
+**Source :** `convex/missions.ts`
+**Fn-paths :** 6
+
+Les missions sont l'unité de planification de plus haut niveau. Une mission regroupe des tâches, définit un pilote, suit la progression (0–100) et passe par un cycle de vie : `brainstorm → plan → execute → validate → complete`. Les missions sont automatiquement complétées quand toutes leurs tâches liées atteignent `status="done"`.
+
+---
+
+## `missions:create`
+
+**Portée :** mutation
+
+Insère une nouvelle mission.
+
+### Arguments
+
+```typescript
+{
+  name: string,
+  description?: string,
+  project: string,
+  status: "brainstorm" | "plan" | "execute" | "validate" | "complete",
+  priority: "urgent" | "high" | "medium" | "low",
+  pilot: string,                   // ID de l'orchestrateur lead
+  agents: string[],                // IDs des orchestrateurs participants
+  brief?: string,
+  startDate?: number,              // Unix ms
+  targetDate?: number,             // Unix ms
+  progress?: number,               // 0-100
+  createdBy: string,
+}
+```
+
+### Retour
+
+`Id<"missions">` — l'ID de la nouvelle mission.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__create_mission",
+  "args": {
+    "name": "M3 sessions iframe embed",
+    "project": "vantage-peers",
+    "status": "plan",
+    "priority": "high",
+    "pilot": "sigma",
+    "agents": ["sigma", "pi"],
+    "createdBy": "pi"
+  }
+}
+```
+
+---
+
+## `missions:get`
+
+**Portée :** query
+
+Récupère une mission unique par ID.
+
+### Arguments
+
+```typescript
+{ missionId: Id<"missions"> }
+```
+
+### Retour
+
+Document complet de mission ou `null`.
+
+---
+
+## `missions:list`
+
+**Portée :** query
+
+Liste les missions avec des filtres optionnels. Supporte la projection lite et les alias de statut.
+
+### Arguments
+
+```typescript
+{
+  project?: string,
+  pilot?: string,
+  status?: string | string[],      // "brainstorm"|"open"|"active"|["plan","execute"]
+  limit?: number,                  // défaut 50 (auto-limité à 30 pour fields=full)
+  fields?: "lite" | "full",
+  updatedSince?: number,           // Unix ms
+}
+```
+
+**Alias de statut :**
+- `"open"` → `["brainstorm","plan","execute","validate"]`
+- `"active"` → `["plan","execute"]`
+
+**Projection `fields="lite"` :** `{ _id, _creationTime, name, status, pilot, priority, project }`
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_missions",
+  "args": { "project": "vantage-peers", "status": "open" }
+}
+```
+
+### Fichier source
+
+`convex/missions.ts:177`
+
+---
+
+## `missions:update`
+
+**Portée :** mutation
+
+Mise à jour partielle de tout champ mutable d'une mission. Tous les champs sauf `missionId` sont optionnels.
+
+### Arguments
+
+```typescript
+{
+  missionId: Id<"missions">,
+  name?: string,
+  description?: string,
+  project?: string,
+  status?: "brainstorm" | "plan" | "execute" | "validate" | "complete",
+  priority?: "urgent" | "high" | "medium" | "low",
+  pilot?: string,
+  agents?: string[],
+  brief?: string,
+  startDate?: number,
+  targetDate?: number,
+  progress?: number,
+}
+```
+
+### Retour
+
+`null`
+
+---
+
+## `missions:updateStatus`
+
+**Portée :** mutation
+
+Raccourci : définit `status` et `updatedAt=maintenant`.
+
+### Arguments
+
+```typescript
+{
+  missionId: Id<"missions">,
+  status: "brainstorm" | "plan" | "execute" | "validate" | "complete",
+}
+```
+
+### Retour
+
+`null`
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__update_mission_status",
+  "args": {
+    "missionId": "k57...",
+    "status": "validate"
+  }
+}
+```
+
+---
+
+## `missions:updateProgress`
+
+**Portée :** mutation
+
+Raccourci : définit `progress` (0–100) et `updatedAt=maintenant`.
+
+### Arguments
+
+```typescript
+{
+  missionId: Id<"missions">,
+  progress: number,               // 0-100
+}
+```
+
+### Retour
+
+`null`
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__update_mission_progress",
+  "args": { "missionId": "k57...", "progress": 75 }
+}
+```

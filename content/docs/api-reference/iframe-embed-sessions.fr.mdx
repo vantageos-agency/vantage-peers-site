@@ -1,0 +1,173 @@
+---
+title: iframeEmbedSessions — Référence API
+description: Les 4 fn-paths de convex/iframeEmbedSessions.ts — createSession, getSession, touchSession, revokeSession. Ajouté en v2.4.0.
+---
+
+# iframeEmbedSessions
+
+**Source :** `convex/iframeEmbedSessions.ts`
+**Fn-paths :** 4
+**Ajouté :** v2.4.0 (livrable M3 — SEP-1865)
+
+Le module `iframeEmbedSessions` gère les enregistrements de sessions authentifiées pour les embeds iframe Gen UI VantagePeers. Chaque session représente une connexion authentifiée depuis une origine spécifique, portant un contexte optionnel de tenant et d'utilisateur. Les sessions expirent automatiquement via le champ `expiresAt`.
+
+**Principes de conception :**
+- `getSession` retourne `null` pour les sessions expirées — les appelants doivent les traiter comme inexistantes
+- `revokeSession` est le chemin de déconnexion sécurisée — les sessions révoquées sont immédiatement traitées comme inexistantes par `getSession`
+- `touchSession` étend la présence sans changer `expiresAt` — il ne met à jour que `lastSeenAt`
+- Les IDs de session sont des chaînes générées par le client — utilisez `crypto.randomUUID()` ou équivalent
+
+---
+
+## `iframeEmbedSessions:createSession`
+
+**Portée :** mutation
+
+Crée un nouvel enregistrement de session embed iframe.
+
+### Arguments
+
+```typescript
+{
+  sessionId: string,               // ID unique généré par le client (ex. crypto.randomUUID())
+  tenantId?: string,               // contexte de routage multi-tenant
+  origin: string,                  // origine de l'embed, ex. "https://app.example.com"
+  userId?: string,                 // contexte par utilisateur pour l'embed
+  expiresAt: number,               // Unix ms — quand la session expire
+}
+```
+
+### Retour
+
+`Id<"iframeEmbedSessions">` — l'ID de document Convex de la nouvelle session.
+
+### Exemple (ConvexHttpClient)
+
+```typescript
+const docId = await client.mutation("iframeEmbedSessions:createSession", {
+  sessionId: crypto.randomUUID(),
+  origin: "https://dashboard.example.com",
+  userId: "user_abc123",
+  expiresAt: Date.now() + 30 * 60 * 1000, // 30 minutes
+});
+```
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__create_iframe_session",
+  "args": {
+    "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+    "origin": "https://dashboard.example.com",
+    "userId": "user_abc123",
+    "expiresAt": 1748556000000
+  }
+}
+```
+
+---
+
+## `iframeEmbedSessions:getSession`
+
+**Portée :** query
+
+Récupère une session par `sessionId`. Retourne `null` pour les sessions expirées ou révoquées.
+
+### Arguments
+
+```typescript
+{ sessionId: string }
+```
+
+### Retour
+
+```typescript
+{
+  _id: Id<"iframeEmbedSessions">,
+  _creationTime: number,
+  sessionId: string,
+  tenantId?: string,
+  origin: string,
+  userId?: string,
+  createdAt: number,
+  lastSeenAt: number,
+  expiresAt: number,
+  revoked: boolean,
+} | null
+```
+
+Retourne `null` si :
+- La session n'existe pas
+- `session.expiresAt <= Date.now()` — expirée
+- `session.revoked === true` — révoquée
+
+### Exemple (ConvexHttpClient)
+
+```typescript
+const session = await client.query("iframeEmbedSessions:getSession", {
+  sessionId: "550e8400-e29b-41d4-a716-446655440000",
+});
+
+if (session === null) {
+  // Session expirée ou révoquée — rediriger vers la connexion
+}
+```
+
+---
+
+## `iframeEmbedSessions:touchSession`
+
+**Portée :** mutation
+
+Met à jour `lastSeenAt` à l'heure actuelle. Appelé à chaque événement d'activité de l'embed pour maintenir une fenêtre de présence précise. Ne prolonge **pas** `expiresAt`.
+
+### Arguments
+
+```typescript
+{ sessionId: string }
+```
+
+### Retour
+
+`boolean` — `true` si la session a été trouvée et mise à jour, `false` si non trouvée ou déjà révoquée.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__touch_iframe_session",
+  "args": { "sessionId": "550e8400-e29b-41d4-a716-446655440000" }
+}
+```
+
+---
+
+## `iframeEmbedSessions:revokeSession`
+
+**Portée :** mutation
+
+Marque une session comme révoquée. Les sessions révoquées sont immédiatement traitées comme inexistantes par `getSession`. À utiliser pour les flux de déconnexion ou d'invalidation sécurisée.
+
+### Arguments
+
+```typescript
+{ sessionId: string }
+```
+
+### Retour
+
+`boolean` — `true` si la session a été trouvée et révoquée, `false` si non trouvée (déjà supprimée ou jamais créée).
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__revoke_iframe_session",
+  "args": { "sessionId": "550e8400-e29b-41d4-a716-446655440000" }
+}
+```
+
+### Note de sécurité
+
+`revokeSession` ne supprime pas la ligne de session — elle définit `revoked: true`. La ligne est préservée à des fins d'audit. Un nettoyage basé sur des crons des sessions expirées et révoquées peut être ajouté en déployant une fonction planifiée contre `iframeEmbedSessions` — voir `convex/crons.ts` pour le pattern.
