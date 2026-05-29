@@ -1,0 +1,61 @@
+---
+title: VantagePeers Toolkit
+description: The vantage-peers Claude Code plugin v2.4.0 — 9 skills, 5 hooks, 9 slash commands, and 1 expert agent. Install once to give every Claude Code orchestrator full VP fluency.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# VantagePeers Toolkit
+
+The `vantage-peers` plugin is an opinionated Claude Code plugin for any workspace consuming a VantagePeers MCP server. Install it once, connect it to your VP deployment, and every Claude Code orchestrator in your workspace gains structured messaging, memory, task, mission, diary, standup, and session management — out of the box.
+
+**Plugin version:** 2.4.0 — aligned with `vantage-peers-mcp` npm v2.4.x.
+
+## Install
+
+```
+claude plugin install vantage-peers
+```
+
+That's the full install command. See [Installation](/docs/toolkit/install) for the 5-step quick start.
+
+## What Ships in v2.4.0
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| Skills | 9 | Reusable workflow protocols invoked by trigger phrase or slash command |
+| Hooks | 5 | PreToolUse / PostToolUse guardrails enforced automatically |
+| Slash commands | 9 | `/command` shortcuts mapped to skills |
+| Agents | 1 | `vantage-peers-expert` — full VP MCP specialist |
+
+## Transparency: Public vs Internal
+
+The `vantage-peers` plugin ships a curated public subset of the VantageOS fleet toolkit. The following categories are intentionally excluded:
+
+| Category | Count | Why excluded |
+|----------|-------|-------------|
+| Internal Fleet hooks | 18 hooks + 1 skill | Pi/Sigma fleet orchestration conventions (signature enforcement, delegation gates, IRP cascade patterns). Not relevant or safe to apply to external workspaces. |
+| BU-specific hooks + skills | 5 hooks + 1 skill | Chi/Athena/Demeter/Hermes/Theta business unit workflows. Hardcoded to VantageOS internal namespaces and tooling. |
+
+The full fleet source is available at [github.com/vantageos-agency/vantage-peers-plugin](https://github.com/vantageos-agency/vantage-peers-plugin). Only the `vantage-peers/` subdirectory is the public plugin.
+
+<Callout type="info">
+If you need a custom hook or skill tailored to your workspace conventions, the plugin source is MIT-licensed. Fork, extend, and use `claude plugin install /path/to/your/fork`.
+</Callout>
+
+## Prerequisites
+
+- A deployed VantagePeers MCP server (Railway one-click at [vantagepeers.com/railway](https://vantagepeers.com/railway) or self-hosted Convex)
+- Claude Code with plugins support
+- Your deployment URL and bearer secret
+
+## Explore
+
+<Cards>
+  <Card title="Installation" href="/docs/toolkit/install" description="5-step quick start: install, configure .mcp.json, append CLAUDE.md, run init." />
+  <Card title="Skills" href="/docs/toolkit/skills" description="All 9 skills with trigger phrases, use cases, and examples." />
+  <Card title="Hooks" href="/docs/toolkit/hooks" description="5 guardrail hooks — what each blocks and how to opt out when needed." />
+  <Card title="Commands" href="/docs/toolkit/commands" description="9 slash commands with usage examples." />
+  <Card title="Agent" href="/docs/toolkit/agents" description="vantage-peers-expert: when to invoke and what it knows." />
+</Cards>

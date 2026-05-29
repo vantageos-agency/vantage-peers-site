@@ -1,0 +1,143 @@
+---
+title: Hooks
+description: Les 5 hooks guardrail livrés dans vantage-peers v2.4.0 — déclencheurs, portée d'application et patterns de désactivation.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# Hooks
+
+Les hooks s'exécutent automatiquement sur chaque appel d'outil correspondant dans Claude Code. Ils appliquent silencieusement les standards de qualité du workflow VP — ils ne se manifestent que lorsqu'ils bloquent une action. Quand un hook bloque, il affiche une raison claire et un correctif.
+
+<Callout type="info">
+Les hooks du plugin public sont des **gates de qualité BU-agnostiques**. Ils n'appliquent pas les conventions spécifiques au fleet VantageOS (signatures, délégation, cascades IRP). Consultez la [vue d'ensemble du Toolkit](/docs/toolkit/index) pour le détail de transparence complet.
+</Callout>
+
+## Les 5 hooks
+
+### enforce-evidence-bound-completion
+
+**Déclencheur :** `PreToolUse` — correspond à `mcp__vantage-peers__complete_task` et `mcp__vantage-peers__update_task`
+
+**Ce qu'il applique :** Chaque fermeture de tâche ou mise à jour vers le statut `review`/`done` doit inclure un `completionNote` d'au moins 40 caractères contenant au moins un jeton de preuve vérifiable :
+
+| Type de jeton de preuve | Exemples |
+|------------------------|---------|
+| URL | Lien PR, URL de déploiement, URL dashboard |
+| Commit SHA | 7-40 caractères hexadécimaux |
+| Numéro PR / issue | `#546`, `#113` |
+| ID VP / Convex | ID tâche, ID mémoire, ID message |
+| Ratio de tests | `311/314`, `69/69` |
+| Artefact compté | `18 tests`, `7 fichiers`, `2900 lignes` |
+| Chemin de fichier | `analysis/report.md`, `qa/screenshots/x.png` |
+
+**Ce qu'il bloque :** Les notes de complétion contenant uniquement des mots de revendication sans preuve — "done", "merged", "PASS", "all good", "fixed".
+
+**Exemple d'appel bloqué :**
+```
+complete_task({ taskId: '...', completionNote: 'done' })
+# BLOQUÉ : "done" est une revendication, pas une preuve.
+```
+
+**Exemple d'appel accepté :**
+```
+complete_task({ taskId: '...', completionNote: 'PR #546 mergé, build passe, commit acc0092' })
+# PASS : contient PR#, confirmation de build, commit SHA
+```
+
+**Désactivation :** Ajoutez `// allow-no-evidence: <raison>` au commentaire de contexte de l'appel d'outil. Utilisez uniquement quand vous êtes véritablement bloqué (ex. tâche terminée sans artefact numérique). Corrigez la source si vous désactivez fréquemment.
+
+---
+
+### enforce-no-task-in-message
+
+**Déclencheur :** `PreToolUse` — correspond à `mcp__vantage-peers__send_message`
+
+**Ce qu'il applique :** Les messages inter-orchestrateurs contenant des instructions impératives ("implement", "fix", "build", "deploy", "create", "update") doivent référencer un ID de tâche. Le travail vit dans une tâche — les messages coordonnent, les tâches assignent.
+
+**Ce qu'il bloque :** Les messages qui donnent des instructions sans pointer vers une tâche formellement suivie.
+
+**Exemple d'appel bloqué :**
+```
+send_message({ to: 'sigma', content: 'Please implement the retry logic for the HTTP client.' })
+# BLOQUÉ : instruction impérative sans référence de tâche
+```
+
+**Exemple d'appel accepté :**
+```
+send_message({ to: 'sigma', content: 'Task k170xxx is ready for your review — #546 is open.' })
+# PASS : référence un ID de tâche et un PR
+```
+
+**Pourquoi cette règle existe :** Quand les instructions ne vivent que dans les messages, elles sont invisibles dans la file de tâches, ne peuvent pas être priorisées et n'ont pas de responsabilité de complétion. Créer d'abord une tâche rend le travail traçable.
+
+---
+
+### enforce-task-quality
+
+**Déclencheur :** `PreToolUse` — correspond à `mcp__vantage-peers__create_task`
+
+**Ce qu'il applique :** Chaque nouvelle tâche doit inclure les sections `VERIFICATION` et `TESTS` dans sa description. C'est la doctrine T-VERIFY — une tâche sans ces sections ne peut pas être achevée ou révisée de façon fiable.
+
+**Sections requises :**
+
+```
+VERIFICATION:
+- [ ] <vérification spécifique prouvant que le travail est terminé>
+- [ ] <deuxième vérification si applicable>
+
+TESTS:
+- [ ] <commande ou action de test concrète>
+```
+
+**Ce qu'il bloque :** Les tâches dont le champ `description` manque des marqueurs `VERIFICATION:` et `TESTS:`.
+
+**Exemple de description de tâche acceptée :**
+```
+Implémenter l'endpoint de rotation de token Bearer.
+
+VERIFICATION:
+- [ ] POST /rotate-token retourne 200 avec nouveau bearer
+- [ ] L'ancien bearer retourne 401 après rotation
+
+TESTS:
+- [ ] npm test -- --grep "bearer rotation"
+```
+
+---
+
+### block-time-estimates
+
+**Déclencheur :** `PreToolUse` — correspond à `Edit`, `Write`, `mcp__vantage-peers__send_message`, `mcp__vantage-peers__create_task`, `mcp__vantage-peers__update_task`, `mcp__vantage-peers__create_mission`
+
+**Ce qu'il applique :** Les estimations d'effort et de durée dans le contenu sont bloquées. Les formulations vagues de durée dans les tâches, messages, missions et fichiers écrits ne sont pas autorisées.
+
+**Désactivation pour valeurs de configuration légitimes :** Ajoutez `// allow-time-estimate: <raison>` sur la ligne concernée. Valide : valeurs de configuration factuelles (intervalles cron, durées d'animation, constantes TTL). Non valide : estimations d'effort de travail.
+
+**Pourquoi cette règle existe :** Les estimations d'effort dans les tâches et messages ont un mauvais bilan de précision et ancrent incorrectement les attentes. Le travail est délimité par les critères VERIFICATION, pas par une durée estimée.
+
+---
+
+### auto-compact-reminder
+
+**Déclencheur :** `PostToolUse` — correspond à `.*` (tous les outils)
+
+**Ce qu'il applique :** Suit le nombre d'appels d'outils par session. Rappelle de compacter au 35e appel d'outil, puis tous les 15 appels suivants. // allow-time-estimate: factual tool-call count thresholds
+
+**Ce qu'il fait :** Affiche un message de rappel quand le seuil est atteint : "Le contexte grandit — pensez à exécuter le skill `pre-compact` avant que la fenêtre de contexte soit pleine."
+
+**Portée :** Compteur au niveau de la session. Se réinitialise au démarrage de la session.
+
+**Pourquoi cette règle existe :** Les fenêtres de contexte Claude Code sont limitées. Exécuter `pre-compact` avant d'atteindre la limite garantit que l'état de session est préservé et que le prochain contexte peut reprendre sans perte.
+
+**Aucune désactivation nécessaire** — les rappels sont consultatifs, pas bloquants.
+
+## Référence des déclencheurs de hooks
+
+| Hook | Type de déclencheur | Outils correspondants |
+|------|--------------------|-----------------------|
+| `enforce-evidence-bound-completion` | PreToolUse | `complete_task`, `update_task` |
+| `enforce-no-task-in-message` | PreToolUse | `send_message` |
+| `enforce-task-quality` | PreToolUse | `create_task` |
+| `block-time-estimates` | PreToolUse | `Edit`, `Write`, `send_message`, `create_task`, `update_task`, `create_mission` |
+| `auto-compact-reminder` | PostToolUse | Tous les outils (`.*`) |

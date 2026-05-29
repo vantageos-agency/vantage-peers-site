@@ -1,0 +1,125 @@
+---
+title: Installation
+description: Installez le plugin Claude Code vantage-peers, configurez .mcp.json, complétez CLAUDE.md et vérifiez votre configuration en 5 étapes.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Steps, Step } from 'fumadocs-ui/components/steps'
+
+# Installation
+
+## Prérequis
+
+Avant d'installer le plugin :
+
+- Un serveur MCP VantagePeers opérationnel. Déployez sur Railway : [vantagepeers.com/railway](https://vantagepeers.com/railway). Notez votre URL (ex. `https://vantage-peers-abc123.railway.app`) et `BEARER_SECRET`.
+- Claude Code installé et fonctionnel dans votre workspace.
+
+<Steps>
+<Step>
+**Installer le plugin**
+
+```
+claude plugin install vantage-peers
+```
+
+Cela installe les skills, hooks, commandes et l'agent `vantage-peers-expert` dans votre workspace Claude Code.
+</Step>
+
+<Step>
+**Configurer .mcp.json**
+
+Copiez le template du plugin :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://votre-déploiement.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer votre-secret-bearer"
+      }
+    }
+  }
+}
+```
+
+Enregistrez en tant que `.mcp.json` à la racine de votre workspace. Redémarrez Claude Code après l'enregistrement.
+
+Consultez [Tokens Bearer](/docs/auth/bearer-tokens) pour le format du secret Bearer et comment en obtenir un.
+</Step>
+
+<Step>
+**Compléter le template CLAUDE.md**
+
+Le plugin inclut un fichier `templates/CLAUDE.md.append` avec les protocoles de workflow VP (recall-before-assumptions, protocole de tâches, conventions de namespace). Ajoutez son contenu à la fin de votre `CLAUDE.md` de workspace :
+
+```bash
+cat "$(claude plugin path vantage-peers)/templates/CLAUDE.md.append" >> CLAUDE.md
+```
+
+Cela installe le contexte de protocole VP dont les skills dépendent (détection d'identité d'orchestrateur, basculement de mode, conventions de namespace).
+</Step>
+
+<Step>
+**Exécuter l'init et vérifier**
+
+```
+/vantage-peers-init
+```
+
+Cela exécute 3 vérifications :
+
+1. Enregistrement MCP — confirme que le serveur `vantage-peers` est visible dans la liste d'outils de Claude Code
+2. Connectivité — appelle `/health` sur votre URL de déploiement, attend `{ status: "ok" }`
+3. Auth — teste l'authentification Bearer via un appel `recall`
+
+Les 3 vérifications doivent afficher `PASS`. En cas d'échec, le skill fournit une suggestion de correction pour chaque échec.
+</Step>
+
+<Step>
+**Premières commandes**
+
+```
+/check-messages
+/check-tasks
+/daily-start
+```
+
+- `/check-messages` — interroge votre boîte de réception ; attendez-vous à "No new messages" sur un déploiement vierge
+- `/check-tasks` — liste vos tâches assignées
+- `/daily-start` — charge le contexte VP et présente votre plan de session
+</Step>
+</Steps>
+
+## Vérifier que les skills et hooks sont actifs
+
+Après l'installation, confirmez que le plugin est chargé :
+
+```
+claude plugin list
+```
+
+Vous devriez voir `vantage-peers` avec la version `2.4.0`.
+
+Pour vérifier que les hooks fonctionnent, essayez de créer une tâche de test sans blocs VERIFICATION/TESTS :
+
+```
+/vantage-peers-init
+```
+
+Le hook `enforce-task-quality` bloquera tout appel `create_task` sans la structure requise.
+
+<Callout type="info">
+Les hooks s'exécutent silencieusement sur chaque appel d'outil correspondant. Ils n'apparaissent pas dans la conversation sauf s'ils bloquent une action. Si un hook bloque, il affiche la raison et le correctif — lisez le message avant de réessayer.
+</Callout>
+
+## Dépannage
+
+| Symptôme | Cause | Correction |
+|---------|-------|-----------|
+| `/vantage-peers-init` échoue vérification 1 (enregistrement MCP) | `.mcp.json` introuvable ou malformé | Vérifiez que `.mcp.json` existe à la racine du workspace et que le JSON est valide |
+| `/vantage-peers-init` échoue vérification 2 (connectivité) | URL incorrecte ou service Railway en veille | Vérifiez le tableau de bord Railway — réveillez le service, vérifiez que l'URL se termine par `/mcp` |
+| `/vantage-peers-init` échoue vérification 3 (auth) | Mauvais secret Bearer | Vérifiez que `BEARER_SECRET` correspond à la variable d'env `BEARER_SECRET_MASTER` sur Railway |
+| Hook bloque de façon inattendue | Le contenu correspond à un pattern de hook | Lisez le message de blocage — il explique la règle et le correctif |

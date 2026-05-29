@@ -1,0 +1,76 @@
+---
+title: Vue d'ensemble de l'authentification
+description: Trois flux d'authentification dans VantagePeers — échange de JWT Clerk, tokens Bearer directs, et Dynamic Client Registration OAuth pour clients MCP.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# Vue d'ensemble de l'authentification
+
+VantagePeers prend en charge trois flux d'authentification distincts. Chacun est conçu pour un contexte consommateur différent. Le choix du bon flux dépend de la façon dont votre client se connecte et de qui s'authentifie.
+
+## Les trois flux
+
+| Flux | Cas d'usage | Type de token | Durée de vie |
+|------|-------------|---------------|--------------|
+| **Échange JWT Clerk** | Extension navigateur / webapp agissant pour le compte d'un utilisateur connecté | Bearer niveau utilisateur | 7 jours |
+| **Token Bearer direct** | Clients MCP, plugins Claude Code, scripts CI | Bearer (BEARER_SECRET_MASTER ou client-issued) | Configurable |
+| **OAuth Dynamic Client Registration (DCR)** | Clients MCP SDK s'auto-enregistrant (Claude.ai, Claude Desktop) | Token d'accès OAuth | Configurable |
+
+## Tableau de décision — Quel flux choisir ?
+
+| Situation | Flux recommandé |
+|-----------|----------------|
+| Vous construisez une extension navigateur qui authentifie des utilisateurs via Clerk | [Échange JWT Clerk](/docs/auth/clerk-flow) |
+| Vous configurez Claude Code `.mcp.json` avec un secret Bearer statique | [Tokens Bearer](/docs/auth/bearer-tokens) |
+| Vous hébergez un serveur VP sur Railway et souhaitez que Claude.ai web se connecte | [OAuth DCR](/docs/auth/oauth-dcr) |
+| Vous êtes administrateur et provisionnez des tokens pour un compte de service automatisé | [Tokens Bearer](/docs/auth/bearer-tokens) — utilisez `BEARER_SECRET_MASTER` |
+| Vous êtes opérateur auto-hébergé et provisionnez un nouveau client MCP | [OAuth DCR](/docs/auth/oauth-dcr) |
+
+## Modèle de sécurité
+
+<Callout type="info">
+VantagePeers stocke **uniquement le hash SHA-256** de chaque token Bearer et secret OAuth. Le token brut est retourné exactement une fois lors de l'émission et ne peut jamais être recalculé à partir de la base de données. Si vous perdez un token, révoquez-le et émettez-en un nouveau.
+</Callout>
+
+### Stockage par hash uniquement
+
+- Tous les tokens Bearer sont des valeurs aléatoires cryptographiquement sûres de 32 octets (hex 64 caractères).
+- À l'émission, seul `sha256(token)` est écrit dans Convex.
+- Validation : la valeur du header `Authorization: Bearer <token>` entrant est hashée et comparée à l'index `by_token_hash` sur `userBearerTokens` (pour les tokens Clerk) ou `oauth_access_tokens` (pour les tokens OAuth).
+
+### Limites de débit
+
+| Endpoint | Limite |
+|----------|--------|
+| `POST /issueBearerFromClerk` | 5 requêtes par minute par utilisateur Clerk |
+| `POST /oauth/register` | Aucune limite (public ; la collision de client-id est le throttle naturel) |
+| `POST /oauth/token` | OAuth standard — aucune limite côté VP |
+
+### Journaux d'audit
+
+Le flux d'échange JWT Clerk écrit un enregistrement d'audit dans `credentialsAuditLog` à chaque émission réussie. Champs enregistrés : `clerkUserId`, `workspaceId`, `extId`, `extVersion`, `issuedAt`, IP source, `User-Agent`.
+
+## Prérequis
+
+Avant d'utiliser un flux d'authentification, vérifiez :
+
+1. Votre déploiement Convex est opérationnel et accessible.
+2. Les variables d'environnement pertinentes sont configurées dans le tableau de bord Convex (Paramètres → Variables d'environnement) :
+
+| Variable | Requise pour |
+|----------|-------------|
+| `CLERK_JWT_ISSUER_DOMAIN` | Échange JWT Clerk |
+| `VP_ALLOWED_EXT_IDS` | Échange JWT Clerk (IDs d'extension séparés par des virgules) |
+| `BEARER_SECRET_MASTER` | Auth Bearer directe + opérations admin OAuth |
+
+3. Pour les déploiements auto-hébergés, consultez la matrice complète des variables d'environnement sur [/docs/getting-started](/docs/getting-started/index).
+
+## Explorer chaque flux
+
+<Cards>
+  <Card title="Échange JWT Clerk" href="/docs/auth/clerk-flow" description="Extension navigateur : authentifie un utilisateur Clerk et obtient un token Bearer." />
+  <Card title="Tokens Bearer" href="/docs/auth/bearer-tokens" description="Cycle de vie, rotation, chemin de validation et format de header pour l'accès Bearer direct." />
+  <Card title="OAuth DCR" href="/docs/auth/oauth-dcr" description="Les clients MCP SDK s'auto-enregistrent via DCR pour un accès délimité." />
+</Cards>

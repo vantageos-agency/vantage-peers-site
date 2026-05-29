@@ -1,0 +1,117 @@
+---
+title: Agent Expert
+description: L'agent vantage-peers-expert — quand l'invoquer, quel contexte il charge, et exemples de prompts qui le déclenchent.
+---
+
+# Agent vantage-peers-expert
+
+L'agent `vantage-peers-expert` est un spécialiste MCP VantagePeers complet intégré dans le plugin. Il connaît tous les ~82 outils VP, les conventions de namespace, les types de mémoire, les protocoles de tâches, la gestion des missions, la messagerie, les notes de briefing, le journal, les fix-patterns, les composants, les mandats et les épisodes.
+
+## Quand l'invoquer
+
+L'agent est déclenché automatiquement quand Claude Code détecte ces patterns dans votre prompt :
+
+| Phrase déclencheuse | Ce qu'il fait |
+|--------------------|--------------|
+| "store this" | Appelle `store_memory` avec le bon type et namespace |
+| "recall X" | Appelle `recall` avec une requête de recherche hybride |
+| "create task" | Crée une tâche conforme T-VERIFY (sections VERIFICATION + TESTS) |
+| "set up VP" | Délègue au skill `vantage-peers-init` |
+| "what's in memory" | Appelle `recall` ou `list_memories` pour remonter l'état pertinent |
+| "send message to X" | Appelle `send_message` avec le routage correct |
+| "VP smoke test" | Exécute le skill init |
+| "check my tasks" | Délègue au skill `check-tasks` |
+| "log a decision" | Crée une mémoire `reference` dans le namespace approprié |
+| "write a briefing note" | Appelle `create_briefing_note` avec un contenu structuré |
+| "fix pattern" | Appelle `store_fix_pattern` ou `recall_fix_patterns` |
+| "VP namespace" | Explique les conventions de namespace et les applique |
+
+Vous pouvez aussi l'invoquer directement :
+
+```
+Utilise vantage-peers-expert pour stocker la décision de basculer vers le transport HTTP Railway.
+```
+
+## Ce qu'il sait
+
+### Catalogue d'outils (~82 outils)
+
+L'agent dispose d'une cartographie complète de tous les outils MCP VP par catégorie :
+
+| Catégorie | Outils principaux |
+|-----------|------------------|
+| Mémoire | `store_memory`, `recall`, `list_memories`, `get_memory`, `update_memory`, `delete_memory` |
+| Tâches | `create_task`, `list_tasks`, `start_task`, `complete_task`, `update_task`, `block_task` |
+| Missions | `create_mission`, `list_missions`, `get_mission`, `update_mission`, `start_mission`, `complete_mission` |
+| Messagerie | `send_message`, `check_messages`, `mark_as_read`, `list_messages` |
+| Notes de briefing | `create_briefing_note`, `list_briefing_notes`, `get_briefing_note`, `update_briefing_note` |
+| Journal | `write_diary`, `list_diary_entries`, `get_diary_entry` |
+| Fix Patterns | `store_fix_pattern`, `recall_fix_patterns`, `list_fix_patterns`, `apply_fix_pattern` |
+| Profils / Présence | `set_summary`, `get_summary`, `list_summaries`, `register_profile` |
+| Système | `health`, `list_tools` |
+
+### Conventions de namespace
+
+L'agent applique automatiquement les conventions de namespace VP :
+
+| Portée | Pattern | Pour quoi |
+|--------|---------|-----------|
+| Faits cross-équipe | `global` | Décisions, mandats, fix-patterns applicables partout |
+| Délimité au projet | `project/<slug>` | ex. `project/vantage-peers`, `project/cedar` |
+| Délimité à l'orchestrateur | `orchestrator/<role>` | État personnel, snapshots de session |
+
+### Types de mémoire
+
+| Type | Quand utilisé |
+|------|--------------|
+| `user` | Faits sur l'opérateur — préférences, contraintes |
+| `feedback` | Corrections, notes de qualité, "ne jamais refaire X" |
+| `project` | Faits au niveau projet — décisions de stack, URLs déployées |
+| `reference` | Artefacts à long terme — snapshots de session, résumés de spec |
+| `episode` | Enregistrements narratifs — ce qui s'est passé en session, rapports d'incident |
+
+### Doctrine T-VERIFY
+
+Chaque tâche créée par l'agent inclut des blocs `VERIFICATION` et `TESTS` obligatoires. L'agent ne créera pas de tâche sans eux.
+
+### Recall-Before-Assumptions
+
+L'agent appelle toujours `recall` avant de répondre à toute question factuelle sur l'état du projet, l'historique ou les décisions. Il indiquera "No memory found" si la recherche ne retourne rien, plutôt que de deviner.
+
+## Exemples de prompts
+
+**Stocker une décision :**
+```
+Store this architecture decision — we're using Railway for HTTP transport on Cedar.
+```
+L'agent appelle `store_memory` avec `type=reference`, `namespace=project/cedar`, contenu structuré.
+
+**Recall avant de répondre :**
+```
+What stack did we decide on for the Cedar API?
+```
+L'agent appelle d'abord `recall query="Cedar API stack decision" namespace=project/cedar`, puis répond d'après les résultats.
+
+**Créer une tâche correcte :**
+```
+Create a task for sigma to implement the Bearer token rotation endpoint.
+```
+L'agent appelle `create_task` avec `assignedTo=sigma`, et remplit les sections obligatoires `VERIFICATION` et `TESTS` dans la description.
+
+**Dispatch de swarm d'agents :**
+```
+Dispatch a task to eta to review commit acc0092 before we publish the npm package.
+```
+L'agent crée une tâche structurée avec le brief de revue et les critères VERIFICATION pour la gate d'approbation d'Eta.
+
+## Limites de portée
+
+L'agent ne fait pas de travail en dehors des outils VP. Il route les demandes hors portée :
+
+| Type de demande | Routé vers |
+|----------------|-----------|
+| Modifications de code frontend | Agent `dev-frontend` |
+| Décisions d'architecture | Agent `dev-senior-dev` |
+| Fonctions backend Convex | Agent `dev-convex-expert` |
+
+Quand invoqué comme sous-agent depuis un autre agent, il retourne : outil appelé + résultat clé (ID, compte, ou aperçu de contenu) + namespace utilisé.

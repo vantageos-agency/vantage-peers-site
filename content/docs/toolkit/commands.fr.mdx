@@ -1,0 +1,136 @@
+---
+title: Commandes Slash
+description: Les 9 commandes slash du plugin vantage-peers v2.4.0 — chaque commande, le skill qu'elle encapsule, et un exemple d'utilisation.
+---
+
+# Commandes Slash
+
+Les commandes slash sont l'interface d'invocation directe des 9 skills. Chaque commande encapsule exactement un skill et transmet les arguments optionnels.
+
+## Les 9 commandes
+
+| Commande | Skill encapsulé | Description |
+|----------|----------------|-------------|
+| `/check-messages` | check-messages | Interroger la boîte de réception et choisir la prochaine tâche (mode autonome) |
+| `/check-tasks` | check-tasks | Lister votre file de tâches, triée par priorité |
+| `/close-day` | close-day | Clôture EOD : mettre à jour tâches, écrire journal, stocker résumé |
+| `/daily-start` | daily-start | Démarrage matinal : charger le contexte et présenter le plan |
+| `/pre-compact` | pre-compact | Snapshot de session avant compaction de contexte |
+| `/recall <requête>` | recall | Recherche hybride sémantique + BM25 sur les mémoires VP |
+| `/standup` | standup | Générer un rapport de standup structuré et déposer une note de briefing |
+| `/vantage-peers-init` | vantage-peers-init | Vérifier l'enregistrement MCP, la connectivité et l'auth |
+| `/write-diary` | write-diary | Écrire une entrée de journal structurée pour aujourd'hui |
+
+## Exemples d'utilisation
+
+### /check-messages
+
+```
+/check-messages
+```
+
+Interroge votre boîte de réception. Affiche les messages non lus avec l'expéditeur et le contenu. En mode autonome, choisit et démarre automatiquement la prochaine tâche prioritaire après le traitement des messages.
+
+Argument optionnel pour vérifier avec un rôle spécifique :
+```
+/check-messages --role sigma
+```
+
+---
+
+### /check-tasks
+
+```
+/check-tasks
+```
+
+Liste toutes les tâches assignées à votre rôle d'orchestrateur. Groupe par priorité (urgent → high → medium → low). Signale les tâches bloquées avec leurs IDs de dépendances. Suggère la prochaine tâche non bloquée à démarrer.
+
+---
+
+### /close-day
+
+```
+/close-day
+```
+
+Déclenche la séquence de clôture EOD : révise les tâches ouvertes, écrit le journal pour la date d'aujourd'hui, stocke un résumé de session comme mémoire `reference`, et définit votre présence d'orchestrateur en état fermé/veille.
+
+---
+
+### /daily-start
+
+```
+/daily-start
+```
+
+Charge le contexte VP pour la session courante : rappelle les mémoires récentes du projet, vérifie les messages, liste les tâches actives. En mode humain : présente un plan de session proposé. En mode autonome : choisit et démarre directement la tâche non bloquée de plus haute priorité.
+
+---
+
+### /pre-compact
+
+```
+/pre-compact
+```
+
+Sauvegarde un snapshot complet de session avant la compaction de contexte. Stocke l'état actuel (missions actives, tâches, bloqueurs, résumé en 3 lignes) comme mémoire `reference` et une note de briefing. Le prochain contexte rappellera ceci et reprendra de façon fluide.
+
+---
+
+### /recall
+
+```
+/recall <requête>
+```
+
+Effectue une recherche hybride sémantique + BM25 sur les mémoires VP. Le namespace est détecté automatiquement depuis la requête, ou vous pouvez le spécifier :
+
+```
+/recall "decisions architecture auth" --namespace project/vantage-peers
+```
+
+Retourne les mémoires les mieux correspondantes avec leurs types, namespaces et horodatages de création.
+
+---
+
+### /standup
+
+```
+/standup
+```
+
+Génère un standup structuré avec 4 sections :
+
+- **DONE** — tâches terminées depuis le dernier standup
+- **IN PROGRESS** — tâches actuellement actives
+- **BLOCKERS** — tâches bloquées avec les IDs de dépendances
+- **GIT** — commits récents (si l'outil Bash est disponible)
+
+Dépose le résultat comme `briefing_note` avec le topic `standup`.
+
+---
+
+### /vantage-peers-init
+
+```
+/vantage-peers-init
+```
+
+Exécute 3 vérifications et produit un rapport PASS/FAIL :
+
+1. Enregistrement MCP — `vantage-peers` visible dans la liste d'outils
+2. Connectivité — `/health` retourne `{ status: "ok" }`
+3. Auth — l'appel `recall` réussit avec un Bearer valide
+
+Les 3 doivent passer avant d'utiliser les autres skills.
+
+---
+
+### /write-diary
+
+```
+/write-diary
+```
+
+Guide à travers une entrée de journal structurée. Pose une question d'ancrage sur la chose la plus importante aujourd'hui, puis construit et stocke une entrée de journal avec les points saillants, ce qui a été appris, et les bloqueurs ouverts.

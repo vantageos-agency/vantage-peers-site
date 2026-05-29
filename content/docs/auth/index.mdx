@@ -1,0 +1,76 @@
+---
+title: Authentication Overview
+description: Three authentication flows in VantagePeers — Clerk JWT exchange, direct Bearer tokens, and OAuth Dynamic Client Registration for MCP clients.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# Authentication Overview
+
+VantagePeers supports three distinct authentication flows. Each is designed for a different consumer context. Choosing the right one depends on how your client connects and who is authenticating.
+
+## The Three Flows
+
+| Flow | Use case | Token type | Lifetime |
+|------|----------|------------|----------|
+| **Clerk JWT exchange** | Browser extension / webapp acting on behalf of a logged-in user | User-grade Bearer | 7 days |
+| **Direct Bearer token** | MCP server clients, Claude Code plugins, CI scripts | Bearer (BEARER_SECRET_MASTER or client-issued) | Configurable |
+| **OAuth Dynamic Client Registration (DCR)** | MCP client SDKs self-registering (Claude.ai, Claude Desktop) | OAuth access token | Configurable |
+
+## Decision Table — Which Flow Should I Use?
+
+| Situation | Recommended flow |
+|-----------|-----------------|
+| You are building a browser extension that authenticates users via Clerk | [Clerk JWT exchange](/docs/auth/clerk-flow) |
+| You are configuring Claude Code `.mcp.json` with a static bearer secret | [Bearer tokens](/docs/auth/bearer-tokens) |
+| You are building a Railway-hosted VP server and want Claude.ai web to connect | [OAuth DCR](/docs/auth/oauth-dcr) |
+| You are an admin provisioning tokens for an automated service account | [Bearer tokens](/docs/auth/bearer-tokens) — use `BEARER_SECRET_MASTER` |
+| You are a self-hosted VP operator provisioning a new MCP client | [OAuth DCR](/docs/auth/oauth-dcr) |
+
+## Security Model
+
+<Callout type="info">
+VantagePeers stores **only the SHA-256 hash** of every Bearer token and OAuth secret. The raw token is returned exactly once at issuance and is never re-derivable from the database. If you lose a token, revoke it and issue a new one.
+</Callout>
+
+### Hash-only storage
+
+- All Bearer tokens are 32-byte cryptographically random values (64-char hex).
+- At issuance, only `sha256(token)` is written to Convex.
+- Validation: the incoming `Authorization: Bearer <token>` header value is hashed and matched against the `by_token_hash` index on `userBearerTokens` (for Clerk-issued tokens) or `oauth_access_tokens` (for OAuth tokens).
+
+### Rate limits
+
+| Endpoint | Limit |
+|----------|-------|
+| `POST /issueBearerFromClerk` | 5 requests per minute per Clerk user |
+| `POST /oauth/register` | No limit (public; client-id collision is the natural throttle) |
+| `POST /oauth/token` | Standard OAuth — no explicit VP-side limit |
+
+### Audit logs
+
+The Clerk JWT exchange flow writes an audit record to `credentialsAuditLog` for every successful issuance. Fields recorded: `clerkUserId`, `workspaceId`, `extId`, `extVersion`, `issuedAt`, source IP, `User-Agent`.
+
+## Prerequisites
+
+Before using any auth flow, confirm:
+
+1. Your Convex deployment is running and accessible.
+2. The relevant environment variables are set in the Convex dashboard (Settings → Environment Variables):
+
+| Variable | Required for |
+|----------|-------------|
+| `CLERK_JWT_ISSUER_DOMAIN` | Clerk JWT exchange |
+| `VP_ALLOWED_EXT_IDS` | Clerk JWT exchange (comma-separated extension IDs) |
+| `BEARER_SECRET_MASTER` | Direct Bearer auth + OAuth admin operations |
+
+3. For self-hosted deployments, cross-reference the full environment variable matrix at [/docs/self-host/env-vars](/docs/getting-started/index).
+
+## Explore Each Flow
+
+<Cards>
+  <Card title="Clerk JWT Exchange" href="/docs/auth/clerk-flow" description="Browser extension authenticates a Clerk user and receives a 7-day Bearer token." />
+  <Card title="Bearer Tokens" href="/docs/auth/bearer-tokens" description="Lifecycle, rotation, validation path, and header format for direct Bearer access." />
+  <Card title="OAuth DCR" href="/docs/auth/oauth-dcr" description="MCP client SDKs self-register via Dynamic Client Registration for scoped access." />
+</Cards>

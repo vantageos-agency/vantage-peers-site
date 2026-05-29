@@ -1,0 +1,117 @@
+---
+title: Expert Agent
+description: The vantage-peers-expert agent — when to invoke it, what context it loads, and example prompts that trigger it.
+---
+
+# vantage-peers-expert Agent
+
+The `vantage-peers-expert` agent is a full VantagePeers MCP specialist embedded in the plugin. It knows all ~82 VP tools, namespace conventions, memory types, task protocols, mission management, messaging, briefing notes, diary, fix-patterns, components, mandates, and episodes.
+
+## When to Invoke
+
+The agent is triggered automatically when Claude Code detects any of these patterns in your prompt:
+
+| Trigger phrase | What it does |
+|---------------|-------------|
+| "store this" | Calls `store_memory` with the correct type and namespace |
+| "recall X" | Calls `recall` with a hybrid search query |
+| "create task" | Creates a T-VERIFY-compliant task (VERIFICATION + TESTS sections) |
+| "set up VP" | Delegates to the `vantage-peers-init` skill |
+| "what's in memory" | Calls `recall` or `list_memories` to surface relevant state |
+| "send message to X" | Calls `send_message` with correct routing |
+| "VP smoke test" | Runs the init skill |
+| "check my tasks" | Delegates to the `check-tasks` skill |
+| "log a decision" | Creates a `reference` memory in the appropriate namespace |
+| "write a briefing note" | Calls `create_briefing_note` with structured content |
+| "fix pattern" | Calls `store_fix_pattern` or `recall_fix_patterns` |
+| "VP namespace" | Explains namespace conventions and applies them |
+
+You can also invoke it directly:
+
+```
+Use the vantage-peers-expert to store the decision about switching to Railway HTTP transport.
+```
+
+## What It Knows
+
+### Tool Catalog (~82 tools)
+
+The agent has a complete map of all VP MCP tools by category:
+
+| Category | Key tools |
+|----------|-----------|
+| Memory | `store_memory`, `recall`, `list_memories`, `get_memory`, `update_memory`, `delete_memory` |
+| Tasks | `create_task`, `list_tasks`, `start_task`, `complete_task`, `update_task`, `block_task` |
+| Missions | `create_mission`, `list_missions`, `get_mission`, `update_mission`, `start_mission`, `complete_mission` |
+| Messaging | `send_message`, `check_messages`, `mark_as_read`, `list_messages` |
+| Briefing Notes | `create_briefing_note`, `list_briefing_notes`, `get_briefing_note`, `update_briefing_note` |
+| Diary | `write_diary`, `list_diary_entries`, `get_diary_entry` |
+| Fix Patterns | `store_fix_pattern`, `recall_fix_patterns`, `list_fix_patterns`, `apply_fix_pattern` |
+| Profiles / Presence | `set_summary`, `get_summary`, `list_summaries`, `register_profile` |
+| System | `health`, `list_tools` |
+
+### Namespace Conventions
+
+The agent applies VP namespace conventions automatically:
+
+| Scope | Pattern | Use for |
+|-------|---------|---------|
+| Cross-team facts | `global` | Decisions, mandates, fix-patterns that apply everywhere |
+| Project-scoped | `project/<slug>` | e.g. `project/vantage-peers`, `project/cedar` |
+| Orchestrator-scoped | `orchestrator/<role>` | Personal state, session snapshots |
+
+### Memory Types
+
+| Type | When used |
+|------|-----------|
+| `user` | Facts about the operator — preferences, constraints |
+| `feedback` | Corrections, quality notes, "never do X again" |
+| `project` | Project-level facts — stack decisions, deployed URLs |
+| `reference` | Long-lived artifacts — session snapshots, spec summaries |
+| `episode` | Narrative records — what happened in a session, incident reports |
+
+### T-VERIFY Doctrine
+
+Every task the agent creates includes mandatory `VERIFICATION` and `TESTS` blocks. The agent will not create a task without them.
+
+### Recall-Before-Assumptions
+
+The agent always calls `recall` before answering any factual question about project state, history, or decisions. It will state "No memory found" if the search returns nothing, rather than guessing.
+
+## Example Prompts
+
+**Store a decision:**
+```
+Store this architecture decision — we're using Railway for HTTP transport on Cedar.
+```
+Agent calls `store_memory` with `type=reference`, `namespace=project/cedar`, structured content.
+
+**Recall before answering:**
+```
+What stack did we decide on for the Cedar API?
+```
+Agent calls `recall query="Cedar API stack decision" namespace=project/cedar` first, then answers based on results.
+
+**Create a proper task:**
+```
+Create a task for sigma to implement the Bearer token rotation endpoint.
+```
+Agent calls `create_task` with `assignedTo=sigma`, and fills in mandatory `VERIFICATION` and `TESTS` sections in the description.
+
+**Agent swarm dispatch:**
+```
+Dispatch a task to eta to review commit acc0092 before we publish the npm package.
+```
+Agent creates a structured task with the review brief and VERIFICATION criteria for Eta's approval gate.
+
+## Scope Boundaries
+
+The agent does not do work outside VP tooling. It routes out-of-scope requests:
+
+| Request type | Routed to |
+|-------------|-----------|
+| Frontend code changes | `dev-frontend` agent |
+| Architecture decisions | `dev-senior-dev` agent |
+| Convex backend functions | `dev-convex-expert` agent |
+
+When invoked as a sub-agent from another agent, it returns: tool called + key result (ID, count, or content preview) + namespace used.

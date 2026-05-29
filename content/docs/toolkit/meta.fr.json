@@ -1,0 +1,4 @@
+{
+  "title": "Plugin Toolkit",
+  "pages": ["index", "install", "skills", "hooks", "commands", "agents"]
+}

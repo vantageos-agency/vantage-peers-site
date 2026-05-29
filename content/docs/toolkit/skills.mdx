@@ -1,0 +1,193 @@
+---
+title: Skills
+description: All 9 public skills in the vantage-peers plugin v2.4.0 — descriptions, trigger phrases, when to use, and minimal examples.
+---
+
+# Skills
+
+Skills are reusable workflow protocols that encode VP best practices. Each skill is invoked by a trigger phrase (natural language) or its corresponding slash command. Skills use VP MCP tools internally and enforce patterns like Evidence-Bound Done and T-VERIFY doctrine.
+
+## All 9 Skills
+
+### check-messages
+
+**Description:** Poll unread messages from other orchestrators, respond to any that require action, and (in autonomous mode) auto-pick the next unblocked todo task.
+
+**Trigger phrases:** "check messages", "any messages", "inbox", "peers", "new messages"
+
+**When to use:**
+- At the start of every session to check for dispatched work
+- When running autonomously to chain tasks (the skill self-chains via Step 6)
+- When a peer orchestrator may have sent instructions or completed delegated work
+
+**Example:**
+
+```
+User: check messages
+```
+
+The skill detects your orchestrator mode (human vs autonomous), polls `check_messages`, displays any unread messages with their senders, responds to any that require action, marks them as read, and in autonomous mode picks the next priority task.
+
+---
+
+### check-tasks
+
+**Description:** Fetch all tasks assigned to your orchestrator role, filter out done tasks, sort by priority, and flag any blocked tasks.
+
+**Trigger phrases:** "my tasks", "task list", "what should I work on", "backlog"
+
+**When to use:**
+- To get an overview of your current workload
+- Before starting a session to know what's queued
+- When you want to see blocked tasks and their blockers
+
+**Example:**
+
+```
+User: what should I work on today?
+```
+
+The skill calls `list_tasks` with your assigned role, groups by priority (urgent → high → medium → low), surfaces blocked tasks with their dependency IDs, and presents the next unblocked task.
+
+---
+
+### close-day
+
+**Description:** End-of-day wrap routine — updates open task statuses, writes a diary entry, stores a session summary as memory, and calls `set_summary` to closed.
+
+**Trigger phrases:** "close day", "end of day", "wrap up", "close session"
+
+**When to use:**
+- At the end of a working session before stopping Claude Code
+- Before a planned context compaction
+
+**Example:**
+
+```
+User: close day
+```
+
+The skill prompts for any outstanding updates, writes a diary entry for today, stores a `reference` memory with session highlights, and sets your orchestrator summary to closed/standby.
+
+---
+
+### daily-start
+
+**Description:** Morning session start — loads VP context (recent memories, active tasks, messages), presents the day plan for human operators or auto-picks the highest-priority task for autonomous orchestrators.
+
+**Trigger phrases:** "start the day", "morning plan", "daily planning", "session start"
+
+**When to use:**
+- At the beginning of every working session
+- When resuming after a context compaction
+
+**Example:**
+
+```
+User: start the day
+```
+
+In human mode: recalls recent project memories, lists active tasks, checks messages, and presents a proposed session plan. In autonomous mode: directly picks and starts the top-priority unblocked task.
+
+---
+
+### pre-compact
+
+**Description:** Session snapshot before context compaction — saves full session state (active missions, tasks, blockers, 3-line summary) as a `reference` memory and a briefing note.
+
+**Trigger phrases:** "save context", "before compaction", "snapshot session"
+
+**When to use:**
+- When Claude Code warns that context is approaching the limit
+- Before intentionally compacting to continue work in a fresh context
+
+**Example:**
+
+```
+User: save context before compaction
+```
+
+The skill calls `store_memory` with a snapshot of current session state and `create_briefing_note` with a structured handoff note, so the next session can `recall` exactly where things were left.
+
+---
+
+### recall
+
+**Description:** Semantic + BM25 hybrid search across VP memories. Auto-detects the most likely namespace from the query.
+
+**Trigger phrases:** "recall", "search memory", "what do we know about", "look up"
+
+**When to use:**
+- Before answering any factual question about project state, history, or decisions
+- When you need to find a previously stored fix pattern, spec, or decision
+
+**Example:**
+
+```
+User: recall what we decided about the auth architecture
+```
+
+The skill constructs a hybrid recall query (semantic + BM25), searches across the relevant namespace (auto-detected from query context), and returns the top matching memories with their types and namespaces.
+
+---
+
+### standup
+
+**Description:** Generate a structured standup report (DONE / IN PROGRESS / BLOCKERS / GIT sections) and file it as a briefing note.
+
+**Trigger phrases:** "standup", "status report", "daily report", "sitrep"
+
+**When to use:**
+- Daily standup or shift handoff
+- When a team coordinator needs a structured status update
+- Before a planning meeting
+
+**Example:**
+
+```
+User: standup
+```
+
+The skill calls `list_tasks` for recent completions and in-progress items, checks git for recent commits (if Bash is available), assembles the 4-section report, and calls `create_briefing_note` with topic `standup`.
+
+---
+
+### vantage-peers-init
+
+**Description:** Verify VP setup — checks MCP registration, tests `/health`, and smoke-tests auth via `recall`. Produces a PASS/FAIL report with specific fix instructions per failure.
+
+**Trigger phrases:** "verify VP setup", "VP smoke test", "init vantage-peers"
+
+**When to use:**
+- After initial plugin installation
+- After changing `.mcp.json` or bearer secret
+- After a Railway redeployment
+
+**Example:**
+
+```
+/vantage-peers-init
+```
+
+All 3 checks must PASS before using other skills. If any fail, follow the specific fix instruction output by the skill.
+
+---
+
+### write-diary
+
+**Description:** Write a structured diary entry — asks one grounding question, then constructs an entry with highlights, blockers, and a reflection section.
+
+**Trigger phrases:** "write diary", "diary entry", "log today", "journal entry"
+
+**When to use:**
+- At the end of a meaningful session
+- After completing a significant milestone
+- As part of the `close-day` skill (which calls this internally)
+
+**Example:**
+
+```
+User: write diary
+```
+
+The skill asks "What was the most important thing that happened today?" then calls `write_diary` with a structured entry covering highlights, what was learned, and any open blockers.
