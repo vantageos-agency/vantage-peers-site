@@ -1,0 +1,208 @@
+---
+title: Migrate from stdio to HTTP Transport
+description: Move vantage-peers-mcp from a local stdio process to a cloud-hosted HTTP endpoint — multi-client access, centralized auth, no per-machine installs.
+---
+
+# Migrate from stdio to HTTP Transport
+
+## Why migrate
+
+The stdio transport runs `vantage-peers-mcp` as a local process on each machine, with one MCP server per Claude Code session. The HTTP transport runs one server in the cloud, accessible to any number of clients simultaneously.
+
+| | stdio | HTTP |
+|---|---|---|
+| Install required on each machine | Yes | No |
+| Multiple agents share one server | No | Yes |
+| Works from Claude.ai web | No | Yes |
+| Auth model | None (local process) | Bearer token + OAuth DCR |
+| State persistence across restarts | Via Convex | Via Convex |
+| Deploy surface | Local machine | Railway (or any host) |
+
+Practical triggers for migrating:
+
+- You are adding a second agent or machine and want them to share the same VantagePeers instance.
+- You want to connect Claude.ai (web) to your VantagePeers deployment.
+- You want centralized auth and token rotation without touching every agent's machine.
+- You want healthchecks, uptime monitoring, and Railway restart policies.
+
+---
+
+## Before and after: .mcp.json
+
+### Before (stdio)
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp@2.4.0"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud",
+        "BEARER_SECRET_MASTER": "your-local-secret"
+      }
+    }
+  }
+}
+```
+
+### After (HTTP)
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://your-project.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_BEARER_SECRET_MASTER"
+      }
+    }
+  }
+}
+```
+
+The `CONVEX_URL` and `BEARER_SECRET_MASTER` move from the client config to Railway environment variables. The client only needs the server URL and a bearer token.
+
+---
+
+## Migration steps
+
+### Step 1: Deploy the HTTP server on Railway
+
+Follow the [Railway HTTP deploy guide](/docs/self-host/railway-http) in full before continuing. Confirm:
+
+- `curl https://your-project.up.railway.app/health` returns 200
+- `railway logs` shows "Running" state
+
+### Step 2: Validate tool parity
+
+The HTTP transport exposes the same 82 tools as stdio. Before switching, confirm the deployed version matches your current stdio version:
+
+```bash
+# Check the deployed version via health endpoint
+curl https://your-project.up.railway.app/health | grep version
+# Expected: "version": "2.4.0"
+
+# Compare with your local stdio version
+npx vantage-peers-mcp@2.4.0 --version 2>/dev/null || echo "version flag not supported"
+```
+
+### Step 3: Run both transports in parallel (validation window)
+
+During transition, keep the stdio config active on one agent while adding the HTTP config on another. Both agents write to the same Convex backend, so you can verify tool calls produce identical results:
+
+**Agent A (stdio — unchanged):**
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp@2.4.0"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud",
+        "BEARER_SECRET_MASTER": "your-local-secret"
+      }
+    }
+  }
+}
+```
+
+**Agent B (HTTP — new):**
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://your-project.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_BEARER_SECRET_MASTER"
+      }
+    }
+  }
+}
+```
+
+Have Agent B call `search_memories` or `list_tasks` and confirm it retrieves the same data that Agent A wrote.
+
+### Step 4: Switch all clients to HTTP
+
+Once validated, update every agent's MCP config to the HTTP form:
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://your-project.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_BEARER_SECRET_MASTER"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Code on each machine after updating the config.
+
+### Step 5: Remove local env vars and stdio config
+
+Once all clients are confirmed working on HTTP:
+
+1. Remove `CONVEX_URL` and `BEARER_SECRET_MASTER` from local `.env` files and agent configs — they are now Railway variables.
+2. Remove the `npx vantage-peers-mcp` stdio entry from all `.mcp.json` / `settings.json` files.
+3. Optionally uninstall the local package: `npm uninstall -g vantage-peers-mcp` (if globally installed).
+
+<Callout type="warn">
+  Do not remove the local config until at least one HTTP client has been validated end-to-end. Running both transports simultaneously is safe — they write to the same Convex database with no conflict.
+</Callout>
+
+---
+
+## Validation: same tool calls, both transports
+
+Run the same tool call on both stdio and HTTP to confirm identical output:
+
+**stdio:**
+
+```bash
+CONVEX_URL=https://your-deployment.convex.cloud \
+BEARER_SECRET_MASTER=your-local-secret \
+npx vantage-peers-mcp@2.4.0
+# Then from Claude Code: search_memories namespace="global" query="test"
+```
+
+**HTTP:**
+
+```bash
+curl -H "Authorization: Bearer $BEARER_SECRET_MASTER" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "search_memories",
+      "arguments": {"namespace": "global", "query": "test"}
+    }
+  }' \
+  https://your-project.up.railway.app/mcp
+```
+
+Both should return results from the same Convex database. If the HTTP call returns fewer or different results, check that `CONVEX_URL_INTERNAL` on Railway points to the same deployment as `CONVEX_URL` in your stdio config.
+
+---
+
+## Rollback path
+
+If the HTTP deploy has issues and you need to revert immediately:
+
+1. Keep your original stdio config in a backup file (`settings.stdio-backup.json`).
+2. To rollback: restore the stdio config and restart Claude Code — no Railway changes needed.
+3. The Convex data is unaffected by either transport — all writes persist regardless of which transport made them.
+
+<Callout type="info">
+  The stdio and HTTP transports are both stateless with respect to Convex — they both use `ConvexHttpClient` per-request. Switching between them mid-session is safe. Any memory, task, or message written via stdio is immediately visible via HTTP and vice versa.
+</Callout>

@@ -6,7 +6,9 @@
     "core-concepts",
     "capabilities",
     "infrastructure",
+    "self-host",
     "---Reference---",
-    "tools"
+    "tools",
+    "changelog"
   ]
 }
