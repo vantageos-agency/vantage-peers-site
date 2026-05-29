@@ -1,0 +1,159 @@
+---
+title: RAG Embeddings
+description: Configure text-embedding-3-small (1536 dims), troubleshoot rate limits, dimension mismatches, and API key errors in VantagePeers RAG search.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+
+# RAG Embeddings
+
+VantagePeers uses `@convex-dev/rag` with **text-embedding-3-small** (1536 dimensions) for semantic memory search and hybrid (vector + BM25) search.
+
+## Configuration
+
+### Environment variables
+
+Set in your Convex dashboard (Settings → Environment Variables):
+
+| Variable | Required | Description |
+|---|---|---|
+| `AI_GATEWAY_API_KEY` | Yes | OpenAI-compatible API key for the embedding model |
+| `AI_GATEWAY_BASE_URL` | No | Override for OpenAI-compatible gateway (default: OpenAI API) |
+
+<Callout type="info">
+`AI_GATEWAY_API_KEY` accepts standard OpenAI API keys (`sk-...`) or any OpenAI-compatible gateway key (e.g. Azure OpenAI, OpenRouter). The embedding model name is hardcoded to `text-embedding-3-small`.
+</Callout>
+
+### Verify configuration
+
+After setting the key, test it by calling `search_memories`:
+
+```
+search_memories({ query: "test", namespace: "sigma", limit: 1 })
+```
+
+If it returns results (or an empty array), embeddings are working. If it throws, see the errors below.
+
+---
+
+## Common Errors
+
+### `AI_GATEWAY_API_KEY` not set
+
+```
+Error: AI_GATEWAY_API_KEY is not set. Configure it in Convex dashboard → Settings → Environment Variables.
+```
+
+**Fix**:
+
+<Steps>
+  <Step>Open the [Convex dashboard](https://dashboard.convex.dev)</Step>
+  <Step>Select your deployment → **Settings** → **Environment Variables**</Step>
+  <Step>Add `AI_GATEWAY_API_KEY` with your OpenAI API key value</Step>
+  <Step>Save — the change takes effect immediately, no redeploy needed</Step>
+</Steps>
+
+---
+
+### Rate limit exceeded
+
+```
+Error: 429 Too Many Requests — Rate limit reached for text-embedding-3-small
+OpenAI error: You exceeded your current quota
+```
+
+**Root cause**: Your OpenAI account has hit its embedding rate limit (tokens per minute or requests per minute). This happens when many agents search or store memories simultaneously.
+
+**Fix options**:
+
+<Tabs items={['Reduce rate', 'Upgrade tier', 'Use gateway']}>
+  <Tab value="Reduce rate">
+    Add a delay between embedding-intensive operations. Memory writes (`store_memory`) generate one embedding per call. Batching writes into larger `content` strings instead of many small calls reduces total embedding requests.
+
+    ```ts
+    // Instead of many small memories:
+    store_memory({ content: "fact 1", namespace: "sigma" })
+    store_memory({ content: "fact 2", namespace: "sigma" })
+
+    // Combine into one:
+    store_memory({
+      content: "fact 1\n\nfact 2",
+      namespace: "sigma"
+    })
+    ```
+  </Tab>
+  <Tab value="Upgrade tier">
+    Upgrade your OpenAI account to Tier 2 or higher. Tier 1 (new accounts) has a 1M token/minute limit for text-embedding-3-small. Tier 2 raises this to 10M tokens/minute. See [OpenAI rate limits](https://platform.openai.com/docs/guides/rate-limits).
+  </Tab>
+  <Tab value="Use gateway">
+    Route embeddings through a gateway that handles rate limiting for you (e.g. Azure OpenAI, OpenRouter). Set `AI_GATEWAY_BASE_URL` to your gateway endpoint and `AI_GATEWAY_API_KEY` to your gateway key.
+  </Tab>
+</Tabs>
+
+---
+
+### Dimension mismatch
+
+```
+Error: Vector dimension mismatch: expected 1536, got 1024
+ConvexError: Index dimension does not match stored vectors
+```
+
+**Root cause**: The Convex vector index for memories was created with one dimension (e.g. 1536 from text-embedding-3-small) but the current embedding model returns a different dimension.
+
+This happens when:
+- The embedding model was changed mid-deployment
+- A custom gateway is configured with a different model
+- An older deployment snapshot was restored
+
+**Fix**:
+
+<Callout type="warn">
+Fixing a dimension mismatch requires re-embedding all existing memories. This cannot be done without data migration.
+</Callout>
+
+<Steps>
+  <Step>Confirm the current model dimension by checking `AI_GATEWAY_BASE_URL`. If it points to a gateway, verify what model the gateway is using and its output dimension.</Step>
+  <Step>If you changed models intentionally, you need to re-index: export all memories, delete the vector index, re-create with the new dimension, and re-embed all content. Contact support or open a GitHub issue for migration tooling.</Step>
+  <Step>If you did not change models, revert `AI_GATEWAY_BASE_URL` to the default (or remove it) to restore text-embedding-3-small at 1536 dims.</Step>
+</Steps>
+
+---
+
+### Embedding timeout
+
+```
+Error: Embedding request timed out after 30000ms
+```
+
+**Root cause**: The embedding API call (OpenAI or gateway) did not respond within the Convex function timeout. This is rare with OpenAI direct but can happen with slow gateway proxies.
+
+**Fix**:
+- Check gateway latency — switch to OpenAI direct if your gateway is slow
+- Reduce content size. Very long content strings take more time to embed. Keep individual memory content under 8000 tokens
+
+---
+
+### Search returns no results (embeddings seem wrong)
+
+If `search_memories` returns empty despite relevant memories existing:
+
+1. Verify the namespace matches exactly — namespaces are case-sensitive (`sigma` != `Sigma`)
+2. Check that the memories were stored with the same API key / model — if the model changed, old vectors are from a different embedding space
+3. Try `recall_memories` with `type` filter instead of semantic search — BM25 text search does not require vector alignment
+
+---
+
+## Embedding model reference
+
+| Property | Value |
+|---|---|
+| Model | `text-embedding-3-small` |
+| Provider | OpenAI (or compatible gateway) |
+| Dimensions | **1536** |
+| Max input | 8191 tokens |
+| Search mode | Cosine similarity |
+| Index type | Convex vector index |
+| Hybrid search | RRF fusion (vector + BM25) |

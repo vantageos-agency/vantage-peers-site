@@ -1,0 +1,229 @@
+---
+title: Common Errors
+description: Top 10 VantagePeers errors with diagnosis and fix steps — CONVEX_URL missing, auth failures, tool not found, schema violations, and more.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
+
+# Common Errors
+
+<Accordions>
+
+<Accordion title="1. CONVEX_URL not found / not set">
+
+**Error message**:
+```
+Error: CONVEX_URL not found.
+Set it via: export CONVEX_URL=https://your-deployment.convex.cloud
+Or create a .env.local file with CONVEX_URL=...
+```
+
+**Cause**: The MCP server could not find a Convex deployment URL in the environment or `.env.local` file.
+
+**Fix**:
+
+Option A — environment variable:
+```bash
+export CONVEX_URL=https://your-deployment.convex.cloud
+```
+
+Option B — `.env.local` file in the directory where you run `npx vantage-peers-mcp`:
+```
+CONVEX_URL=https://your-deployment.convex.cloud
+```
+
+Find your deployment URL in the [Convex dashboard](https://dashboard.convex.dev) → your project → Settings → Deployment URL.
+
+</Accordion>
+
+<Accordion title="2. Bearer auth failure (HTTP transport)">
+
+**Error message**:
+```
+HTTP 401 Unauthorized
+{"error":"invalid_token","error_description":"Bearer token is missing or invalid"}
+```
+
+**Cause**: The HTTP transport requires a bearer token in the `Authorization` header. The token is either missing, expired (OAuth), or incorrect (master token mismatch).
+
+**Fix**:
+
+For master bearer (admin):
+```bash
+export BEARER_SECRET_MASTER=your-secret-here
+# Then add to MCP client config: Authorization: Bearer <your-secret>
+```
+
+For OAuth tokens: re-authorize the client through the OAuth flow. OAuth access tokens expire after a short window — check that your client refreshes using the refresh token before expiry.
+
+For Claude.ai connector: use the `/.well-known/oauth-authorization-server` discovery endpoint to verify redirect URIs match your registered client.
+
+</Accordion>
+
+<Accordion title="3. Tool not found">
+
+**Error message**:
+```
+MCP error: Tool 'tool_name' not found
+UnknownToolError: No tool registered with name 'tool_name'
+```
+
+**Cause**: The tool name used in the MCP call does not match any registered tool. Common causes:
+- Typo in tool name (e.g. `list_task` instead of `list_tasks`)
+- Using a tool that was removed in a newer version
+- Using an old MCP client that cached the tool list
+
+**Fix**:
+
+1. Check the [Tools Reference](/docs/tools) for the exact tool name
+2. Call `tools/list` to get the current server tool list
+3. If using Claude Code, restart the MCP server connection to refresh the tool cache
+
+</Accordion>
+
+<Accordion title="4. Zod validation error on tool input">
+
+**Error message**:
+```
+ZodError: [{"code":"invalid_type","expected":"string","received":"number","path":["assignedTo"]}]
+McpError: Invalid arguments for tool 'create_task'
+```
+
+**Cause**: The arguments passed to the tool do not match the expected schema. VantagePeers tools use strict Zod validation on all inputs.
+
+**Fix**: Review the tool schema in the [Tools Reference](/docs/tools). Common issues:
+- Passing a number where a string is expected (e.g. `priority: 1` should be `priority: "high"`)
+- Passing an array as a JSON string (`"[\"a\",\"b\"]"` instead of `["a","b"]`) — note: the server auto-normalizes this for most array params
+- Missing required fields
+
+</Accordion>
+
+<Accordion title="5. Convex function not found">
+
+**Error message**:
+```
+ConvexError: Function "tasks:list" not found
+Error calling Convex: Could not find function with path "memories:search"
+```
+
+**Cause**: The Convex deployment does not have the expected function. This happens when:
+- The Convex backend is not deployed or is using an older version
+- `npx convex deploy` has not been run after a code update
+- The CONVEX_URL points to the wrong deployment
+
+**Fix**:
+
+```bash
+# From the vantage-peers repo root:
+npx convex deploy --prod
+```
+
+Verify the deployment completed successfully in the Convex dashboard → Functions tab.
+
+</Accordion>
+
+<Accordion title="6. Memory namespace not found (empty results, no error)">
+
+**Symptom**: `recall_memories` or `search_memories` returns an empty array, but you know memories exist.
+
+**Cause**: Namespaces are case-sensitive. `sigma` and `Sigma` are different namespaces.
+
+**Fix**: Use exact lowercase namespace strings. All built-in orchestrators use lowercase Greek letters (`sigma`, `pi`, `tau`, etc.). Verify with:
+
+```
+list_memories({ namespace: "sigma", limit: 5 })
+```
+
+If that returns results, the data exists under the correct namespace. If not, check what namespace the memories were stored under using the Convex dashboard → Data tab → `memories` table.
+
+</Accordion>
+
+<Accordion title="7. Rate limit on GitHub webhook / API">
+
+**Error message**:
+```
+GitHub API error: 403 rate limit exceeded
+X-RateLimit-Remaining: 0
+```
+
+**Cause**: The `GITHUB_TOKEN` environment variable is either not set (unauthenticated rate limit: 60 req/hour) or the token's rate limit is exhausted.
+
+**Fix**:
+
+1. Set `GITHUB_TOKEN` in the Convex dashboard:
+   - Settings → Environment Variables → `GITHUB_TOKEN`
+   - Use a fine-grained personal access token with `issues:read` and `issues:write` permissions
+2. Authenticated requests get 5000 req/hour — sufficient for all normal usage
+
+</Accordion>
+
+<Accordion title="8. MCP connection refused (HTTP transport)">
+
+**Error message**:
+```
+connect ECONNREFUSED 127.0.0.1:3000
+Error: fetch failed — connection refused
+```
+
+**Cause**: The HTTP MCP server is not running, or it's running on a different port.
+
+**Fix**:
+
+1. Start the HTTP server:
+   ```bash
+   cd mcp-server
+   PORT=3000 CONVEX_URL=... BEARER_SECRET_MASTER=... node dist/server-http.js
+   ```
+2. Verify it's listening:
+   ```bash
+   curl http://localhost:3000/health
+   ```
+3. If using Railway, check the deployment logs — the server logs its port on startup
+
+</Accordion>
+
+<Accordion title="9. VpToolResultSchema parse failure (Paradigm B)">
+
+**Error message**:
+```
+TypeError: [stream-marker] wrapToolResult: invalid payload — ...
+```
+
+Or `parseToolResult` returns `null` when you expect a structured result.
+
+**Cause**: The payload does not conform to `VpToolResultSchema`. Common issues:
+- `kind` value does not match one of the 6 allowed strings
+- `diary-entry` and `briefing-note` use `item` (singular), not `items` — easy to confuse
+- Required fields missing (`_id`, `title` for tasks, etc.)
+
+**Fix**: Validate against the schema before wrapping:
+
+```ts
+const result = VpToolResultSchema.safeParse(payload)
+if (!result.success) {
+  console.error('Schema error:', result.error.format())
+}
+```
+
+See the [Stream Marker reference](/docs/paradigm-b/stream-marker) for the full discriminated union definition.
+
+</Accordion>
+
+<Accordion title="10. VP_EMIT_UI_MARKERS has no effect">
+
+**Symptom**: `VP_EMIT_UI_MARKERS=1` is set but tool responses do not contain markers.
+
+**Cause**: The environment variable must be set in the **Convex dashboard** (server-side), not in the local `.env.local` file or shell environment. The MCP server reads its own Node.js environment, but the auto-emit logic runs inside Convex functions.
+
+**Fix**:
+
+1. Open Convex dashboard → your deployment → Settings → Environment Variables
+2. Add `VP_EMIT_UI_MARKERS` with value `1`
+3. Save — takes effect on the next function call, no redeploy needed
+
+Verify by calling any of the 6 auto-emit tools and checking if the response text contains `__VP_TOOL_RESULT__`.
+
+</Accordion>
+
+</Accordions>

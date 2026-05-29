@@ -1,0 +1,9 @@
+{
+  "title": "Dépannage",
+  "pages": [
+    "index",
+    "convex-workpool",
+    "rag-embeddings",
+    "common-errors"
+  ]
+}

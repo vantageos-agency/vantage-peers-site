@@ -1,0 +1,195 @@
+---
+title: Guide du consommateur
+description: Comment Hermes, Mu et Registry consomment le Paradigme B — importation des schémas, parsing des marqueurs et rendu des primitives.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# Guide du consommateur
+
+Ce guide couvre la façon dont trois consommateurs de référence intègrent le Paradigme B. Chacun a une architecture différente, mais tous trois partagent le même patron `parseToolResult` + validation Zod + switch de rendu.
+
+## Patron d'intégration commun
+
+Tous les consommateurs suivent ce flux en trois étapes :
+
+<Steps>
+  <Step>
+    **Intercepter** : capturer le texte brut d'une réponse d'outil MCP ou d'un résultat d'appel direct Convex.
+  </Step>
+  <Step>
+    **Parser** : appeler `parseToolResult(text)` — retourne un `VpToolResult` validé ou `null`.
+  </Step>
+  <Step>
+    **Afficher** : faire un switch sur `result.kind` et dispatcher vers le renderer approprié.
+  </Step>
+</Steps>
+
+```ts
+import { parseToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+import type { VpToolResult } from 'vantage-peers-mcp/ui-resources/schemas'
+
+function gererReponseOutil(texteBreut: string): void {
+  const result = parseToolResult(texteBreut)
+
+  if (!result) {
+    afficherTexteSimple(texteBreut)
+    return
+  }
+
+  afficherStructure(result)
+}
+
+function afficherStructure(result: VpToolResult): void {
+  switch (result.kind) {
+    case 'tasks-table':      return afficherTableauTaches(result.items)
+    case 'messages-feed':    return afficherFilMessages(result.items)
+    case 'diary-entry':      return afficherEntreeJournal(result.item)
+    case 'mission-timeline': return afficherTimelineMissions(result.items)
+    case 'briefing-note':    return afficherNoteBriefing(result.item)
+    case 'memory-quote':     return afficherCitationMemoire(result.items)
+    default:
+      result satisfies never
+  }
+}
+```
+
+---
+
+## Consommateur 1 : Hermes vantage-peers-extension
+
+**Architecture** : Extension Claude Desktop utilisant un client Convex direct (pas MCP HTTP). Hermes s'abonne aux requêtes temps réel Convex et appelle les actions Convex directement.
+
+**Points d'intégration** : Hermes reçoit les résultats des appels d'outils via l'API d'utilisation d'outils de Claude Desktop. Quand `VP_EMIT_UI_MARKERS=1`, ces résultats contiennent des marqueurs intégrés.
+
+```ts
+// hermes/src/tool-handler.ts
+import { parseToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+import { VpToolResultSchema } from 'vantage-peers-mcp/ui-resources/schemas'
+
+export function surResultatAppelOutil(nomOutil: string, resultatBrut: string): void {
+  const vpResult = parseToolResult(resultatBrut)
+
+  if (!vpResult) {
+    claudeDesktop.afficherTexte(resultatBrut)
+    return
+  }
+
+  const valide = VpToolResultSchema.safeParse(vpResult)
+  if (!valide.success) {
+    console.warn('[Hermes] Non-conformité schéma VpToolResult:', valide.error)
+    claudeDesktop.afficherTexte(resultatBrut)
+    return
+  }
+
+  // Rendu via injection Shadow DOM
+  const hote = document.createElement('div')
+  const shadow = hote.attachShadow({ mode: 'open' })
+
+  const uri = construireUriUi(valide.data)
+  recupererRessourceUi(uri).then((html) => {
+    shadow.innerHTML = html
+    claudeDesktop.afficherWidget(hote)
+  })
+}
+```
+
+<Callout type="info">
+Hermes utilise un **rendu en deux passes** : il parse le marqueur pour obtenir les métadonnées kind/count immédiatement, puis récupère le HTML complet depuis la ressource `ui://` pour le rendu final.
+</Callout>
+
+---
+
+## Consommateur 2 : Panneau latéral Mu vantage-bridge
+
+**Architecture** : Extension navigateur avec panneau latéral se connectant via transport MCP HTTP (Streamable HTTP). Mu communique avec le serveur MCP VantagePeers déployé sur Railway.
+
+**Intégration** : Mu intercepte toutes les réponses `tools/call` de la connexion MCP HTTP et les fait passer par `parseToolResult`.
+
+```ts
+// mu/src/mcp-bridge.ts
+import { parseToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+
+export async function appelerOutil(
+  nomOutil: string,
+  args: Record<string, unknown>
+): Promise<void> {
+  const reponse = await clientMcpHttp.callTool({ name: nomOutil, arguments: args })
+
+  const texteBreut = reponse.content
+    .filter((c) => c.type === 'text')
+    .map((c) => c.text)
+    .join('\n')
+
+  const vpResult = parseToolResult(texteBreut)
+
+  if (vpResult) {
+    panneauLateral.postMessage({ type: 'VP_PRIMITIVE', payload: vpResult })
+  } else {
+    panneauLateral.postMessage({ type: 'TEXT', payload: texteBreut })
+  }
+}
+```
+
+---
+
+## Consommateur 3 : Registry json-render
+
+**Architecture** : Le Registry VantagePeers est un workflow natif Convex. Après les appels d'outils, il utilise l'extraction de marqueurs post-appel pour persister les données structurées et afficher des résumés compacts dans sa propre interface.
+
+**Intégration** : Le Registry traite les résultats d'actions Convex (pas les réponses MCP). Quand un outil émet automatiquement un marqueur, le Registry l'extrait pour construire un résumé JSON dans son journal d'activité.
+
+```ts
+// registry/src/tool-result-processor.ts
+import { parseToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+import { VpToolResultSchema } from 'vantage-peers-mcp/ui-resources/schemas'
+
+export function extraireEtJournaliser(
+  nomOutil: string,
+  resultatBrut: string,
+  idSession: string
+): void {
+  const vpResult = parseToolResult(resultatBrut)
+
+  if (!vpResult) {
+    journalActivite.push({
+      idSession,
+      nomOutil,
+      type: 'text',
+      apercu: resultatBrut.slice(0, 200)
+    })
+    return
+  }
+
+  const parse = VpToolResultSchema.parse(vpResult)
+  const meta = extraireMeta(parse)
+
+  journalActivite.push({
+    idSession,
+    nomOutil,
+    type: 'structured',
+    kind: parse.kind,
+    nombre: meta.nombre,
+    apercu: meta.apercu,
+    payload: parse,
+  })
+}
+```
+
+---
+
+## Choisir la bonne approche
+
+| Scénario | Approche recommandée |
+|---|---|
+| Besoin du HTML complet avec CSS (Shadow DOM) | Récupérer la ressource `ui://` après le parsing du marqueur |
+| Besoin uniquement des données structurées | Utiliser `parseToolResult` + `VpToolResultSchema` directement |
+| Journal d'audit à fort volume | Patron Registry : extraire les métadonnées, persister `payload` |
+| Panneau latéral temps réel | Patron Mu : bridge post-message entre client MCP et renderer |
+| Extension desktop avec Convex direct | Patron Hermes : deux passes (métadonnées marqueur + HTML ui://) |
+
+<Callout type="warn">
+Utilisez toujours `parseToolResult` du package npm — ne réimplémentez pas la logique de parsing des marqueurs. Les tokens délimiteurs (`__VP_TOOL_RESULT__` / `__END__`) sont stables dans la v2.x mais seront versionnés en v3. Utilisez le package pour une compatibilité automatique.
+</Callout>

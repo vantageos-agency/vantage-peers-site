@@ -1,0 +1,238 @@
+---
+title: Marqueur de flux
+description: Marqueurs de flux __VP_TOOL_RESULT__ — helpers wrapToolResult / parseToolResult, union discriminée VpToolResultSchema, et quels outils émettent automatiquement des marqueurs.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+
+# Marqueur de flux
+
+Le marqueur de flux `__VP_TOOL_RESULT__` est un protocole texte léger intégré dans les réponses des outils MCP. Il permet aux consommateurs en aval (Claude Desktop, Hermes, panneau latéral Mu, Registry) de détecter et d'afficher des primitives UI structurées en ligne, sans appel séparé à `resources/read`.
+
+## Format du marqueur
+
+```
+__VP_TOOL_RESULT__<json>__END__
+```
+
+Où `<json>` est un objet JSON sérialisé conforme à `VpToolResultSchema` (une union discriminée Zod avec un discriminateur `kind`). Le JSON est minifié (sans espaces).
+
+**Exemple complet — tasks-table :**
+
+```
+__VP_TOOL_RESULT__{"kind":"tasks-table","items":[{"_id":"j97abc","title":"Corriger le bug d'auth","status":"in_progress","priority":"high","assignedTo":"sigma"}]}__END__
+```
+
+Le marqueur n'est émis que lorsque `VP_EMIT_UI_MARKERS=1` est défini dans l'environnement Convex. Quand la variable est absente (par défaut), les réponses des outils sont en texte brut — les intégrations existantes ne sont pas affectées.
+
+## VpToolResultSchema — Union discriminée
+
+Six types, un par primitive. Importez depuis `vantage-peers-mcp/ui-resources/schemas` :
+
+```ts
+import { VpToolResultSchema } from 'vantage-peers-mcp/ui-resources/schemas'
+import type { VpToolResult } from 'vantage-peers-mcp/ui-resources/schemas'
+```
+
+### Type : `tasks-table`
+
+```ts
+{
+  kind: 'tasks-table',
+  items: Array<{
+    _id: string
+    title: string
+    status: string
+    priority?: string
+    assignedTo?: string
+    _creationTime?: number
+  }>
+}
+```
+
+### Type : `messages-feed`
+
+```ts
+{
+  kind: 'messages-feed',
+  items: Array<{
+    _id: string
+    from: string
+    channel?: string
+    content: string
+    createdAt: number
+  }>
+}
+```
+
+### Type : `diary-entry`
+
+```ts
+{
+  kind: 'diary-entry',
+  item: {
+    _id: string
+    date: string        // YYYY-MM-DD
+    orchestrator: string
+    content: string
+    highlights?: string[]
+    blockers?: string[]
+  }
+}
+```
+
+Note : `diary-entry` utilise `item` (singulier), pas `items`.
+
+### Type : `mission-timeline`
+
+```ts
+{
+  kind: 'mission-timeline',
+  items: Array<{
+    _id: string
+    name: string
+    project?: string
+    status: string
+    pilot?: string
+    priority?: string
+    progress?: number   // 0–100
+  }>
+}
+```
+
+### Type : `briefing-note`
+
+```ts
+{
+  kind: 'briefing-note',
+  item: {
+    _id: string
+    topic: string
+    title: string
+    participants?: string[]
+    content?: string
+    createdBy?: string
+  }
+}
+```
+
+Note : `briefing-note` utilise `item` (singulier).
+
+### Type : `memory-quote`
+
+```ts
+{
+  kind: 'memory-quote',
+  items: Array<{
+    _id: string
+    namespace: string
+    type: string
+    content: string
+    score?: number
+  }>
+}
+```
+
+## Helpers
+
+Importez les deux helpers depuis `vantage-peers-mcp/ui-resources/stream-marker` :
+
+```ts
+import {
+  wrapToolResult,
+  parseToolResult,
+  MARKER_START,
+  MARKER_END,
+} from 'vantage-peers-mcp/ui-resources/stream-marker'
+```
+
+### `wrapToolResult(payload: VpToolResult): string`
+
+Valide `payload` contre `VpToolResultSchema`, puis sérialise au format marqueur. Lève une `TypeError` si la validation échoue.
+
+```ts
+const marker = wrapToolResult({
+  kind: 'tasks-table',
+  items: [
+    { _id: 'j97abc', title: 'Corriger le bug d\'auth', status: 'in_progress', priority: 'high', assignedTo: 'sigma' },
+  ],
+})
+// → "__VP_TOOL_RESULT__{"kind":"tasks-table","items":[...]}__END__"
+```
+
+### `parseToolResult(text: string): VpToolResult | null`
+
+Extrait et valide un marqueur VP depuis `text`. Gère trois cas :
+
+1. `text` **est** le marqueur (brut)
+2. `text` **contient** le marqueur dans du contenu environnant
+3. `text` **ne contient pas** de marqueur — retourne `null`
+
+Retourne le `VpToolResult` validé en cas de succès, ou `null` en cas d'échec. Ne lève jamais d'exception.
+
+```ts
+const result = parseToolResult(toolResponse)
+
+if (result === null) {
+  afficherTexteSimple(toolResponse)
+} else {
+  afficherPrimitive(result)
+}
+```
+
+## Outils à émission automatique
+
+Quand `VP_EMIT_UI_MARKERS=1` est défini, les 6 outils MCP suivants ajoutent automatiquement un marqueur `__VP_TOOL_RESULT__` à leur réponse textuelle :
+
+| Outil | Type émis |
+|---|---|
+| `list_tasks` | `tasks-table` |
+| `list_messages` / `get_messages` | `messages-feed` |
+| `get_diary_entry` | `diary-entry` |
+| `list_missions` | `mission-timeline` |
+| `get_briefing_note` | `briefing-note` |
+| `search_memories` / `recall_memories` | `memory-quote` |
+
+<Callout type="info">
+L'émission automatique est additive — le marqueur est ajouté après la réponse texte lisible par l'humain. Les consommateurs qui n'implémentent pas `parseToolResult` voient le texte brut du marqueur, ce qui est inesthétique mais pas nuisible. Définissez `VP_EMIT_UI_MARKERS=1` uniquement dans les déploiements où au moins un consommateur gère les marqueurs.
+</Callout>
+
+## Patron de rendu par switch
+
+Patron standard pour afficher un résultat parsé :
+
+```ts
+import { parseToolResult, type VpToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+
+function gererReponseOutil(text: string): void {
+  const result = parseToolResult(text)
+  if (!result) {
+    afficherTexteSimple(text)
+    return
+  }
+
+  switch (result.kind) {
+    case 'tasks-table':
+      afficherTableauTaches(result.items)
+      break
+    case 'messages-feed':
+      afficherFilMessages(result.items)
+      break
+    case 'diary-entry':
+      afficherEntreeJournal(result.item)
+      break
+    case 'mission-timeline':
+      afficherTimelineMissions(result.items)
+      break
+    case 'briefing-note':
+      afficherNoteBriefing(result.item)
+      break
+    case 'memory-quote':
+      afficherCitationMemoire(result.items)
+      break
+    default:
+      result satisfies never
+  }
+}
+```

@@ -1,0 +1,136 @@
+---
+title: Embeddings RAG
+description: Configurer text-embedding-3-small (1536 dims), résoudre les limites de débit, les incompatibilités de dimensions et les erreurs de clé API dans la recherche RAG de VantagePeers.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+
+# Embeddings RAG
+
+VantagePeers utilise `@convex-dev/rag` avec **text-embedding-3-small** (1536 dimensions) pour la recherche sémantique de mémoires et la recherche hybride (vecteur + BM25).
+
+## Configuration
+
+### Variables d'environnement
+
+À définir dans votre tableau de bord Convex (Paramètres → Variables d'environnement) :
+
+| Variable | Requis | Description |
+|---|---|---|
+| `AI_GATEWAY_API_KEY` | Oui | Clé API compatible OpenAI pour le modèle d'embedding |
+| `AI_GATEWAY_BASE_URL` | Non | Remplacement pour passerelle compatible OpenAI (défaut : API OpenAI) |
+
+<Callout type="info">
+`AI_GATEWAY_API_KEY` accepte les clés API OpenAI standard (`sk-...`) ou toute clé de passerelle compatible OpenAI (ex. Azure OpenAI, OpenRouter). Le nom du modèle d'embedding est codé en dur à `text-embedding-3-small`.
+</Callout>
+
+### Vérifier la configuration
+
+Après avoir défini la clé, testez-la en appelant `search_memories` :
+
+```
+search_memories({ query: "test", namespace: "sigma", limit: 1 })
+```
+
+Si elle retourne des résultats (ou un tableau vide), les embeddings fonctionnent. Si elle lève une exception, consultez les erreurs ci-dessous.
+
+---
+
+## Erreurs courantes
+
+### `AI_GATEWAY_API_KEY` non définie
+
+```
+Error: AI_GATEWAY_API_KEY is not set. Configure it in Convex dashboard → Settings → Environment Variables.
+```
+
+**Correction** :
+
+<Steps>
+  <Step>Ouvrez le [tableau de bord Convex](https://dashboard.convex.dev)</Step>
+  <Step>Sélectionnez votre déploiement → **Paramètres** → **Variables d'environnement**</Step>
+  <Step>Ajoutez `AI_GATEWAY_API_KEY` avec votre valeur de clé API OpenAI</Step>
+  <Step>Enregistrez — la modification prend effet immédiatement, sans redéploiement</Step>
+</Steps>
+
+---
+
+### Limite de débit dépassée
+
+```
+Error: 429 Too Many Requests — Rate limit reached for text-embedding-3-small
+OpenAI error: You exceeded your current quota
+```
+
+**Cause racine** : votre compte OpenAI a atteint sa limite de débit d'embedding. Cela se produit quand de nombreux agents recherchent ou stockent des mémoires simultanément.
+
+**Options de correction** :
+
+<Tabs items={['Réduire le débit', 'Changer de niveau', 'Utiliser une passerelle']}>
+  <Tab value="Réduire le débit">
+    Ajoutez un délai entre les opérations intensives en embedding. Les écritures mémoire (`store_memory`) génèrent un embedding par appel. Regrouper les écritures en chaînes `content` plus grandes réduit le nombre total de requêtes d'embedding.
+
+    ```ts
+    // Au lieu de plusieurs petites mémoires :
+    store_memory({ content: "fait 1", namespace: "sigma" })
+    store_memory({ content: "fait 2", namespace: "sigma" })
+
+    // Combinez en une seule :
+    store_memory({
+      content: "fait 1\n\nfait 2",
+      namespace: "sigma"
+    })
+    ```
+  </Tab>
+  <Tab value="Changer de niveau">
+    Passez votre compte OpenAI au Niveau 2 ou supérieur. Le Niveau 1 (nouveaux comptes) a une limite de 1M tokens/minute pour text-embedding-3-small. Le Niveau 2 l'augmente à 10M tokens/minute.
+  </Tab>
+  <Tab value="Utiliser une passerelle">
+    Routez les embeddings via une passerelle qui gère la limitation de débit pour vous (ex. Azure OpenAI, OpenRouter). Définissez `AI_GATEWAY_BASE_URL` sur l'endpoint de votre passerelle et `AI_GATEWAY_API_KEY` sur votre clé de passerelle.
+  </Tab>
+</Tabs>
+
+---
+
+### Incompatibilité de dimensions
+
+```
+Error: Vector dimension mismatch: expected 1536, got 1024
+ConvexError: Index dimension does not match stored vectors
+```
+
+**Cause racine** : l'index vectoriel Convex pour les mémoires a été créé avec une dimension (ex. 1536 de text-embedding-3-small) mais le modèle d'embedding actuel retourne une dimension différente.
+
+<Callout type="warn">
+Corriger une incompatibilité de dimensions nécessite de ré-embedder toutes les mémoires existantes. Cela ne peut pas se faire sans migration de données.
+</Callout>
+
+**Correction** : vérifiez `AI_GATEWAY_BASE_URL`. Si vous n'avez pas changé de modèle intentionnellement, retirez `AI_GATEWAY_BASE_URL` pour restaurer text-embedding-3-small à 1536 dims.
+
+---
+
+### Délai d'attente d'embedding dépassé
+
+```
+Error: Embedding request timed out after 30000ms
+```
+
+**Cause racine** : l'appel API d'embedding n'a pas répondu dans le délai imparti de la fonction Convex. Rare avec OpenAI direct, mais possible avec des passerelles lentes.
+
+**Correction** : vérifiez la latence de la passerelle. Passez à OpenAI direct si votre passerelle est lente. Réduisez la taille du contenu — gardez chaque mémoire sous 8000 tokens.
+
+---
+
+## Référence du modèle d'embedding
+
+| Propriété | Valeur |
+|---|---|
+| Modèle | `text-embedding-3-small` |
+| Fournisseur | OpenAI (ou passerelle compatible) |
+| Dimensions | **1536** |
+| Entrée maximale | 8191 tokens |
+| Mode de recherche | Similarité cosinus |
+| Type d'index | Index vectoriel Convex |
+| Recherche hybride | Fusion RRF (vecteur + BM25) |
