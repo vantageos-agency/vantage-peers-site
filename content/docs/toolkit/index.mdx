@@ -29,21 +29,6 @@ That's the full install command. See [Installation](/docs/toolkit/install) for t
 | Slash commands | 9 | `/command` shortcuts mapped to skills |
 | Agents | 1 | `vantage-peers-expert` — full VP MCP specialist |
 
-## Transparency: Public vs Internal
-
-The `vantage-peers` plugin ships a curated public subset of the VantageOS fleet toolkit. The following categories are intentionally excluded:
-
-| Category | Count | Why excluded |
-|----------|-------|-------------|
-| Internal Fleet hooks | 18 hooks + 1 skill | Pi/Sigma fleet orchestration conventions (signature enforcement, delegation gates, IRP cascade patterns). Not relevant or safe to apply to external workspaces. |
-| BU-specific hooks + skills | 5 hooks + 1 skill | Chi/Athena/Demeter/Hermes/Theta business unit workflows. Hardcoded to VantageOS internal namespaces and tooling. |
-
-The full fleet source is available at [github.com/vantageos-agency/vantage-peers-plugin](https://github.com/vantageos-agency/vantage-peers-plugin). Only the `vantage-peers/` subdirectory is the public plugin.
-
-<Callout type="info">
-If you need a custom hook or skill tailored to your workspace conventions, the plugin source is MIT-licensed. Fork, extend, and use `claude plugin install /path/to/your/fork`.
-</Callout>
-
 ## Prerequisites
 
 - A deployed VantagePeers MCP server (Railway one-click at [vantagepeers.com/railway](https://vantagepeers.com/railway) or self-hosted Convex)
