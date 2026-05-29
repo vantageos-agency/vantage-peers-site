@@ -1,0 +1,181 @@
+---
+title: CLI Reference
+description: How to run the vantage-peers-mcp server — stdio transport for Claude Code, HTTP transport for Railway/Claude.ai, and all environment variable configuration.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# CLI Reference
+
+`vantage-peers-mcp` ships two server entry points. Both are configured entirely via environment variables — there are no CLI flags. Choose based on your transport:
+
+| Entry point | Transport | Use case |
+|---|---|---|
+| `dist/server.js` | stdio | Claude Code agents (local) |
+| `dist/server-http.js` | Streamable HTTP | Railway deploy, Claude.ai connector, remote clients |
+
+---
+
+## Stdio Transport (Claude Code)
+
+The stdio server reads from stdin and writes to stdout following the MCP stdio transport protocol. It is designed to be launched by Claude Code as a child process.
+
+### Run directly
+
+```bash
+CONVEX_URL=https://your-deployment.convex.cloud node dist/server.js
+```
+
+Or with `bun` during development:
+
+```bash
+CONVEX_URL=https://your-deployment.convex.cloud bun run server.ts
+```
+
+### Claude Code configuration
+
+Add to your `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "node",
+      "args": ["/path/to/mcp-server/dist/server.js"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Or via `npx` (no local install needed):
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp@latest"],
+      "env": {
+        "CONVEX_URL": "https://your-deployment.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+### CONVEX_URL resolution order (stdio)
+
+The stdio server resolves `CONVEX_URL` in this order:
+
+1. `CONVEX_URL` environment variable (explicit env, always wins)
+2. `CONVEX_URL=` entry in `.env.local` in the working directory where the server is launched
+3. If neither is found: exits with error
+
+---
+
+## HTTP Transport (Railway / Claude.ai)
+
+The HTTP server exposes a Streamable HTTP MCP endpoint, full OAuth 2.0 authorization server, and optional master bearer auth. Intended for Railway deployment or any always-on server.
+
+### Run locally
+
+```bash
+PORT=3000 \
+CONVEX_URL_INTERNAL=https://your-deployment.convex.cloud \
+BEARER_SECRET_MASTER=your-secret \
+PUBLIC_BASE_URL=http://localhost:3000 \
+node dist/server-http.js
+```
+
+### Run in production (Railway)
+
+Set these environment variables in your Railway project:
+
+```
+CONVEX_URL_INTERNAL=https://your-deployment.convex.cloud
+BEARER_SECRET_MASTER=<random 32-char secret>
+PUBLIC_BASE_URL=https://your-railway-app.up.railway.app
+PORT=3000
+NODE_ENV=production
+```
+
+Railway injects `PORT` automatically — you do not need to set it manually in Railway.
+
+---
+
+## Environment Variable Reference
+
+### Shared (both transports)
+
+| Variable | Required | Description |
+|---|---|---|
+| `CONVEX_URL` | Yes (stdio) | Convex deployment URL. Resolved from env or `.env.local`. |
+| `VP_EMIT_UI_MARKERS` | No | Set to `1` to enable `__VP_TOOL_RESULT__` stream markers on auto-emit tools. See [Stream Marker](/docs/paradigm-b/stream-marker). |
+
+### HTTP transport only
+
+| Variable | Required | Description |
+|---|---|---|
+| `CONVEX_URL_INTERNAL` | Yes | Convex deployment URL for the internal orchestrator client used by OAuth state mutations. |
+| `BEARER_SECRET_MASTER` | Yes | Master bearer token for admin endpoints (`/admin/*`). Must be kept secret. |
+| `PUBLIC_BASE_URL` | Recommended | Public URL of this server, used as the OAuth `issuer` in discovery metadata. Defaults to `https://vantage-peers-production.up.railway.app` if not set. |
+| `PORT` | No | HTTP port. Default: `3000`. |
+| `NODE_ENV` | No | Set to `production` on Railway. Controls error verbosity. |
+
+### Convex backend (set in Convex dashboard)
+
+These variables are set in the **Convex dashboard** (Settings → Environment Variables), not in the server process:
+
+| Variable | Required | Description |
+|---|---|---|
+| `AI_GATEWAY_API_KEY` | Yes (for search) | OpenAI-compatible API key for `text-embedding-3-small` embeddings. |
+| `AI_GATEWAY_BASE_URL` | No | Override the OpenAI API base URL for a compatible gateway. |
+| `GITHUB_WEBHOOK_SECRET` | No | HMAC secret for validating GitHub webhook `X-Hub-Signature-256` headers. |
+| `GITHUB_TOKEN` | No | GitHub personal access token for authenticated API calls (higher rate limit). |
+| `VP_EMIT_UI_MARKERS` | No | Enables Paradigm B stream markers on tool responses. Set to `1` to activate. |
+
+---
+
+## Health check (HTTP transport)
+
+```bash
+curl https://your-server.railway.app/health
+# → {"status":"ok","version":"2.4.0"}
+```
+
+The health endpoint is unauthenticated and returns the running server version.
+
+---
+
+## Package binary
+
+After `npm install -g vantage-peers-mcp`, the `vantage-peers-mcp` binary is available:
+
+```bash
+# Stdio (same as node dist/server.js)
+CONVEX_URL=... vantage-peers-mcp
+
+# HTTP
+PORT=3000 CONVEX_URL_INTERNAL=... BEARER_SECRET_MASTER=... vantage-peers-mcp-http
+```
+
+<Callout type="info">
+The package binary (`bin.vantage-peers-mcp` in `package.json`) points to `dist/server.js`. For the HTTP server, run `node dist/server-http.js` directly or use the Railway deploy button in the README.
+</Callout>
+
+---
+
+## Upgrade
+
+```bash
+npm install vantage-peers-mcp@latest
+# or
+npx vantage-peers-mcp@latest  # always runs latest without installing
+```
+
+Always check the [Changelog](/docs/changelog) for breaking environment variable changes between major versions.

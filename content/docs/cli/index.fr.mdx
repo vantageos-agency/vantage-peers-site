@@ -1,0 +1,163 @@
+---
+title: Référence CLI
+description: Comment lancer le serveur vantage-peers-mcp — transport stdio pour Claude Code, transport HTTP pour Railway/Claude.ai, et toute la configuration par variables d'environnement.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# Référence CLI
+
+`vantage-peers-mcp` inclut deux points d'entrée serveur. Les deux sont configurés entièrement par variables d'environnement — il n'y a pas de flags CLI. Choisissez selon votre transport :
+
+| Point d'entrée | Transport | Cas d'usage |
+|---|---|---|
+| `dist/server.js` | stdio | Agents Claude Code (local) |
+| `dist/server-http.js` | HTTP Streamable | Déploiement Railway, connecteur Claude.ai, clients distants |
+
+---
+
+## Transport stdio (Claude Code)
+
+Le serveur stdio lit depuis stdin et écrit sur stdout en suivant le protocole de transport MCP stdio. Il est conçu pour être lancé par Claude Code en tant que processus enfant.
+
+### Lancer directement
+
+```bash
+CONVEX_URL=https://votre-deploiement.convex.cloud node dist/server.js
+```
+
+Ou avec `bun` en développement :
+
+```bash
+CONVEX_URL=https://votre-deploiement.convex.cloud bun run server.ts
+```
+
+### Configuration Claude Code
+
+Ajoutez à votre `claude_desktop_config.json` (macOS : `~/Library/Application Support/Claude/claude_desktop_config.json`) :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "node",
+      "args": ["/chemin/vers/mcp-server/dist/server.js"],
+      "env": {
+        "CONVEX_URL": "https://votre-deploiement.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+Ou via `npx` (sans installation locale) :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "npx",
+      "args": ["-y", "vantage-peers-mcp@latest"],
+      "env": {
+        "CONVEX_URL": "https://votre-deploiement.convex.cloud"
+      }
+    }
+  }
+}
+```
+
+### Ordre de résolution CONVEX_URL (stdio)
+
+Le serveur stdio résout `CONVEX_URL` dans cet ordre :
+
+1. Variable d'environnement `CONVEX_URL` (env explicite, priorité absolue)
+2. Entrée `CONVEX_URL=` dans `.env.local` dans le répertoire de travail où le serveur est lancé
+3. Si aucune n'est trouvée : arrêt avec erreur
+
+---
+
+## Transport HTTP (Railway / Claude.ai)
+
+Le serveur HTTP expose un endpoint MCP HTTP Streamable, un serveur d'autorisation OAuth 2.0 complet, et une auth Bearer master optionnelle. Destiné au déploiement Railway ou à tout serveur permanent.
+
+### Lancer en local
+
+```bash
+PORT=3000 \
+CONVEX_URL_INTERNAL=https://votre-deploiement.convex.cloud \
+BEARER_SECRET_MASTER=votre-secret \
+PUBLIC_BASE_URL=http://localhost:3000 \
+node dist/server-http.js
+```
+
+### Lancer en production (Railway)
+
+Définissez ces variables d'environnement dans votre projet Railway :
+
+```
+CONVEX_URL_INTERNAL=https://votre-deploiement.convex.cloud
+BEARER_SECRET_MASTER=<secret aléatoire de 32 caractères>
+PUBLIC_BASE_URL=https://votre-app.up.railway.app
+PORT=3000
+NODE_ENV=production
+```
+
+Railway injecte `PORT` automatiquement — vous n'avez pas besoin de le définir manuellement dans Railway.
+
+---
+
+## Référence des variables d'environnement
+
+### Partagées (les deux transports)
+
+| Variable | Requis | Description |
+|---|---|---|
+| `CONVEX_URL` | Oui (stdio) | URL du déploiement Convex. Résolue depuis l'env ou `.env.local`. |
+| `VP_EMIT_UI_MARKERS` | Non | Définir à `1` pour activer les marqueurs de flux `__VP_TOOL_RESULT__`. Voir [Marqueur de flux](/docs/paradigm-b/stream-marker). |
+
+### Transport HTTP uniquement
+
+| Variable | Requis | Description |
+|---|---|---|
+| `CONVEX_URL_INTERNAL` | Oui | URL du déploiement Convex pour le client orchestrateur interne utilisé par les mutations d'état OAuth. |
+| `BEARER_SECRET_MASTER` | Oui | Token Bearer master pour les endpoints admin (`/admin/*`). À garder secret. |
+| `PUBLIC_BASE_URL` | Recommandé | URL publique de ce serveur, utilisée comme `issuer` OAuth dans les métadonnées de découverte. |
+| `PORT` | Non | Port HTTP. Défaut : `3000`. |
+| `NODE_ENV` | Non | Définir à `production` sur Railway. Contrôle la verbosité des erreurs. |
+
+### Backend Convex (à définir dans le tableau de bord Convex)
+
+Ces variables sont définies dans le **tableau de bord Convex** (Paramètres → Variables d'environnement), pas dans le processus serveur :
+
+| Variable | Requis | Description |
+|---|---|---|
+| `AI_GATEWAY_API_KEY` | Oui (pour la recherche) | Clé API compatible OpenAI pour les embeddings `text-embedding-3-small`. |
+| `AI_GATEWAY_BASE_URL` | Non | Remplacer l'URL de base de l'API OpenAI pour une passerelle compatible. |
+| `GITHUB_WEBHOOK_SECRET` | Non | Secret HMAC pour valider les en-têtes `X-Hub-Signature-256` des webhooks GitHub. |
+| `GITHUB_TOKEN` | Non | Token d'accès personnel GitHub pour les appels API authentifiés (limite de débit plus élevée). |
+| `VP_EMIT_UI_MARKERS` | Non | Active les marqueurs de flux Paradigme B sur les réponses des outils. Définir à `1` pour activer. |
+
+---
+
+## Vérification de santé (transport HTTP)
+
+```bash
+curl https://votre-serveur.railway.app/health
+# → {"status":"ok","version":"2.4.0"}
+```
+
+L'endpoint de santé est non authentifié et retourne la version du serveur en cours d'exécution.
+
+---
+
+## Mise à jour
+
+```bash
+npm install vantage-peers-mcp@latest
+# ou
+npx vantage-peers-mcp@latest  # toujours la dernière version sans installation
+```
+
+Consultez toujours le [Changelog](/docs/changelog) pour les changements de variables d'environnement cassants entre les versions majeures.

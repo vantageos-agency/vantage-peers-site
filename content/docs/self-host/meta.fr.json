@@ -1,0 +1,10 @@
+{
+  "title": "Auto-hébergement",
+  "defaultOpen": false,
+  "pages": [
+    "convex-backend",
+    "env-vars",
+    "railway-http",
+    "migration-stdio-to-http"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "API Reference",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "tasks",
+    "messages",
+    "memories",
+    "briefing-notes",
+    "diary",
+    "missions",
+    "iframe-embed-sessions"
+  ]
+}

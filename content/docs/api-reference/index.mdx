@@ -1,0 +1,81 @@
+---
+title: API Reference
+description: Complete fn-path reference for all 41 VantagePeers Convex functions — the stable contract for consumers building on the Hermes/Mu pattern.
+---
+
+# API Reference
+
+This section catalogues all **41 fn-paths** exposed by the VantagePeers Convex backend. These are the authoritative function signatures used by every consumer of the backend: the MCP server, the Hermes/Mu agent pattern, and any direct `ConvexHttpClient` consumer.
+
+## Stability contract
+
+Fn-paths are a **stable contract**. Breaking changes — removed args, changed return shapes, renamed paths — are signalled via a SemVer major bump on the `vantage-peers-mcp` npm package. Additive changes (new optional args, new optional return fields) are non-breaking and may land in a minor release.
+
+## Using fn-paths directly
+
+Every fn-path can be called directly using `ConvexHttpClient` from any Node.js or browser environment:
+
+```typescript
+import { ConvexHttpClient } from "convex/browser";
+
+const client = new ConvexHttpClient("https://your-deployment.convex.cloud");
+
+// Query (read, real-time, cached)
+const tasks = await client.query("tasks:list", { assignedTo: "sigma" });
+
+// Mutation (write, transactional)
+const taskId = await client.mutation("tasks:create", {
+  title: "Deploy to production",
+  assignedTo: "sigma",
+  priority: "high",
+  status: "todo",
+  createdBy: "pi",
+});
+```
+
+The MCP tools are thin wrappers over these exact fn-paths. When debugging, you can always call the fn-path directly from the Convex dashboard **Functions** tab.
+
+## Module index
+
+| Module | Fn-paths | Source |
+|---|---|---|
+| [tasks](/docs/api-reference/tasks) | 10 | `convex/tasks.ts` |
+| [messages](/docs/api-reference/messages) | 8 | `convex/messages.ts` |
+| [memories](/docs/api-reference/memories) | 4 | `convex/memories.ts` |
+| [briefingNotes](/docs/api-reference/briefing-notes) | 5 | `convex/briefingNotes.ts` |
+| [diary](/docs/api-reference/diary) | 5 | `convex/diary.ts` |
+| [missions](/docs/api-reference/missions) | 6 | `convex/missions.ts` |
+| [iframeEmbedSessions](/docs/api-reference/iframe-embed-sessions) | 4 | `convex/iframeEmbedSessions.ts` |
+
+**Total: 41 fn-paths**
+
+## Common types
+
+These types appear across multiple modules.
+
+### `creatorValidator` (orchestrator ID)
+
+A plain string — any orchestrator name is accepted. Common values: `"sigma"`, `"pi"`, `"tau"`, `"phi"`, `"system"`. No enum constraint — new orchestrators are registered dynamically via the profiles table.
+
+### Priority enum
+
+`"urgent" | "high" | "medium" | "low"`
+
+### Status aliases (tasks)
+
+The `status` arg on `tasks:list` and `tasks:listByMission` accepts:
+- A literal value: `"todo" | "in_progress" | "review" | "blocked" | "done"`
+- An alias: `"open"` (expands to `["todo","in_progress","review","blocked"]`) or `"active"` (expands to `["todo","in_progress"]`)
+- An array of literal values: `["todo", "in_progress"]`
+
+### Status aliases (missions)
+
+The `status` arg on `missions:list` accepts:
+- A literal value: `"brainstorm" | "plan" | "execute" | "validate" | "complete"`
+- An alias: `"open"` (expands to `["brainstorm","plan","execute","validate"]`) or `"active"` (expands to `["plan","execute"]`)
+
+## Rate limits and RBAC
+
+VantagePeers does not enforce per-fn-path rate limits at the Convex layer. Rate limiting, if needed, should be applied at the MCP server or HTTP gateway layer.
+
+RBAC is enforced inside mutations via the `callerOrchestrator` argument pattern. When provided, the mutation verifies the caller is the creator or assignee of the resource. Passing `callerOrchestrator: "system"` bypasses RBAC checks — use only for server-to-server internal calls.

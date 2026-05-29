@@ -1,0 +1,406 @@
+---
+title: Déployer sur Railway (Transport HTTP)
+description: Déployez vantage-peers-mcp v2.4.0 comme serveur MCP HTTPS public sur Railway — healthcheck vert, JSON-RPC 2.0, Bearer auth et OAuth DCR prêts.
+---
+
+# Déployer sur Railway (Transport HTTP)
+
+## Ce que vous obtiendrez
+
+Un point d'accès HTTPS public exécutant `vantage-peers-mcp` v2.4.0 avec :
+
+- Serveur MCP JSON-RPC 2.0 via Streamable HTTP (`/mcp`)
+- Healthcheck Railway validé sur `/health`
+- Auth par token Bearer (token maître + OAuth DCR pour Claude.ai)
+- HTTPS automatique via le proxy intégré de Railway
+- Accès multi-clients depuis Claude Code, Claude.ai et tout client compatible MCP
+
+## Prérequis
+
+Avant de commencer :
+
+- Un compte [Railway](https://railway.app) (plan Hobby ou supérieur pour les déploiements persistants)
+- Une URL de déploiement Convex — suivez d'abord le [guide backend Convex](/docs/self-host/convex-backend)
+- Une valeur `BEARER_SECRET_MASTER` (voir [Configuration Bearer auth](#configuration-bearer-auth) ci-dessous)
+- `CONVEX_URL_INTERNAL` — l'URL `https://` depuis votre tableau de bord Convex
+- Node.js 20+ en local pour l'installation du CLI Railway
+
+<Callout type="info">
+  Le serveur de transport HTTP (`server-http.ts`) s'exécute sur Bun sur Railway. Le package npm `vantage-peers-mcp` expose les mêmes 82 définitions d'outils que le serveur stdio, servis via Streamable HTTP.
+</Callout>
+
+## Déploiement en 5 minutes
+
+### Étape 1 : Installer le CLI Railway et se connecter
+
+```bash
+npm install -g @railway/cli
+railway login
+```
+
+### Étape 2 : Créer un nouveau projet Railway
+
+```bash
+railway init
+```
+
+Sélectionnez "Empty Project" lorsque demandé. Railway crée un projet et lie votre répertoire de travail.
+
+### Étape 3 : Créer votre répertoire de projet
+
+```bash
+mkdir vantage-peers-http
+cd vantage-peers-http
+npm init -y
+npm install vantage-peers-mcp@2.4.0
+```
+
+Ajoutez le script de démarrage dans `package.json` :
+
+```json
+{
+  "scripts": {
+    "start": "node node_modules/vantage-peers-mcp/dist/server-http.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
+```
+
+<Callout type="warn">
+  Le package npm `vantage-peers-mcp` livre le `dist/server-http.js` compilé. La commande de démarrage l'invoque directement — Bun n'est pas requis lors de l'exécution depuis le package npm publié. Si vous auto-hébergez le dépôt source, utilisez le chemin `nixpacks.toml` + Bun décrit ci-dessous.
+</Callout>
+
+### Étape 4 : Définir les variables d'environnement
+
+```bash
+railway variables set CONVEX_URL_INTERNAL=https://votre-deployment.convex.cloud
+railway variables set BEARER_SECRET_MASTER=$(openssl rand -hex 32)
+railway variables set PUBLIC_BASE_URL=https://votre-projet.up.railway.app
+railway variables set NODE_ENV=production
+```
+
+<Callout type="info">
+  Ne définissez PAS `PORT` manuellement — Railway l'injecte automatiquement. Le serveur lit `process.env.PORT` et utilise `3000` par défaut si non défini.
+</Callout>
+
+### Étape 5 : Déployer
+
+```bash
+railway up
+```
+
+Railway build, déploie et exécute le healthcheck. Suivez les logs avec :
+
+```bash
+railway logs
+```
+
+---
+
+## railway.json et nixpacks.toml
+
+Deux surfaces de configuration contrôlent le déploiement. Elles sont complémentaires, pas interchangeables.
+
+| Fichier | Couche | Contrôle |
+|---|---|---|
+| `railway.json` | Orchestration Railway | Chemin/timeout du healthcheck, politique de redémarrage, surcharge optionnelle de la commande de démarrage |
+| `nixpacks.toml` | Image de build | Quels packages nix sont installés (bun, node), commandes install/build/start |
+
+### Utiliser le package npm publié (runtime Node)
+
+Si vous avez installé `vantage-peers-mcp` depuis npm dans votre propre projet (Étape 3 ci-dessus), vous n'avez besoin que de `railway.json` :
+
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "node node_modules/vantage-peers-mcp/dist/server-http.js",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  }
+}
+```
+
+### Utiliser le dépôt source (runtime Bun)
+
+Si vous déployez directement depuis le dépôt source `vantage-peers`, les deux fichiers sont requis :
+
+**`nixpacks.toml`** (dans `mcp-server/`) :
+
+```toml
+[phases.setup]
+nixPkgs = ["nodejs_22", "bun"]
+
+[phases.install]
+cmds = ["bun install"]
+
+[phases.build]
+cmds = ["bun run build"]
+
+[start]
+cmd = "bun run server-http.ts"
+```
+
+**`railway.json`** (dans `mcp-server/`) :
+
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "deploy": {
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  }
+}
+```
+
+<Callout type="warn">
+  Si vous supprimez `nixpacks.toml` et comptez uniquement sur `railway.json`, nixpacks détecte automatiquement `package-lock.json` et installe uniquement Node/npm — `bun` n'est jamais installé. Le conteneur démarre puis plante avec `bun: command not found`. Conservez toujours les deux fichiers lorsque vous utilisez le runtime Bun.
+</Callout>
+
+---
+
+## Liaison de port — l'exigence 0.0.0.0
+
+Le probe de healthcheck de Railway provient d'un hôte externe (`healthcheck.railway.app`). Le serveur doit se lier à `0.0.0.0`, pas à `127.0.0.1` ou `localhost`.
+
+Le code source `server-http.ts` le fait déjà correctement :
+
+```typescript
+const PORT = Number(process.env.PORT ?? 3000);
+const HOSTNAME = "0.0.0.0"; // CRITIQUE — pas 127.0.0.1
+
+Bun.serve({
+  port: PORT,
+  hostname: HOSTNAME,
+  fetch: app.fetch,
+});
+```
+
+Si vous voyez des timeouts de healthcheck malgré un démarrage réussi du serveur, la liaison sur localhost est la cause la plus courante.
+
+---
+
+## Vérification du healthcheck
+
+Une fois déployé, vérifiez :
+
+```bash
+# Endpoint de santé — doit retourner 200 sans authentification
+curl https://votre-projet.up.railway.app/health
+
+# Réponse attendue :
+# {
+#   "status": "ok",
+#   "service": "vantage-peers-mcp-http",
+#   "version": "2.4.0",
+#   "transport": "streamable-http",
+#   "oauth": "supported",
+#   "scopes": ["mcp:full"]
+# }
+```
+
+```bash
+# Découverte OAuth — non authentifié
+curl https://votre-projet.up.railway.app/.well-known/oauth-authorization-server
+```
+
+```bash
+# Endpoint MCP — nécessite un token Bearer
+curl -H "Authorization: Bearer $BEARER_SECRET_MASTER" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
+  https://votre-projet.up.railway.app/mcp
+```
+
+---
+
+## Configuration Bearer auth
+
+Le serveur supporte deux chemins d'authentification :
+
+1. **Bearer maître** — accès direct avec `BEARER_SECRET_MASTER`. Utiliser pour les opérations admin et les configurations mono-tenant.
+2. **OAuth DCR** — Enregistrement Dynamique de Client (RFC 7591) pour Claude.ai et autres clients MCP.
+
+### Générer BEARER_SECRET_MASTER
+
+```bash
+openssl rand -hex 32
+```
+
+Définir sur Railway (pas dans le code, pas dans `.env`) :
+
+```bash
+railway variables set BEARER_SECRET_MASTER=<votre-valeur-générée>
+```
+
+### Tester l'authentification
+
+```bash
+# Sans token — doit retourner 401
+curl -s -o /dev/null -w "%{http_code}\n" \
+  https://votre-projet.up.railway.app/mcp
+
+# Avec le token maître — doit retourner 200
+curl -s -o /dev/null -w "%{http_code}\n" \
+  -H "Authorization: Bearer $BEARER_SECRET_MASTER" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
+  https://votre-projet.up.railway.app/mcp
+```
+
+<Callout type="warn">
+  `BEARER_SECRET_MASTER` est une variable Railway (lue par le conteneur Bun). Ce n'est **pas** la même surface que les variables d'environnement Convex. Ne le définissez pas via `npx convex env set` — cela n'aura aucun effet sur le serveur HTTP.
+</Callout>
+
+---
+
+## Connexion des clients MCP
+
+### Claude Code
+
+Ajoutez dans `~/.claude.json` ou le `.claude/settings.json` de votre projet :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://votre-projet.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer VOTRE_BEARER_SECRET_MASTER"
+      }
+    }
+  }
+}
+```
+
+Redémarrez Claude Code. Les 82 outils VantagePeers devraient apparaître dans la liste des outils.
+
+### Connecteur MCP HTTP Claude.ai
+
+Claude.ai utilise OAuth DCR — aucun token Bearer statique n'est nécessaire. Lorsque vous ajoutez l'URL du serveur dans les paramètres du connecteur MCP de Claude.ai :
+
+1. Claude.ai envoie une requête `POST /register` (RFC 7591 Enregistrement Dynamique de Client).
+2. Le serveur enregistre le client avec le profil de portée `client-generic` (refus par défaut).
+3. Claude.ai complète le flux OAuth PKCE via `/authorize` et `/token`.
+4. Les requêtes atteignent `/mcp` avec un token d'accès OAuth à courte durée de vie.
+
+Pour élever un client Claude.ai à un accès complet après l'auto-enregistrement :
+
+```bash
+# Lister les clients enregistrés (token maître requis)
+curl -H "Authorization: Bearer $BEARER_SECRET_MASTER" \
+  https://votre-projet.up.railway.app/admin/oauth/clients
+
+# Initialiser les profils de portée par défaut (exécuter une fois après le premier déploiement)
+curl -X POST \
+  -H "Authorization: Bearer $BEARER_SECRET_MASTER" \
+  https://votre-projet.up.railway.app/admin/oauth/seed-profiles
+```
+
+### Autres clients MCP (SSE / Streamable HTTP)
+
+Tout client supportant Streamable HTTP (spec MCP 2025-03-26) peut se connecter :
+
+```json
+{
+  "url": "https://votre-projet.up.railway.app/mcp",
+  "transport": "streamable-http",
+  "headers": {
+    "Authorization": "Bearer VOTRE_TOKEN"
+  }
+}
+```
+
+---
+
+## Résolution des problèmes
+
+### Timeout du healthcheck
+
+**Symptôme :** Railway affiche "Healthcheck failed" ou le déploiement ne passe jamais à l'état "Running."
+
+**Étapes de diagnostic :**
+1. Vérifiez que le serveur se lie à `0.0.0.0`, pas à `127.0.0.1`.
+2. Vérifiez que `PORT` n'est pas manuellement surchargé dans les Variables Railway.
+3. Consultez `railway logs` pour les erreurs de démarrage avant que le healthcheck ne se déclenche.
+
+```bash
+railway logs --build  # erreurs de phase de build
+railway logs          # erreurs d'exécution
+```
+
+### `bun: command not found` (déploiements depuis le dépôt source)
+
+**Symptôme :** Le build réussit mais le conteneur plante au démarrage avec `bun: command not found`.
+
+**Correction :** Assurez-vous que `nixpacks.toml` déclare `bun` dans `nixPkgs` :
+
+```toml
+[phases.setup]
+nixPkgs = ["nodejs_22", "bun"]
+```
+
+C'est l'erreur la plus courante lors de la suppression de `nixpacks.toml` en pensant que `railway.json` le couvre — ce n'est pas le cas. `nixpacks.toml` contrôle ce qui est installé ; `railway.json` contrôle comment ça s'exécute.
+
+### Variables d'environnement non chargées
+
+**Symptôme :** Le serveur démarre mais retourne `server_misconfigured` ou ne peut pas atteindre Convex.
+
+**Correction :** Vérifiez que les variables sont définies sur Railway, pas seulement en local :
+
+```bash
+railway variables
+```
+
+Assurez-vous que `CONVEX_URL_INTERNAL` (pas `CONVEX_URL`) est défini — le serveur HTTP lit la variable d'URL interne.
+
+### Erreurs CORS depuis les clients navigateur
+
+**Symptôme :** Les clients MCP basés sur navigateur voient des erreurs `Access-Control-Allow-Origin`.
+
+Le serveur définit des en-têtes CORS permissifs pour toutes les origines par défaut :
+
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS
+```
+
+Si vous voyez des erreurs CORS, vérifiez que votre client n'utilise pas d'en-tête personnalisé absent de la liste `allowHeaders` (`Content-Type`, `Authorization`, `mcp-session-id`, `Last-Event-ID`, `mcp-protocol-version`).
+
+### Échec de build double `cd`
+
+**Symptôme :** Le build échoue avec `bash: cd: mcp-server/mcp-server: No such file or directory`.
+
+**Cause :** Le répertoire racine du service Railway est déjà défini sur `mcp-server/` ET le `buildCommand` inclut aussi `cd mcp-server`. Choisissez l'une ou l'autre approche :
+
+- Soit définissez le répertoire racine dans le tableau de bord Railway et supprimez `cd mcp-server` des commandes.
+- Soit gardez la racine au niveau du dépôt et ajoutez `cd mcp-server` aux commandes.
+
+---
+
+## Liste de contrôle de production
+
+<Callout type="success">
+  Avant de passer en production avec n'importe quel tenant payant, confirmez tous les éléments ci-dessous.
+</Callout>
+
+- Domaine personnalisé configuré via `railway domain` ou le tableau de bord Railway
+- HTTPS uniquement — Railway applique TLS automatiquement ; vérifiez l'absence de liens HTTP dans les configs client
+- Chemin de healthcheck `/health` actif et retournant 200 (non authentifié)
+- `BEARER_SECRET_MASTER` stocké dans les Variables Railway, pas dans un fichier commité
+- Politique de rotation Bearer documentée — planifiez `openssl rand -hex 32` + redéploiement Railway
+- Profils de portée OAuth initialisés : `POST /admin/oauth/seed-profiles` exécuté après le premier déploiement
+- `CONVEX_URL_INTERNAL` pointe vers le bon déploiement Convex (pas un déploiement de développement en production)
+- Le déploiement Convex utilise l'environnement de production — voir le [guide backend Convex](/docs/self-host/convex-backend)
+- Alertes Railway configurées (notifications de défaillance CPU, mémoire, healthcheck)
+- `railway logs` confirme l'état "Running" et l'absence d'erreurs au démarrage

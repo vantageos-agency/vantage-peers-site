@@ -1,0 +1,191 @@
+---
+title: Auto-héberger le backend Convex
+description: Déployer un nouveau projet Convex VantagePeers from scratch — initialisation du schéma, variables d'environnement et configuration initiale.
+---
+
+# Auto-héberger le backend Convex
+
+VantagePeers fonctionne entièrement sur [Convex](https://convex.dev). Vous possédez le déploiement. Convex fournit la base de données, les fonctions serverless, les index vectoriels et les abonnements en temps réel. Il n'y a aucune infrastructure gérée par VantagePeers entre vos agents et vos données.
+
+Cette page vous guide à travers une configuration de nouveau projet Convex. Si vous avez déjà un projet Convex et que vous migrez du transport stdio vers HTTP, consultez [Migrer de stdio vers HTTP](/docs/self-host/migration-stdio-to-http).
+
+## Prérequis
+
+- **Node.js 20+** — la CLI Convex requiert Node 20 ou supérieur
+- **Git** — pour cloner le dépôt vantage-memory
+- **Un compte Convex** — niveau gratuit sur [convex.dev](https://convex.dev). Aucune carte bancaire requise.
+- **Une clé API OpenAI** — pour les embeddings RAG (`text-embedding-3-small`)
+
+## Étape 1 : Cloner vantage-memory
+
+`vantage-memory` est le dépôt du backend Convex pour VantagePeers.
+
+```bash
+git clone https://github.com/vantageos-agency/vantage-memory.git
+cd vantage-memory
+npm install
+```
+
+Le dépôt contient :
+- `convex/` — toutes les définitions de schéma, requêtes, mutations et actions (20 tables)
+- `mcp-server/` — le serveur MCP qui se place devant Convex (transport HTTP ou stdio)
+- `convex/schema.ts` — schéma canonique, source de vérité pour toutes les définitions de tables
+
+## Étape 2 : S'authentifier avec Convex
+
+```bash
+npx convex login
+```
+
+Cette commande ouvre une fenêtre de navigateur. Connectez-vous avec votre compte Convex. Sur une machine CI ou un serveur sans affichage, utilisez :
+
+```bash
+npx convex login --no-browser
+```
+
+Suivez les instructions affichées pour terminer l'authentification.
+
+## Étape 3 : Initialiser un nouveau projet Convex
+
+```bash
+npx convex dev --once
+```
+
+Au premier lancement, la CLI vous posera les questions suivantes :
+
+1. **Créer un nouveau projet ou utiliser un existant ?** — Sélectionnez **Créer un nouveau projet**.
+2. **Nom du projet** — Entrez un nom, par exemple `vantage-memory-prod`.
+3. La CLI affiche votre URL de déploiement sous la forme `https://<slug>.convex.cloud`. Copiez-la.
+
+L'option `--once` déploie le schéma et les fonctions puis quitte immédiatement (sans mode watch). C'est la méthode correcte pour effectuer un déploiement d'initialisation ponctuel.
+
+Vous devriez voir une sortie similaire à :
+
+```
+✓ Deployed schema (20 tables)
+✓ Pushed 47 functions
+Deployment URL: https://cheerful-penguin-123.convex.cloud
+```
+
+## Étape 4 : Définir les variables d'environnement dans le tableau de bord Convex
+
+Ouvrez [dashboard.convex.dev](https://dashboard.convex.dev), sélectionnez votre nouveau projet, et allez dans **Settings → Environment Variables**. Ajoutez chaque variable listée ci-dessous.
+
+### Obligatoires
+
+| Variable | Exemple | Rôle |
+|---|---|---|
+| `AI_GATEWAY_API_KEY` | `sk-proj-...` | Clé API OpenAI pour les embeddings RAG `text-embedding-3-small`. Sans cette clé, `recall` retourne des résultats vides. |
+| `BEARER_SECRET_MASTER` | _(chaîne hex 32 octets)_ | Token d'authentification maître pour le serveur MCP. Tous les appels d'outils sont rejetés sans lui. Générez-le avec `openssl rand -hex 32`. |
+
+### Optionnelles — Authentification basée sur Clerk
+
+À définir uniquement si vous activez le flux d'émission de credentials Clerk JWT (`POST /issueBearerFromClerk`). Non requis pour les déploiements agent-only.
+
+| Variable | Exemple | Rôle |
+|---|---|---|
+| `CLERK_JWT_ISSUER_DOMAIN` | `https://clerk.votre-app.com` | URL de base JWKS pour la vérification JWT Clerk. Requis uniquement si vous utilisez l'endpoint web d'émission de credentials. |
+| `VP_ALLOWED_EXT_IDS` | `ext_abc123,ext_def456` | Liste d'IDs d'extensions Clerk autorisées, séparées par des virgules. Restreint quelles extensions navigateur peuvent échanger un JWT Clerk contre un token bearer VantagePeers. |
+
+### Optionnelles — Intégration GitHub
+
+| Variable | Exemple | Rôle |
+|---|---|---|
+| `GITHUB_WEBHOOK_SECRET` | _(hex aléatoire)_ | Valide les payloads de webhook GitHub entrants. Requis si vous synchronisez des issues GitHub via l'endpoint webhook. |
+| `GITHUB_TOKEN` | `ghp_...` | Token personnel ou d'application GitHub. Requis pour poster des commentaires IRP automatiques sur les issues et récupérer les métadonnées. |
+
+## Étape 5 : Déployer en production
+
+```bash
+npx convex deploy
+```
+
+C'est la commande de déploiement en production. Elle compile TypeScript, valide le schéma, et pousse les 20 tables et fonctions vers votre déploiement Convex.
+
+> **Note pour les déploiements en flotte :** Dans le workflow de flotte interne VantagePeers, les déploiements en production nécessitent un verrou `PI_AUTHORIZED_TASK_ID` appliqué par un hook pre-commit. Les clients en auto-hébergement ne sont pas soumis à ce verrou — `npx convex deploy` s'exécute directement sans étape d'approbation supplémentaire.
+
+Vérifiez la réussite du déploiement dans l'onglet **Functions** du tableau de bord. Vous devriez voir tous les modules listés : `tasks`, `messages`, `memories`, `missions`, `briefingNotes`, `diary`, `iframeEmbedSessions`, `profiles`, `fixPatterns`, `issues`, et d'autres.
+
+## Étape 6 : Initialiser les données (optionnel)
+
+Après un déploiement initial, la base de données est vide. Vous pouvez optionnellement initialiser un profil et un espace de travail pour que les agents aient un namespace par défaut disponible immédiatement.
+
+Via la commande CLI Convex :
+
+```bash
+# Créer votre profil d'orchestrateur principal
+npx convex run profiles:upsertProfile '{
+  "orchestratorId": "sigma",
+  "displayName": "Sigma",
+  "role": "engineer",
+  "capabilities": ["code", "research"],
+  "createdBy": "system"
+}'
+```
+
+Ou depuis votre agent, appelez l'outil MCP `update_profile` après connexion.
+
+## Étape 7 : Connecter le serveur MCP
+
+Le serveur MCP est le pont entre les agents IA et votre backend Convex. Consultez [Déploiement HTTP Railway](/docs/self-host/railway-http) pour le guide de déploiement complet.
+
+Pour un test local rapide avec le transport stdio :
+
+```bash
+cd mcp-server
+npm install
+npm run build
+CONVEX_URL=https://votre-deployment.convex.cloud BEARER_SECRET_MASTER=votre-secret node dist/server.js
+```
+
+Puis ajoutez à votre `~/.claude.json` Claude Code :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "command": "node",
+      "args": ["/chemin/vers/vantage-memory/mcp-server/dist/server.js"],
+      "env": {
+        "CONVEX_URL": "https://votre-deployment.convex.cloud",
+        "BEARER_SECRET_MASTER": "votre-secret"
+      }
+    }
+  }
+}
+```
+
+## Étape 8 : Vérification de santé
+
+Vérifiez que tout est correctement câblé :
+
+```bash
+# Doit retourner un tableau (vide sur un déploiement neuf)
+npx convex run profiles:list '{}'
+```
+
+Depuis votre client MCP, appelez l'outil `check_messages` :
+
+```json
+{ "recipient": "sigma" }
+```
+
+Résultat attendu : `[]` (tableau vide — aucun message pour l'instant). Une réponse sans erreur confirme que la connectivité Convex, l'authentification et le routage des fonctions fonctionnent tous correctement.
+
+## Dépannage
+
+**`AI_GATEWAY_API_KEY` non définie — embeddings désactivés**
+
+Les mémoires sont stockées correctement mais `recall` retourne des résultats vides. Définissez `AI_GATEWAY_API_KEY` dans le tableau de bord Convex et redéployez.
+
+**"Unauthorized" à chaque appel d'outil**
+
+`BEARER_SECRET_MASTER` est absent ou incohérent entre le tableau de bord Convex et l'`env` du serveur MCP. Régénérez et définissez de manière cohérente.
+
+**Erreurs de désaccord de schéma après un `git pull`**
+
+Exécutez à nouveau `npx convex deploy`. Convex applique les migrations de schéma automatiquement au déploiement — aucun script de migration manuel requis pour les changements additifs (nouvelles tables, nouveaux champs optionnels).
+
+**Index vectoriel pas encore prêt**
+
+Sur un nouveau déploiement, les index vectoriels se construisent de façon asynchrone. Si `recall` retourne des résultats vides immédiatement après le déploiement, attendez 30 à 60 secondes et réessayez.

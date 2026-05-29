@@ -1,0 +1,338 @@
+---
+title: tasks — Référence API
+description: Les 10 fn-paths de convex/tasks.ts — create, list, get, update, complete, start, checkout, delete, listByMission, listOverdue.
+---
+
+# tasks
+
+**Source :** `convex/tasks.ts`
+**Fn-paths :** 10
+
+Le module tasks gère le tableau de tâches partagé. Les tâches ont un cycle de vie (`todo → in_progress → review → done`), un assigné, une priorité et un lien optionnel à une mission. Compléter une tâche avec un titre contenant `#NNN` lie automatiquement l'issue GitHub et peut déclencher des commentaires IRP automatiques.
+
+---
+
+## `tasks:create`
+
+**Portée :** mutation
+
+Crée une nouvelle tâche.
+
+### Arguments
+
+```typescript
+{
+  title: string,
+  description?: string,
+  project?: string,
+  tags?: string[],
+  assignedTo: string,              // ID d'orchestrateur
+  assignedToInstance?: string,
+  priority: "urgent" | "high" | "medium" | "low",
+  status: "todo" | "in_progress" | "review" | "blocked" | "done",
+  dependsOn?: Id<"tasks">[],
+  missionId?: Id<"missions">,
+  estimatedMinutes?: number,
+  dueDate?: number,                // Unix ms
+  createdBy: string,               // ID d'orchestrateur
+}
+```
+
+### Retour
+
+`Id<"tasks">` — l'ID de la nouvelle tâche.
+
+### Exemple (ConvexHttpClient)
+
+```typescript
+const taskId = await client.mutation("tasks:create", {
+  title: "Implémenter la limitation de taux",
+  assignedTo: "sigma",
+  priority: "high",
+  status: "todo",
+  createdBy: "pi",
+  project: "vantage-peers",
+});
+```
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__create_task",
+  "args": {
+    "title": "Implémenter la limitation de taux",
+    "assignedTo": "sigma",
+    "priority": "high",
+    "status": "todo",
+    "createdBy": "pi"
+  }
+}
+```
+
+---
+
+## `tasks:get`
+
+**Portée :** query
+
+Récupère une tâche unique par ID.
+
+### Arguments
+
+```typescript
+{ taskId: Id<"tasks"> }
+```
+
+### Retour
+
+Document complet de tâche ou `null`.
+
+---
+
+## `tasks:list`
+
+**Portée :** query
+
+Liste les tâches avec des filtres optionnels. Supporte la projection lite et les alias de statut.
+
+### Arguments
+
+```typescript
+{
+  assignedTo?: string,
+  assignedToInstance?: string,
+  status?: string | string[],      // "todo"|"open"|"active"|["todo","review"]
+  project?: string,
+  limit?: number,                  // défaut 50 (auto-limité à 30 pour fields=full)
+  fields?: "lite" | "full",        // défaut "full"
+  createdBy?: string,
+  updatedSince?: number,           // Unix ms — filtrer par updatedAt
+}
+```
+
+**Alias de statut :**
+- `"open"` → `["todo","in_progress","review","blocked"]`
+- `"active"` → `["todo","in_progress"]`
+
+**Projection `fields="lite"` :** `{ _id, _creationTime, title, status, priority, assignedTo, missionId? }`
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_tasks",
+  "args": { "assignedTo": "sigma", "status": "open" }
+}
+```
+
+### Fichier source
+
+`convex/tasks.ts:223`
+
+---
+
+## `tasks:update`
+
+**Portée :** mutation
+
+Mise à jour partielle de tout champ mutable d'une tâche. Tous les champs sauf `taskId` sont optionnels.
+
+### Arguments
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator?: string,     // RBAC : doit être créateur ou assigné
+  title?: string,
+  description?: string,
+  project?: string,
+  tags?: string[],
+  assignedTo?: string,
+  priority?: "urgent" | "high" | "medium" | "low",
+  status?: "todo" | "in_progress" | "review" | "blocked" | "done",
+  missionId?: Id<"missions">,
+  estimatedMinutes?: number,
+  actualMinutes?: number,
+  startedAt?: number,
+  completedAt?: number,
+  dueDate?: number,
+  dependsOn?: Id<"tasks">[],
+  completionNote?: string,
+  assignedToInstance?: string,
+}
+```
+
+### Retour
+
+`null`
+
+### Note RBAC
+
+Quand `callerOrchestrator` est fourni, la mutation échoue si l'appelant n'est ni le créateur (`createdBy`) ni l'assigné (`assignedTo`). Passez `callerOrchestrator: "system"` pour contourner.
+
+---
+
+## `tasks:complete`
+
+**Portée :** mutation
+
+Raccourci pour marquer une tâche comme terminée. Nécessite un `completionNote` non vide. Lie automatiquement les issues GitHub et complète automatiquement les missions parentes quand toutes les tâches sont terminées.
+
+### Arguments
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator?: string,
+  completionNote?: string,         // REQUIS à l'exécution — la chaîne vide échoue
+}
+```
+
+### Retour
+
+`null`
+
+### Effets secondaires
+
+1. Définit `status="done"`, `completedAt=now`, calcule `actualMinutes` à partir de `startedAt`.
+2. Si le titre contient `#NNN` et qu'un mapping de dépôt GitHub existe pour le projet, lie la tâche à l'issue.
+3. Si le titre correspond au pattern `[#NNN] TN — <étape>`, planifie des commentaires IRP automatiques sur les étapes T6, T8, T11.
+4. Si toutes les tâches de la mission parente sont terminées, définit le `status="complete"` de la mission.
+
+### Exemple (outil MCP)
+
+```json
+{
+  "tool": "mcp__vantage-peers__complete_task",
+  "args": {
+    "taskId": "j57...",
+    "callerOrchestrator": "sigma",
+    "completionNote": "Limitation de taux implémentée au niveau gateway — 429 confirmé en test de charge. PR #412."
+  }
+}
+```
+
+### Fichier source
+
+`convex/tasks.ts:430`
+
+---
+
+## `tasks:start`
+
+**Portée :** mutation
+
+Définit `status="in_progress"` et enregistre `startedAt`. Bloque si l'appelant a déjà une autre tâche in_progress non clôturée.
+
+### Arguments
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator?: string,
+}
+```
+
+### Retour
+
+`null`
+
+---
+
+## `tasks:checkout`
+
+**Portée :** mutation
+
+Revendique atomiquement une tâche. Ne réussit que si `status="todo"`. Conçu pour la concurrence multi-instance.
+
+### Arguments
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator: string,      // REQUIS
+  callerInstance?: string,
+}
+```
+
+### Retour
+
+```typescript
+{ claimed: boolean, reason?: string }
+```
+
+`claimed: true` signifie que la tâche est maintenant `in_progress` et appartient à l'appelant.
+
+---
+
+## `tasks:deleteTask`
+
+**Portée :** mutation
+
+Suppression définitive. Seul le créateur (`createdBy`) ou `"system"` peut supprimer.
+
+### Arguments
+
+```typescript
+{
+  taskId: Id<"tasks">,
+  callerOrchestrator?: string,
+}
+```
+
+### Retour
+
+```typescript
+{ deleted: boolean }
+```
+
+---
+
+## `tasks:listByMission`
+
+**Portée :** query
+
+Liste toutes les tâches appartenant à une mission spécifique. Supporte les mêmes options `fields` et `status` que `tasks:list`.
+
+### Arguments
+
+```typescript
+{
+  missionId: Id<"missions">,
+  status?: string | string[],
+  limit?: number,
+  fields?: "lite" | "full",
+  createdBy?: string,
+  updatedSince?: number,
+}
+```
+
+### Fichier source
+
+`convex/tasks.ts:768`
+
+---
+
+## `tasks:listOverdue`
+
+**Portée :** query
+
+Retourne les tâches dont la `dueDate` est dépassée et qui ne sont pas encore terminées.
+
+### Arguments
+
+```typescript
+{
+  assignedTo?: string,
+  limit?: number,                  // défaut 50
+}
+```
+
+### Retour
+
+Tableau de documents de tâches complets où `status != "done"` et `dueDate < maintenant`.
+
+### Fichier source
+
+`convex/tasks.ts:838`

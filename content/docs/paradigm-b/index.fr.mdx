@@ -1,0 +1,123 @@
+---
+title: Paradigme B — Ressources ui://
+description: Interface générative native MCP via les ressources ui:// SEP-1865 et les marqueurs de flux __VP_TOOL_RESULT__. Validé dans vantage-peers-mcp v2.4.0.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# Paradigme B — Ressources ui://
+
+VantagePeers prend en charge deux paradigmes d'interface générative distincts. Cette section couvre le **Paradigme B**, l'approche native MCP introduite dans la SEP-1865 et livrée dans `vantage-peers-mcp@2.4.0`.
+
+## Les deux paradigmes en bref
+
+| | Paradigme A | Paradigme B |
+|---|---|---|
+| **Hôte** | Application Theta Next.js | Tout consommateur MCP |
+| **Transport** | iframe + relais Clerk SSO | Protocole de ressources MCP `ui://` |
+| **Auth** | Propagation de session Clerk SSO | Jeton Bearer via serveur MCP |
+| **Rendu** | iframe (contrôle total de la page) | HTML inline scopé Shadow DOM |
+| **Template VR** | `gui-iframe-embed-v1` v1.1.0 §2.5 | SEP-1865 |
+| **Statut** | Déploiement Theta | Validé par Sigma, EN PRODUCTION (v2.4.0) |
+
+Le Paradigme A offre une surface Next.js hébergée par Theta avec un contrôle design complet et l'authentification Clerk SSO. Le Paradigme B donne à chaque consommateur MCP (Hermes, Mu, Registry, Claude Desktop) l'accès à des primitives UI structurées sans infrastructure d'hébergement supplémentaire.
+
+## Arbre de décision
+
+```
+Avez-vous besoin d'une interface web authentifiée complète (pages de connexion, navigation complexe) ?
+├── Oui  →  Paradigme A (iframe embed Theta, gui-iframe-embed-v1 v1.1.0 §2.5)
+└── Non
+    │
+    Vos consommateurs MCP ont-ils besoin de vues structurées inline riches
+    (tableaux de tâches, fils de messages, journal, missions) ?
+    ├── Oui  →  Paradigme B (ressources ui://, cette section)
+    └── Non  →  Les réponses textuelles des outils suffisent
+```
+
+**Choisissez le Paradigme B lorsque :**
+- Vous construisez une extension Claude Desktop, un panneau latéral ou un bridge MCP
+- Vous voulez une sortie structurée visuelle sans déployer un hôte web
+- Vos consommateurs parlent déjà MCP (resources/read, resources/list)
+- Vous avez besoin de HTML conforme WCAG AA, sécurisé contre les XSS, bilingue (FR/EN) livré en ligne
+
+**Choisissez le Paradigme A lorsque :**
+- Une mise en page complète et la session Clerk SSO sont requises
+- Vous avez besoin d'un routage d'URL approfondi et d'un état de navigation
+- Le template VR `gui-iframe-embed-v1` v1.1.0 est déjà dans votre stack (voir §2.5)
+
+## Ce qui est inclus dans le Paradigme B
+
+### 6 primitives ui://
+
+Toutes les primitives sont servies sous le schéma URI `ui://vp/v1/<primitive>?<query>`.
+
+| Primitive | URI | Source de données |
+|---|---|---|
+| `tasks-table` | `ui://vp/v1/tasks-table` | `tasks:list` |
+| `messages-feed` | `ui://vp/v1/messages-feed` | `messages:listMessages` |
+| `diary-entry` | `ui://vp/v1/diary-entry` | `diary:getEntry` |
+| `mission-timeline` | `ui://vp/v1/mission-timeline` | `missions:list` |
+| `briefing-note` | `ui://vp/v1/briefing-note` | `briefingNotes:get` |
+| `memory-quote` | `ui://vp/v1/memory-quote` | `memories:search` |
+
+Chaque primitive retourne du HTML inline avec du CSS intégré, scopé pour le rendu Shadow DOM. La sortie est conforme WCAG AA et bilingue (FR/EN via `?lang=fr`).
+
+### Schémas Zod
+
+Tous les payloads sont validés avec des unions discriminées Zod avant l'émission. Importez depuis :
+
+```ts
+import { VpToolResultSchema } from 'vantage-peers-mcp/ui-resources/schemas'
+import type { VpToolResult } from 'vantage-peers-mcp/ui-resources/schemas'
+```
+
+### Helpers de marqueurs de flux
+
+Lorsque `VP_EMIT_UI_MARKERS=1` est défini sur votre déploiement Convex, les réponses des outils intègrent automatiquement des marqueurs structurés :
+
+```
+__VP_TOOL_RESULT__{"kind":"tasks-table","items":[...]}__END__
+```
+
+Parsez-les avec :
+
+```ts
+import { parseToolResult, wrapToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+```
+
+## Prérequis
+
+<Callout type="info">
+Le Paradigme B requiert `vantage-peers-mcp@2.4.0` ou supérieur et `VP_EMIT_UI_MARKERS=1` dans les variables d'environnement Convex pour l'émission automatique sur les réponses des outils.
+</Callout>
+
+<Steps>
+  <Step>
+    Installez ou mettez à jour le package du serveur MCP :
+    ```bash
+    npm install vantage-peers-mcp@^2.4.0
+    ```
+  </Step>
+  <Step>
+    Définissez la variable d'environnement dans votre tableau de bord Convex (Paramètres → Variables d'environnement) :
+    ```
+    VP_EMIT_UI_MARKERS=1
+    ```
+    Consultez la [référence des variables d'environnement](/docs/infrastructure/deploy-keys) pour tous les détails.
+  </Step>
+  <Step>
+    Vérifiez que le serveur MCP expose les ressources `ui://` en appelant `resources/list` — vous devriez voir 6 entrées avec des URI correspondant à `ui://vp/v1/*`.
+  </Step>
+</Steps>
+
+## Contenu de la section
+
+<Cards>
+  <Card title="Référence des ressources UI" href="/docs/paradigm-b/ui-resources" description="Les 6 primitives : schéma URI, paramètres de requête, sortie HTML, exemples de récupération." />
+  <Card title="Marqueur de flux" href="/docs/paradigm-b/stream-marker" description="Helpers wrapToolResult / parseToolResult, VpToolResultSchema, les 6 types d'unions discriminées." />
+  <Card title="Guide du consommateur" href="/docs/paradigm-b/consumer-guide" description="Comment Hermes, Mu et Registry consomment le Paradigme B avec des exemples de code." />
+</Cards>

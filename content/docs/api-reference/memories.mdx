@@ -1,0 +1,239 @@
+---
+title: memories — API Reference
+description: All 4 fn-paths in convex/memories.ts — storeMemory, getMemory, listMemories, softDeleteMemory.
+---
+
+# memories
+
+**Source:** `convex/memories.ts`
+**Fn-paths:** 4
+
+The memories module is the core knowledge store. Every stored memory is automatically embedded via `text-embedding-3-small` (1536 dims) and indexed for semantic vector search. Memories support namespaces, types, relations, TTL expiry, and a `isLatest` flag for versioning.
+
+The RAG embedding is asynchronous — it is scheduled via `ctx.scheduler.runAfter(0, ...)` immediately after the `storeMemory` mutation completes. There is no sync wait; the embedding is available within a few seconds.
+
+---
+
+## `memories:storeMemory`
+
+**Scope:** mutation
+
+Creates a memory row and schedules async RAG embedding.
+
+### Args
+
+```typescript
+{
+  namespace: string,               // e.g. "global", "sigma/feedback", "project/vp"
+  type: MemoryType,                // see type enum below
+  content: string,
+  createdBy: string,               // orchestrator ID
+  relations?: Array<{
+    targetId: Id<"memories">,
+    type: RelationType,            // "updates" | "references" | "contradicts" | "extends"
+  }>,
+  isLatest?: boolean,              // default true server-side
+  ttl?: string,                    // ISO 8601 datetime — auto-expires at this time
+  episode?: {
+    context: string,
+    goal: string,
+    action: string,
+    outcome: string,
+    insight: string,
+    severity: "low" | "medium" | "high" | "critical",
+  },
+}
+```
+
+**`type` enum:** `"fact"` | `"decision"` | `"feedback"` | `"project"` | `"architecture"` | `"note"` | `"warning"` | `"procedure"` | `"episode"` | `"observation"`
+
+**`relations[].type` enum:** `"updates"` | `"references"` | `"contradicts"` | `"extends"`
+
+When a relation has `type: "updates"`, the target memory is marked `isLatest: false` and removed from future search results — it is superseded.
+
+### Returns
+
+`Id<"memories">` — the new memory ID.
+
+### Side effects
+
+1. Inserts the memory row with `isLatest: true`.
+2. For each `relations[].type === "updates"` entry: patches target to `isLatest: false` and schedules RAG supersede.
+3. Schedules `internal.ragSync.addRagEntry` — embedding generated asynchronously.
+
+### Example (ConvexHttpClient)
+
+```typescript
+const memId = await client.mutation("memories:storeMemory", {
+  namespace: "sigma/feedback",
+  type: "feedback",
+  content: "Rate limiter at the gateway is the correct approach — avoids Convex write amplification.",
+  createdBy: "pi",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__store_memory",
+  "args": {
+    "namespace": "sigma/feedback",
+    "type": "feedback",
+    "content": "Rate limiter at the gateway is the correct approach.",
+    "createdBy": "pi"
+  }
+}
+```
+
+---
+
+## `memories:getMemory`
+
+**Scope:** query
+
+Fetch a single memory by ID.
+
+### Args
+
+```typescript
+{ memoryId: Id<"memories"> }
+```
+
+### Returns
+
+```typescript
+{
+  _id: Id<"memories">,
+  _creationTime: number,
+  namespace: string,
+  type: MemoryType,
+  content: string,
+  createdBy: string,
+  relations: Array<{ targetId: Id<"memories">, type: RelationType }>,
+  isLatest: boolean,
+  ttl?: string,
+  episode?: {
+    context: string,
+    goal: string,
+    action: string,
+    outcome: string,
+    insight: string,
+    severity: "low" | "medium" | "high" | "critical",
+  },
+  createdAt: number,
+  updatedAt: number,
+} | null
+```
+
+### Example (ConvexHttpClient)
+
+```typescript
+const mem = await client.query("memories:getMemory", {
+  memoryId: "m57...",
+});
+```
+
+---
+
+## `memories:listMemories`
+
+**Scope:** query
+
+List active memories by namespace, with optional type filter. Supports cursor-based pagination.
+
+### Args
+
+```typescript
+{
+  namespace: string,
+  type?: MemoryType,
+  includeSuperseded?: boolean,     // default false — only isLatest=true
+  limit?: number,                  // default 50
+  paginationOpts?: {
+    numItems: number,
+    cursor: string | null,
+  },
+}
+```
+
+When `paginationOpts` is provided, the query uses `.paginate()` for cursor-based pagination. When omitted, uses `.take(limit)` and returns `continueCursor: null, isDone: true`.
+
+### Returns
+
+```typescript
+{
+  value: MemoryDoc[],
+  continueCursor: string | null,
+  isDone: boolean,
+}
+```
+
+Existing callers reading `.value` work unchanged regardless of whether `paginationOpts` was used.
+
+### Example (ConvexHttpClient)
+
+```typescript
+// First page
+const page1 = await client.query("memories:listMemories", {
+  namespace: "sigma/feedback",
+  paginationOpts: { numItems: 20, cursor: null },
+});
+
+// Next page
+if (!page1.isDone) {
+  const page2 = await client.query("memories:listMemories", {
+    namespace: "sigma/feedback",
+    paginationOpts: { numItems: 20, cursor: page1.continueCursor },
+  });
+}
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__list_memories",
+  "args": { "namespace": "sigma/feedback", "type": "feedback" }
+}
+```
+
+---
+
+## `memories:softDeleteMemory`
+
+**Scope:** mutation
+
+Marks a memory as `isLatest: false`. The memory row is preserved (audit trail) but will no longer appear in `listMemories` or semantic search results.
+
+### Args
+
+```typescript
+{ memoryId: Id<"memories"> }
+```
+
+### Returns
+
+`null`
+
+### Side effects
+
+1. Patches the memory to `isLatest: false`.
+2. Schedules `internal.ragSync.markRagEntrySuperseded` — removes from vector search asynchronously.
+
+### Example (ConvexHttpClient)
+
+```typescript
+await client.mutation("memories:softDeleteMemory", {
+  memoryId: "m57...",
+});
+```
+
+### Example (MCP tool)
+
+```json
+{
+  "tool": "mcp__vantage-peers__soft_delete_memory",
+  "args": { "memoryId": "m57..." }
+}
+```

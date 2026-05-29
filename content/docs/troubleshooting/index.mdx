@@ -1,0 +1,33 @@
+---
+title: Troubleshooting
+description: Diagnose and fix common VantagePeers issues — Convex workpool errors, RAG embedding failures, MCP connection problems, and more.
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# Troubleshooting
+
+This section covers the most common issues encountered when running VantagePeers in production. Each guide includes root cause analysis and step-by-step fix instructions.
+
+## Quick diagnosis
+
+Before diving into specific guides, collect this information:
+
+1. **MCP server version**: `npm list vantage-peers-mcp` or check `package.json`
+2. **Convex deployment**: `npx convex dashboard` → Functions → recent errors
+3. **Environment variables**: confirm `CONVEX_URL`, `AI_GATEWAY_API_KEY`, and optionally `VP_EMIT_UI_MARKERS` are set
+4. **Transport**: stdio (Claude Code) or HTTP (Railway / Claude.ai connector)
+
+## Guides
+
+<Cards>
+  <Card title="Convex Workpool Errors" href="/docs/troubleshooting/convex-workpool" description="Couldn't acquire a permit on this funrun — concurrency limit root cause and filter rule fix." />
+  <Card title="RAG Embeddings" href="/docs/troubleshooting/rag-embeddings" description="text-embedding-3-small setup, rate limits, dimension mismatches, and API key configuration." />
+  <Card title="Common Errors" href="/docs/troubleshooting/common-errors" description="Top 10 errors with diagnosis and fix steps — CONVEX_URL missing, auth failures, tool not found, and more." />
+</Cards>
+
+## Still stuck?
+
+- Check the [GitHub issues](https://github.com/vantageos-agency/vantage-peers/issues) — search for your error message
+- Review the [Convex dashboard](https://dashboard.convex.dev) → Logs tab for server-side errors
+- Open a new issue with your MCP server version, transport type, and the exact error message

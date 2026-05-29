@@ -1,0 +1,123 @@
+---
+title: Paradigm B — ui:// Resources
+description: MCP-native generative UI via SEP-1865 ui:// resources and __VP_TOOL_RESULT__ stream markers. Validated in vantage-peers-mcp v2.4.0.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Card, Cards } from 'fumadocs-ui/components/card'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# Paradigm B — ui:// Resources
+
+VantagePeers supports two distinct generative UI paradigms. This section covers **Paradigm B**, the MCP-native approach introduced in SEP-1865 and shipped in `vantage-peers-mcp@2.4.0`.
+
+## Two Paradigms at a Glance
+
+| | Paradigm A | Paradigm B |
+|---|---|---|
+| **Host** | Theta Next.js app | Any MCP consumer |
+| **Transport** | iframe + Clerk SSO relay | `ui://` MCP resource protocol |
+| **Auth** | Clerk SSO session propagation | Bearer token via MCP server |
+| **Rendering** | iframe (full page control) | Shadow DOM scoped HTML inline |
+| **VR template** | `gui-iframe-embed-v1` v1.1.0 §2.5 | SEP-1865 |
+| **Status** | Theta deployment | Sigma-validated LIVE (v2.4.0) |
+
+Paradigm A gives you a full Theta-hosted Next.js surface with complete design control and Clerk SSO. Paradigm B gives every MCP consumer (Hermes, Mu, Registry, Claude Desktop) access to structured UI primitives without any additional hosting infrastructure.
+
+## Decision Tree
+
+```
+Do you need a full authenticated web UI (login pages, complex navigation)?
+├── Yes  →  Paradigm A (Theta iframe embed, gui-iframe-embed-v1 v1.1.0 §2.5)
+└── No
+    │
+    Do your MCP consumers need rich inline structured views
+    (task boards, message feeds, diary, missions)?
+    ├── Yes  →  Paradigm B (ui:// resources, this section)
+    └── No   →  Plain text tool responses are sufficient
+```
+
+**Pick Paradigm B when:**
+- You are building a Claude Desktop extension, sidepanel, or MCP bridge
+- You want structured visual output without deploying a web host
+- Your consumers already speak MCP (resources/read, resources/list)
+- You need WCAG AA, XSS-safe, bilingual (FR/EN) HTML delivered inline
+
+**Pick Paradigm A when:**
+- Full page layout and Clerk SSO session are required
+- You need deep URL routing and navigation state
+- The VR template `gui-iframe-embed-v1` v1.1.0 is already in your stack (see §2.5)
+
+## What Ships in Paradigm B
+
+### 6 ui:// Primitives
+
+All primitives are served under the URI scheme `ui://vp/v1/<primitive>?<query>`.
+
+| Primitive | URI | Data source |
+|---|---|---|
+| `tasks-table` | `ui://vp/v1/tasks-table` | `tasks:list` |
+| `messages-feed` | `ui://vp/v1/messages-feed` | `messages:listMessages` |
+| `diary-entry` | `ui://vp/v1/diary-entry` | `diary:getEntry` |
+| `mission-timeline` | `ui://vp/v1/mission-timeline` | `missions:list` |
+| `briefing-note` | `ui://vp/v1/briefing-note` | `briefingNotes:get` |
+| `memory-quote` | `ui://vp/v1/memory-quote` | `memories:search` |
+
+Each primitive returns inline HTML with embedded CSS, scoped for Shadow DOM rendering. Output is WCAG AA compliant and bilingual (FR/EN via `?lang=fr`).
+
+### Zod Schemas
+
+All payloads are validated with Zod discriminated unions before emission. Import from:
+
+```ts
+import { VpToolResultSchema } from 'vantage-peers-mcp/ui-resources/schemas'
+import type { VpToolResult } from 'vantage-peers-mcp/ui-resources/schemas'
+```
+
+### Stream Marker Helpers
+
+When `VP_EMIT_UI_MARKERS=1` is set on your Convex deployment, tool responses automatically embed structured markers:
+
+```
+__VP_TOOL_RESULT__{"kind":"tasks-table","items":[...]}__END__
+```
+
+Parse them with:
+
+```ts
+import { parseToolResult, wrapToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+```
+
+## Prerequisites
+
+<Callout type="info">
+Paradigm B requires `vantage-peers-mcp@2.4.0` or later and `VP_EMIT_UI_MARKERS=1` set in Convex environment variables for auto-emit on tool responses.
+</Callout>
+
+<Steps>
+  <Step>
+    Install or upgrade the MCP server package:
+    ```bash
+    npm install vantage-peers-mcp@^2.4.0
+    ```
+  </Step>
+  <Step>
+    Set the environment variable in your Convex dashboard (Settings → Environment Variables):
+    ```
+    VP_EMIT_UI_MARKERS=1
+    ```
+    See the [environment variables reference](/docs/infrastructure/deploy-keys) for full details.
+  </Step>
+  <Step>
+    Verify the MCP server exposes `ui://` resources by calling `resources/list` — you should see 6 entries with URIs matching `ui://vp/v1/*`.
+  </Step>
+</Steps>
+
+## Section Contents
+
+<Cards>
+  <Card title="UI Resources Reference" href="/docs/paradigm-b/ui-resources" description="All 6 primitives: URI scheme, query params, HTML output, fetch examples." />
+  <Card title="Stream Marker" href="/docs/paradigm-b/stream-marker" description="wrapToolResult / parseToolResult helpers, VpToolResultSchema, the 6 discriminated union kinds." />
+  <Card title="Consumer Guide" href="/docs/paradigm-b/consumer-guide" description="How Hermes, Mu, and Registry consume Paradigm B with code samples." />
+</Cards>
