@@ -1,0 +1,264 @@
+---
+title: Consumer Guide
+description: How Hermes, Mu, and Registry consume Paradigm B — importing schemas, parsing markers, and rendering primitives.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# Consumer Guide
+
+This guide covers how three reference consumers integrate Paradigm B. Each has a different architecture, but all three share the same `parseToolResult` + Zod validate + render switch pattern.
+
+## Common Integration Pattern
+
+All consumers follow this three-step flow:
+
+<Steps>
+  <Step>
+    **Intercept**: capture the raw text from an MCP tool response or a Convex direct call result.
+  </Step>
+  <Step>
+    **Parse**: call `parseToolResult(text)` — returns a validated `VpToolResult` or `null`.
+  </Step>
+  <Step>
+    **Render**: switch on `result.kind` and dispatch to the appropriate renderer.
+  </Step>
+</Steps>
+
+```ts
+import { parseToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+import type { VpToolResult } from 'vantage-peers-mcp/ui-resources/schemas'
+
+function handleMcpToolResponse(rawText: string): void {
+  const result = parseToolResult(rawText)
+
+  if (!result) {
+    // No marker — plain text, render as markdown/text
+    renderPlainText(rawText)
+    return
+  }
+
+  renderStructured(result)
+}
+
+function renderStructured(result: VpToolResult): void {
+  switch (result.kind) {
+    case 'tasks-table':      return renderTasksTable(result.items)
+    case 'messages-feed':    return renderMessagesFeed(result.items)
+    case 'diary-entry':      return renderDiaryEntry(result.item)
+    case 'mission-timeline': return renderMissionTimeline(result.items)
+    case 'briefing-note':    return renderBriefingNote(result.item)
+    case 'memory-quote':     return renderMemoryQuote(result.items)
+    default:
+      result satisfies never
+  }
+}
+```
+
+---
+
+## Consumer 1: Hermes vantage-peers-extension
+
+**Architecture**: Claude Desktop extension using Convex direct client (not MCP HTTP). Hermes subscribes to Convex real-time queries and calls Convex actions directly.
+
+**Integration points**: Hermes receives tool call results through Claude Desktop's tool use API. When `VP_EMIT_UI_MARKERS=1`, those results contain embedded markers.
+
+```ts
+// hermes/src/tool-handler.ts
+import { parseToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+import { VpToolResultSchema } from 'vantage-peers-mcp/ui-resources/schemas'
+
+export function onToolCallResult(toolName: string, rawResult: string): void {
+  // 1. Try to extract a structured VP result
+  const vpResult = parseToolResult(rawResult)
+
+  if (!vpResult) {
+    // No marker → fall back to default text rendering
+    claudeDesktop.renderText(rawResult)
+    return
+  }
+
+  // 2. Optional: re-validate with Zod for extra safety
+  const validated = VpToolResultSchema.safeParse(vpResult)
+  if (!validated.success) {
+    console.warn('[Hermes] VpToolResult schema mismatch:', validated.error)
+    claudeDesktop.renderText(rawResult)
+    return
+  }
+
+  // 3. Render via Shadow DOM injection
+  const shadowHost = document.createElement('div')
+  const shadow = shadowHost.attachShadow({ mode: 'open' })
+
+  // Fetch the HTML version from ui:// resource for full styling
+  const uri = buildUiUri(validated.data)
+  fetchUiResource(uri).then((html) => {
+    shadow.innerHTML = html
+    claudeDesktop.renderWidget(shadowHost)
+  })
+}
+
+function buildUiUri(result: VpToolResult): string {
+  // Convert parsed marker → ui:// URI for re-fetch with full HTML render
+  switch (result.kind) {
+    case 'tasks-table':
+      return `ui://vp/v1/tasks-table?limit=${result.items.length}`
+    case 'messages-feed':
+      return `ui://vp/v1/messages-feed?limit=${result.items.length}`
+    // ... etc
+    default:
+      return `ui://vp/v1/${result.kind}`
+  }
+}
+```
+
+<Callout type="info">
+Hermes uses **two-pass rendering**: it parses the marker to get kind/count metadata immediately, then fetches the full HTML from the `ui://` resource for final render. This avoids re-implementing the HTML template in the extension.
+</Callout>
+
+---
+
+## Consumer 2: Mu vantage-bridge Sidepanel
+
+**Architecture**: Browser extension sidepanel connecting via MCP HTTP transport (Streamable HTTP). Mu talks to the VantagePeers MCP server deployed on Railway.
+
+**Integration**: Mu intercepts all `tools/call` responses from the MCP HTTP connection and runs them through `parseToolResult`.
+
+```ts
+// mu/src/mcp-bridge.ts
+import { parseToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+
+// Mu's MCP HTTP client wraps every tool call
+export async function callTool(
+  toolName: string,
+  args: Record<string, unknown>
+): Promise<void> {
+  const response = await mcpHttpClient.callTool({ name: toolName, arguments: args })
+
+  // MCP tool result is always { content: [{ type: 'text', text: '...' }] }
+  const rawText = response.content
+    .filter((c) => c.type === 'text')
+    .map((c) => c.text)
+    .join('\n')
+
+  const vpResult = parseToolResult(rawText)
+
+  if (vpResult) {
+    // Post to sidepanel renderer
+    sidepanel.postMessage({ type: 'VP_PRIMITIVE', payload: vpResult })
+  } else {
+    sidepanel.postMessage({ type: 'TEXT', payload: rawText })
+  }
+}
+```
+
+```ts
+// mu/src/sidepanel/renderer.ts
+import type { VpToolResult } from 'vantage-peers-mcp/ui-resources/schemas'
+
+window.addEventListener('message', (event) => {
+  const msg = event.data as { type: string; payload: unknown }
+
+  if (msg.type === 'VP_PRIMITIVE') {
+    const result = msg.payload as VpToolResult
+    renderPrimitive(result)
+  } else if (msg.type === 'TEXT') {
+    renderMarkdown(msg.payload as string)
+  }
+})
+
+function renderPrimitive(result: VpToolResult): void {
+  const container = document.getElementById('vp-output')!
+  container.innerHTML = '' // clear previous
+
+  // Shadow DOM for CSS isolation
+  const host = document.createElement('div')
+  container.appendChild(host)
+  const shadow = host.attachShadow({ mode: 'open' })
+
+  // Build minimal HTML from payload — or fetch from ui:// resource
+  shadow.innerHTML = buildHtmlFromPayload(result)
+}
+```
+
+---
+
+## Consumer 3: Registry json-render
+
+**Architecture**: VantagePeers Registry is a Convex-native workflow. After tool calls, it uses post-tool-call marker extraction to persist structured data and render compact summaries in its own UI.
+
+**Integration**: Registry processes Convex action results (not MCP responses). When a tool auto-emits a marker, the Registry extracts it to build a JSON summary for its activity log.
+
+```ts
+// registry/src/tool-result-processor.ts
+import { parseToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+import { VpToolResultSchema } from 'vantage-peers-mcp/ui-resources/schemas'
+
+export function extractAndLog(
+  toolName: string,
+  rawResult: string,
+  sessionId: string
+): void {
+  const vpResult = parseToolResult(rawResult)
+
+  if (!vpResult) {
+    // No structured data — log raw text summary
+    activityLog.push({ sessionId, toolName, type: 'text', preview: rawResult.slice(0, 200) })
+    return
+  }
+
+  // Validate fully before persisting
+  const parsed = VpToolResultSchema.parse(vpResult)
+
+  // Extract count / summary metadata by kind
+  const meta = extractMeta(parsed)
+
+  activityLog.push({
+    sessionId,
+    toolName,
+    type: 'structured',
+    kind: parsed.kind,
+    count: meta.count,
+    preview: meta.preview,
+    payload: parsed,        // full structured data — used by json-render view
+  })
+}
+
+function extractMeta(result: VpToolResult): { count: number; preview: string } {
+  switch (result.kind) {
+    case 'tasks-table':
+      return { count: result.items.length, preview: result.items[0]?.title ?? '' }
+    case 'messages-feed':
+      return { count: result.items.length, preview: result.items[0]?.content?.slice(0, 80) ?? '' }
+    case 'diary-entry':
+      return { count: 1, preview: result.item.content.slice(0, 80) }
+    case 'mission-timeline':
+      return { count: result.items.length, preview: result.items[0]?.name ?? '' }
+    case 'briefing-note':
+      return { count: 1, preview: result.item.title }
+    case 'memory-quote':
+      return { count: result.items.length, preview: result.items[0]?.content?.slice(0, 80) ?? '' }
+    default:
+      result satisfies never
+      return { count: 0, preview: '' }
+  }
+}
+```
+
+---
+
+## Choosing the Right Approach
+
+| Scenario | Recommended approach |
+|---|---|
+| Need full HTML with embedded CSS (Shadow DOM) | Fetch `ui://` resource after parsing marker |
+| Need only structured data (no HTML rendering) | Use `parseToolResult` + `VpToolResultSchema` directly |
+| High-volume log/audit trail | Use Registry pattern: extract metadata, persist `payload` |
+| Real-time sidepanel | Use Mu pattern: post-message bridge between MCP client and renderer |
+| Desktop extension with Convex direct | Use Hermes pattern: two-pass (marker metadata + ui:// HTML) |
+
+<Callout type="warn">
+Always use `parseToolResult` from the npm package — do not reimplement the marker parsing logic. The marker boundary tokens (`__VP_TOOL_RESULT__` / `__END__`) are stable across v2.x but will be versioned in v3. Use the package to get automatic compatibility.
+</Callout>

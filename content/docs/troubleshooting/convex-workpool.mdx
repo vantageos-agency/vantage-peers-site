@@ -1,0 +1,115 @@
+---
+title: Convex Workpool Errors
+description: Root cause and fix for "Couldn't acquire a permit on this funrun" — Convex platform concurrency limits and the fleet filter-rule pattern.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# Convex Workpool Errors
+
+## Error message
+
+```
+Error: Couldn't acquire a permit on this funrun
+```
+
+Variants you may also see:
+
+```
+WorkpoolError: All permits are currently in use
+ConvexError: funrun concurrency limit exceeded
+```
+
+## Root cause
+
+Convex enforces a **per-deployment concurrency limit** on function runs (funruns). Each deployment on the free tier is limited to a fixed number of concurrent function executions. When VantagePeers runs many parallel agent operations (memory writes, task updates, message sends) simultaneously, the concurrency slots fill up and new funruns fail to acquire a permit.
+
+This is a **Convex platform constraint**, not a bug in VantagePeers.
+
+The error is most common when:
+- Multiple agents send messages or write memories simultaneously (fleet burst)
+- A cron job fires at the same time as heavy agent activity
+- An agent runs a search query (vector + BM25 hybrid) while others are writing
+
+## Fix: Filter Rule Pattern
+
+The fleet-standard fix is a **filter rule** that throttles or defers operations when the workpool is saturated.
+
+<Steps>
+  <Step>
+    **Identify the high-frequency tools** causing the burst. Common culprits: `store_memory`, `send_message`, `create_task`, `update_task`.
+  </Step>
+  <Step>
+    **Add exponential backoff** to the agent calling those tools:
+
+    ```ts
+    async function withBackoff<T>(
+      fn: () => Promise<T>,
+      maxRetries = 4,
+      baseDelayMs = 200
+    ): Promise<T> {
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          return await fn()
+        } catch (err) {
+          const isWorkpoolError =
+            err instanceof Error &&
+            (err.message.includes("Couldn't acquire a permit") ||
+             err.message.includes("WorkpoolError"))
+
+          if (!isWorkpoolError || attempt === maxRetries) throw err
+
+          const delay = baseDelayMs * 2 ** attempt + Math.random() * 100
+          await new Promise((resolve) => setTimeout(resolve, delay))
+        }
+      }
+      throw new Error('unreachable')
+    }
+
+    // Usage
+    await withBackoff(() => mcpClient.callTool({ name: 'store_memory', arguments: { ... } }))
+    ```
+  </Step>
+  <Step>
+    **For fleet operations** (many agents writing at once), use a **filter rule** to serialize or rate-limit writes:
+
+    In VantagePeers, create a filter rule that blocks duplicate or low-priority writes during saturation periods. The `create_filter_rule` tool accepts a regex pattern and a priority threshold — operations matching the pattern are deferred when the permit count exceeds the threshold.
+
+    ```
+    // Example: throttle low-priority memory writes during bursts
+    create_filter_rule({
+      pattern: "store_memory|update_task",
+      priority: "low",
+      action: "defer",
+      deferMs: 500
+    })
+    ```
+  </Step>
+  <Step>
+    **Upgrade to Convex Pro** if you consistently hit the limit. Pro deployments have significantly higher concurrency limits and dedicated funrun capacity. See the [Convex pricing page](https://convex.dev/pricing).
+  </Step>
+</Steps>
+
+## Checking current funrun usage
+
+In your Convex dashboard:
+
+1. Go to your deployment → **Functions** tab
+2. Sort by **Duration** — long-running functions hold permits longer
+3. Check **Logs** for `WorkpoolError` frequency
+
+If you see spikes, correlate them with scheduled cron jobs (`list_recurring_tasks`).
+
+## Cron-related bursts
+
+VantagePeers recurring tasks run on Convex scheduled actions. If you have many recurring tasks set to the same interval, they fire simultaneously and compete for permits.
+
+**Fix**: stagger your recurring task schedules. Instead of all agents using `interval: "1h"`, offset them:
+- Agent sigma: `cronExpression: "0 * * * *"` (top of hour)
+- Agent tau: `cronExpression: "15 * * * *"` (15 past)
+- Agent phi: `cronExpression: "30 * * * *"` (half past)
+
+<Callout type="warn">
+Do not catch and silently swallow `WorkpoolError`. If a memory write or message send fails silently, agents will operate on stale data. Always retry or surface the error.
+</Callout>

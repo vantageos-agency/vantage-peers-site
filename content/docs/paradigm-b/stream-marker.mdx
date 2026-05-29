@@ -1,0 +1,255 @@
+---
+title: Stream Marker
+description: __VP_TOOL_RESULT__ stream markers — wrapToolResult / parseToolResult helpers, VpToolResultSchema discriminated union, and which tools auto-emit markers.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { TypeTable } from 'fumadocs-ui/components/type-table'
+
+# Stream Marker
+
+The `__VP_TOOL_RESULT__` stream marker is a lightweight text protocol embedded in MCP tool responses. It lets downstream consumers (Claude Desktop, Hermes, Mu sidepanel, Registry) detect and render structured UI primitives inline, without a separate `resources/read` call.
+
+## Marker Format
+
+```
+__VP_TOOL_RESULT__<json>__END__
+```
+
+Where `<json>` is a JSON-serialized object conforming to `VpToolResultSchema` (a Zod discriminated union with a `kind` discriminator). The JSON is minified (no spaces).
+
+**Full example — tasks-table:**
+
+```
+__VP_TOOL_RESULT__{"kind":"tasks-table","items":[{"_id":"j97abc","title":"Fix auth bug","status":"in_progress","priority":"high","assignedTo":"sigma"}]}__END__
+```
+
+The marker is emitted only when `VP_EMIT_UI_MARKERS=1` is set in the Convex environment. When the variable is absent (default), tool responses are plain text — existing integrations are unaffected.
+
+## VpToolResultSchema — Discriminated Union
+
+Six kinds, one per primitive. Import from `vantage-peers-mcp/ui-resources/schemas`:
+
+```ts
+import { VpToolResultSchema } from 'vantage-peers-mcp/ui-resources/schemas'
+import type { VpToolResult } from 'vantage-peers-mcp/ui-resources/schemas'
+```
+
+### Kind: `tasks-table`
+
+```ts
+{
+  kind: 'tasks-table',
+  items: Array<{
+    _id: string
+    title: string
+    status: string
+    priority?: string
+    assignedTo?: string
+    _creationTime?: number
+  }>
+}
+```
+
+### Kind: `messages-feed`
+
+```ts
+{
+  kind: 'messages-feed',
+  items: Array<{
+    _id: string
+    from: string
+    channel?: string
+    content: string
+    createdAt: number
+  }>
+}
+```
+
+### Kind: `diary-entry`
+
+```ts
+{
+  kind: 'diary-entry',
+  item: {
+    _id: string
+    date: string        // YYYY-MM-DD
+    orchestrator: string
+    content: string
+    highlights?: string[]
+    blockers?: string[]
+  }
+}
+```
+
+Note: `diary-entry` uses `item` (singular), not `items`.
+
+### Kind: `mission-timeline`
+
+```ts
+{
+  kind: 'mission-timeline',
+  items: Array<{
+    _id: string
+    name: string
+    project?: string
+    status: string
+    pilot?: string
+    priority?: string
+    progress?: number   // 0–100
+  }>
+}
+```
+
+### Kind: `briefing-note`
+
+```ts
+{
+  kind: 'briefing-note',
+  item: {
+    _id: string
+    topic: string
+    title: string
+    participants?: string[]
+    content?: string
+    createdBy?: string
+  }
+}
+```
+
+Note: `briefing-note` uses `item` (singular).
+
+### Kind: `memory-quote`
+
+```ts
+{
+  kind: 'memory-quote',
+  items: Array<{
+    _id: string
+    namespace: string
+    type: string
+    content: string
+    score?: number
+  }>
+}
+```
+
+## Helpers
+
+Import both helpers from `vantage-peers-mcp/ui-resources/stream-marker`:
+
+```ts
+import {
+  wrapToolResult,
+  parseToolResult,
+  MARKER_START,
+  MARKER_END,
+} from 'vantage-peers-mcp/ui-resources/stream-marker'
+```
+
+### `wrapToolResult(payload: VpToolResult): string`
+
+Validates `payload` against `VpToolResultSchema`, then serializes to the marker format. Throws `TypeError` if validation fails.
+
+```ts
+const marker = wrapToolResult({
+  kind: 'tasks-table',
+  items: [
+    { _id: 'j97abc', title: 'Fix auth bug', status: 'in_progress', priority: 'high', assignedTo: 'sigma' },
+  ],
+})
+// → "__VP_TOOL_RESULT__{"kind":"tasks-table","items":[...]}__END__"
+```
+
+Use `wrapToolResult` when you are building a tool that should always emit a marker regardless of the `VP_EMIT_UI_MARKERS` env var — for example, in a test harness or a custom tool wrapper.
+
+### `parseToolResult(text: string): VpToolResult | null`
+
+Extracts and validates a VP marker from `text`. Handles three cases:
+
+1. `text` **is** the marker (bare)
+2. `text` **contains** the marker embedded in surrounding content
+3. `text` **does not** contain a marker — returns `null`
+
+Returns the validated `VpToolResult` on success, or `null` on any failure (missing marker, malformed JSON, schema violation). Never throws.
+
+```ts
+const result = parseToolResult(toolResponse)
+
+if (result === null) {
+  // Plain text response — render as-is
+  renderText(toolResponse)
+} else {
+  // Structured result — render by kind
+  renderPrimitive(result)
+}
+```
+
+### Constants
+
+```ts
+MARKER_START = "__VP_TOOL_RESULT__"
+MARKER_END   = "__END__"
+```
+
+Keep these in sync with any iframe bridge parser on the consumer side.
+
+## Auto-Emit Tools
+
+When `VP_EMIT_UI_MARKERS=1` is set, the following 6 MCP tools automatically append a `__VP_TOOL_RESULT__` marker to their text response:
+
+| Tool | Kind emitted |
+|---|---|
+| `list_tasks` | `tasks-table` |
+| `list_messages` / `get_messages` | `messages-feed` |
+| `get_diary_entry` | `diary-entry` |
+| `list_missions` | `mission-timeline` |
+| `get_briefing_note` | `briefing-note` |
+| `search_memories` / `recall_memories` | `memory-quote` |
+
+<Callout type="info">
+Auto-emit is additive — the marker is appended after the human-readable text response. Consumers that do not implement `parseToolResult` see the raw marker text, which is ugly but not harmful. Set `VP_EMIT_UI_MARKERS=1` only in deployments where at least one consumer handles markers.
+</Callout>
+
+## Render Switch Pattern
+
+Standard consumer pattern for rendering a parsed result:
+
+```ts
+import { parseToolResult, type VpToolResult } from 'vantage-peers-mcp/ui-resources/stream-marker'
+
+function handleToolResponse(text: string): void {
+  const result = parseToolResult(text)
+  if (!result) {
+    displayPlainText(text)
+    return
+  }
+
+  switch (result.kind) {
+    case 'tasks-table':
+      renderTasksTable(result.items)
+      break
+    case 'messages-feed':
+      renderMessagesFeed(result.items)
+      break
+    case 'diary-entry':
+      renderDiaryEntry(result.item)
+      break
+    case 'mission-timeline':
+      renderMissionTimeline(result.items)
+      break
+    case 'briefing-note':
+      renderBriefingNote(result.item)
+      break
+    case 'memory-quote':
+      renderMemoryQuote(result.items)
+      break
+    default:
+      // TypeScript exhaustiveness check
+      result satisfies never
+  }
+}
+```
+
+TypeScript's exhaustiveness check (`result satisfies never`) ensures you handle all 6 kinds.

@@ -1,0 +1,208 @@
+---
+title: Référence des ressources UI
+description: Référence complète des 6 primitives ui:// — schéma URI, paramètres de requête, structure HTML de sortie et exemples de récupération MCP.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
+
+# Référence des ressources UI
+
+Toutes les primitives du Paradigme B sont servies via le protocole de ressources MCP `ui://`. Le serveur les enregistre sous `ui://vp/v1/<primitive>` et les clients les récupèrent avec `resources/read`.
+
+## Schéma URI
+
+```
+ui://vp/v1/<primitive>?<paramètres-de-requête>
+```
+
+- **Protocole** : `ui://` (URI personnalisée MCP, pas HTTP)
+- **Espace de noms** : `vp/v1` — versionné pour permettre des changements cassants futurs sous `v2`
+- **Primitive** : l'un des 6 noms enregistrés (voir tableau ci-dessous)
+- **Paramètres de requête** : optionnels, spécifiques à chaque primitive
+
+### Exemples complets d'URI
+
+```
+ui://vp/v1/tasks-table?assignedTo=sigma&status=in_progress&limit=10
+ui://vp/v1/messages-feed?from=pi&channel=fleet&limit=20
+ui://vp/v1/diary-entry?orchestrator=sigma&limit=3&lang=fr
+ui://vp/v1/mission-timeline?pilot=tau&status=active&limit=5
+ui://vp/v1/briefing-note?topic=deployment&limit=3
+ui://vp/v1/memory-quote?namespace=sigma&type=feedback&limit=5
+```
+
+## Récupération via MCP
+
+```ts
+// Récupération client MCP — fonctionne avec toute version MCP SDK >= 1.0
+const result = await client.readResource({
+  uri: 'ui://vp/v1/tasks-table?assignedTo=sigma&status=review&limit=10',
+})
+
+// result.contents[0].text = chaîne HTML
+const html = result.contents[0].text as string
+```
+
+Le `text` retourné est un fragment HTML autonome avec des balises `<style>` intégrées — sécurisé pour une injection dans un Shadow DOM root.
+
+---
+
+## Primitives
+
+### tasks-table
+
+Affiche un tableau HTML compact des tâches VantagePeers.
+
+**URI** : `ui://vp/v1/tasks-table`
+
+**Paramètres de requête** :
+
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `assignedTo` | string | — | Filtrer par nom de responsable |
+| `status` | string | — | Statut unique, alias (`open`, `active`, `all`), ou liste séparée par virgules (ex. `todo,in_progress`) |
+| `fields` | `lite` \| `full` | `lite` | `lite` = titre/statut/priorité/responsable ; `full` ajoute la date de création |
+| `limit` | 1–200 | `20` | Nombre maximum de lignes à retourner |
+| `createdBy` | string | — | Filtrer par nom du créateur |
+| `lang` | `en` \| `fr` | `en` | Langue des en-têtes de colonnes |
+
+**Sortie HTML** :
+
+```html
+<div class="vp-tasks-table" role="region" aria-label="Liste des tâches VantagePeers">
+  <style>/* CSS scopé — compatible Shadow DOM */</style>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Titre</th>
+        <th scope="col">Statut</th>
+        <th scope="col">Priorité</th>
+        <th scope="col">Attribué à</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Titre de ma tâche</td>
+        <td><span class="vp-status vp-status-in_progress">in_progress</span></td>
+        <td>high</td>
+        <td>sigma</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="vp-tasks-count" aria-live="polite">3 tâches</div>
+</div>
+```
+
+**Classes des badges de statut** : `vp-status-todo` (bleu), `vp-status-in_progress` (jaune), `vp-status-review` (violet), `vp-status-blocked` (rouge), `vp-status-done` (vert).
+
+---
+
+### messages-feed
+
+Affiche un fil chronologique de messages VantagePeers.
+
+**URI** : `ui://vp/v1/messages-feed`
+
+**Paramètres de requête** :
+
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `from` | string | — | Filtrer par nom d'expéditeur |
+| `channel` | string | — | Filtrer par nom de canal |
+| `limit` | 1–200 | `20` | Nombre maximum de messages à retourner |
+| `lang` | `en` \| `fr` | `en` | Langue des libellés UI |
+
+**Sortie HTML** : `<div class="vp-messages-feed">` avec une liste de bulles de messages. Chaque bulle contient l'expéditeur, l'horodatage, le badge de canal (si présent) et le contenu sécurisé contre les XSS.
+
+---
+
+### diary-entry
+
+Affiche une entrée de journal structurée ou une liste d'entrées récentes.
+
+**URI** : `ui://vp/v1/diary-entry`
+
+**Paramètres de requête** :
+
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `date` | `YYYY-MM-DD` | — | Récupérer l'entrée pour une date spécifique |
+| `orchestrator` | string | — | Filtrer par nom d'orchestrateur |
+| `limit` | 1–50 | `5` | Nombre maximum d'entrées lors de la récupération d'une liste |
+| `lang` | `en` \| `fr` | `en` | Langue des libellés UI |
+
+**Sortie HTML** : `<div class="vp-diary-entry">` avec en-tête de date, badge d'orchestrateur, bloc de contenu, liste des points forts (si présents) et liste des blocages (si présents).
+
+---
+
+### mission-timeline
+
+Affiche une timeline verticale des missions VantagePeers.
+
+**URI** : `ui://vp/v1/mission-timeline`
+
+**Paramètres de requête** :
+
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `pilot` | string | — | Filtrer par pilote (orchestrateur assigné) |
+| `project` | string | — | Filtrer par nom de projet |
+| `status` | string | — | Filtrer par statut de mission |
+| `limit` | 1–100 | `10` | Nombre maximum de missions à retourner |
+| `lang` | `en` \| `fr` | `en` | Langue des libellés UI |
+
+**Sortie HTML** : `<div class="vp-mission-timeline">` avec une timeline verticale. Chaque entrée affiche le nom de la mission, le projet, le badge de statut, le pilote, la puce de priorité et la barre de progression (quand `progress` est défini).
+
+---
+
+### briefing-note
+
+Affiche une seule note de briefing ou une liste compacte de notes récentes.
+
+**URI** : `ui://vp/v1/briefing-note`
+
+**Paramètres de requête** :
+
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `noteId` | string | — | Récupérer une note spécifique par ID Convex |
+| `topic` | string | — | Filtrer par sujet lors de la récupération d'une liste |
+| `limit` | 1–50 | `5` | Nombre maximum de notes quand aucun `noteId` n'est fourni |
+| `lang` | `en` \| `fr` | `en` | Langue des libellés UI |
+
+**Sortie HTML** : `<div class="vp-briefing-note">` avec badge de sujet, titre, puces de participants (quand `participants` est défini) et bloc de contenu (quand `content` est défini).
+
+---
+
+### memory-quote
+
+Affiche une liste compacte de citations mémoire depuis un espace de noms.
+
+**URI** : `ui://vp/v1/memory-quote`
+
+**Paramètres de requête** :
+
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `namespace` | string | — | Espace de noms mémoire à interroger |
+| `type` | string | — | Filtre de type mémoire (`feedback`, `reference`, etc.) |
+| `limit` | 1–50 | `5` | Nombre maximum de citations à retourner |
+| `lang` | `en` \| `fr` | `en` | Langue des libellés UI |
+
+**Sortie HTML** : `<div class="vp-memory-quote">` avec une liste de style citation. Chaque entrée affiche le badge d'espace de noms, la puce de type, le score de pertinence (quand `score` est défini) et le contenu sécurisé contre les XSS.
+
+---
+
+## Comportement commun à toutes les primitives
+
+- **Sécurité XSS** : tout le contenu fourni par l'utilisateur passe par une fonction d'échappement HTML. Aucune interpolation brute.
+- **Scopage Shadow DOM** : les CSS utilisent des préfixes de classe `.vp-*` pour éviter les collisions avec les styles de la page hôte.
+- **WCAG AA** : tous les tableaux ont des en-têtes `scope="col"` ; les régions interactives utilisent `role` et `aria-label` ; les changements d'état utilisent `aria-live`.
+- **Bilingue** : tous les libellés, compteurs et noms accessibles sont traduits quand `?lang=fr` est passé.
+- **Frontière d'erreur** : si la requête Convex échoue, la primitive retourne un `<div>` d'erreur avec le message — elle ne lève jamais d'exception.
+
+<Callout type="warn">
+Le protocole `ui://` est un schéma URI MCP personnalisé. Les clients HTTP standard (`fetch`, `axios`) ne peuvent pas l'appeler. Seuls les clients SDK MCP avec un gestionnaire `resources/read` enregistré peuvent consommer ces ressources.
+</Callout>

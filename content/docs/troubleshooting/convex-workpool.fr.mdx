@@ -1,0 +1,107 @@
+---
+title: Erreurs de workpool Convex
+description: Cause racine et correction pour "Couldn't acquire a permit on this funrun" — limites de concurrence de la plateforme Convex et le patron fleet de règle de filtre.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# Erreurs de workpool Convex
+
+## Message d'erreur
+
+```
+Error: Couldn't acquire a permit on this funrun
+```
+
+Variantes que vous pouvez également rencontrer :
+
+```
+WorkpoolError: All permits are currently in use
+ConvexError: funrun concurrency limit exceeded
+```
+
+## Cause racine
+
+Convex impose une **limite de concurrence par déploiement** sur les exécutions de fonctions (funruns). Chaque déploiement sur l'offre gratuite est limité à un nombre fixe d'exécutions de fonctions simultanées. Lorsque VantagePeers effectue de nombreuses opérations d'agents en parallèle (écritures mémoire, mises à jour de tâches, envois de messages), les slots de concurrence se remplissent et les nouveaux funruns échouent à acquérir un permit.
+
+Il s'agit d'une **contrainte de la plateforme Convex**, pas d'un bug dans VantagePeers.
+
+L'erreur est la plus fréquente lorsque :
+- Plusieurs agents envoient des messages ou écrivent des mémoires simultanément (burst fleet)
+- Un job cron se déclenche en même temps qu'une activité agent intensive
+- Un agent exécute une requête de recherche (vecteur + BM25 hybride) pendant que d'autres écrivent
+
+## Correction : patron de règle de filtre
+
+La correction standard fleet est une **règle de filtre** qui limite ou diffère les opérations quand le workpool est saturé.
+
+<Steps>
+  <Step>
+    **Identifiez les outils à haute fréquence** provoquant le burst. Coupables courants : `store_memory`, `send_message`, `create_task`, `update_task`.
+  </Step>
+  <Step>
+    **Ajoutez un backoff exponentiel** à l'agent appelant ces outils :
+
+    ```ts
+    async function avecBackoff<T>(
+      fn: () => Promise<T>,
+      maxTentatives = 4,
+      delaiBaseMs = 200
+    ): Promise<T> {
+      for (let tentative = 0; tentative <= maxTentatives; tentative++) {
+        try {
+          return await fn()
+        } catch (err) {
+          const estErreurWorkpool =
+            err instanceof Error &&
+            (err.message.includes("Couldn't acquire a permit") ||
+             err.message.includes("WorkpoolError"))
+
+          if (!estErreurWorkpool || tentative === maxTentatives) throw err
+
+          const delai = delaiBaseMs * 2 ** tentative + Math.random() * 100
+          await new Promise((resolve) => setTimeout(resolve, delai))
+        }
+      }
+      throw new Error('inaccessible')
+    }
+    ```
+  </Step>
+  <Step>
+    **Pour les opérations fleet** (beaucoup d'agents écrivant simultanément), utilisez une **règle de filtre** pour sérialiser ou limiter le débit des écritures.
+
+    ```
+    create_filter_rule({
+      pattern: "store_memory|update_task",
+      priority: "low",
+      action: "defer",
+      deferMs: 500
+    })
+    ```
+  </Step>
+  <Step>
+    **Passez à Convex Pro** si vous atteignez régulièrement la limite. Les déploiements Pro ont des limites de concurrence nettement plus élevées. Voir la [page de tarification Convex](https://convex.dev/pricing).
+  </Step>
+</Steps>
+
+## Vérifier l'utilisation actuelle des funruns
+
+Dans votre tableau de bord Convex :
+
+1. Allez dans votre déploiement → onglet **Functions**
+2. Triez par **Duration** — les fonctions longues maintiennent les permits plus longtemps
+3. Vérifiez les **Logs** pour la fréquence des `WorkpoolError`
+
+## Bursts liés aux crons
+
+Les tâches récurrentes VantagePeers s'exécutent sur des actions planifiées Convex. Si vous avez de nombreuses tâches récurrentes avec le même intervalle, elles se déclenchent simultanément et se disputent les permits.
+
+**Correction** : décalez vos planifications de tâches récurrentes.
+- Agent sigma : `cronExpression: "0 * * * *"` (heure pile)
+- Agent tau : `cronExpression: "15 * * * *"` (15 après)
+- Agent phi : `cronExpression: "30 * * * *"` (30 après)
+
+<Callout type="warn">
+N'interceptez pas et n'avalez pas silencieusement les `WorkpoolError`. Si une écriture mémoire ou un envoi de message échoue silencieusement, les agents opèreront sur des données périmées. Réessayez toujours ou remontez l'erreur.
+</Callout>

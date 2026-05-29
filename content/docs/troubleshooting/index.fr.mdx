@@ -1,0 +1,33 @@
+---
+title: Dépannage
+description: Diagnostiquer et corriger les problèmes courants de VantagePeers — erreurs de workpool Convex, échecs d'embeddings RAG, problèmes de connexion MCP, et plus.
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card'
+
+# Dépannage
+
+Cette section couvre les problèmes les plus courants rencontrés lors de l'exécution de VantagePeers en production. Chaque guide inclut une analyse de la cause racine et des instructions de correction étape par étape.
+
+## Diagnostic rapide
+
+Avant de plonger dans les guides spécifiques, collectez ces informations :
+
+1. **Version du serveur MCP** : `npm list vantage-peers-mcp` ou vérifiez `package.json`
+2. **Déploiement Convex** : `npx convex dashboard` → Functions → erreurs récentes
+3. **Variables d'environnement** : confirmez que `CONVEX_URL`, `AI_GATEWAY_API_KEY`, et optionnellement `VP_EMIT_UI_MARKERS` sont définies
+4. **Transport** : stdio (Claude Code) ou HTTP (Railway / connecteur Claude.ai)
+
+## Guides
+
+<Cards>
+  <Card title="Erreurs de workpool Convex" href="/docs/troubleshooting/convex-workpool" description="Couldn't acquire a permit on this funrun — cause racine de la limite de concurrence et correction par règle de filtre." />
+  <Card title="Embeddings RAG" href="/docs/troubleshooting/rag-embeddings" description="Configuration text-embedding-3-small, limites de débit, incompatibilités de dimensions et configuration de la clé API." />
+  <Card title="Erreurs courantes" href="/docs/troubleshooting/common-errors" description="Top 10 des erreurs avec diagnostic et étapes de correction — CONVEX_URL manquant, échecs d'auth, outil introuvable, et plus." />
+</Cards>
+
+## Toujours bloqué ?
+
+- Consultez les [issues GitHub](https://github.com/vantageos-agency/vantage-peers/issues) — recherchez votre message d'erreur
+- Consultez le [tableau de bord Convex](https://dashboard.convex.dev) → onglet Logs pour les erreurs côté serveur
+- Ouvrez une nouvelle issue avec votre version du serveur MCP, le type de transport et le message d'erreur exact

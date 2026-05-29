@@ -1,0 +1,208 @@
+---
+title: UI Resources Reference
+description: Complete reference for all 6 ui:// primitives — URI scheme, query parameters, HTML output structure, and MCP fetch examples.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
+
+# UI Resources Reference
+
+All Paradigm B primitives are served via the `ui://` MCP resource protocol. The server registers them under `ui://vp/v1/<primitive>` and clients fetch them with `resources/read`.
+
+## URI Scheme
+
+```
+ui://vp/v1/<primitive>?<query-params>
+```
+
+- **Protocol**: `ui://` (MCP custom URI, not HTTP)
+- **Namespace**: `vp/v1` — versioned to allow future breaking changes under `v2`
+- **Primitive**: one of the 6 registered names (see table below)
+- **Query params**: optional, primitive-specific filters
+
+### Full URI examples
+
+```
+ui://vp/v1/tasks-table?assignedTo=sigma&status=in_progress&limit=10
+ui://vp/v1/messages-feed?from=pi&channel=fleet&limit=20
+ui://vp/v1/diary-entry?orchestrator=sigma&limit=3&lang=fr
+ui://vp/v1/mission-timeline?pilot=tau&status=active&limit=5
+ui://vp/v1/briefing-note?topic=deployment&limit=3
+ui://vp/v1/memory-quote?namespace=sigma&type=feedback&limit=5
+```
+
+## Fetching via MCP
+
+```ts
+// MCP client fetch — works with any MCP SDK version >= 1.0
+const result = await client.readResource({
+  uri: 'ui://vp/v1/tasks-table?assignedTo=sigma&status=review&limit=10',
+})
+
+// result.contents[0].text = HTML string
+const html = result.contents[0].text as string
+```
+
+The returned `text` is a self-contained HTML fragment with embedded `<style>` tags — safe to inject into a Shadow DOM root.
+
+---
+
+## Primitives
+
+### tasks-table
+
+Renders a compact HTML table of VantagePeers tasks.
+
+**URI**: `ui://vp/v1/tasks-table`
+
+**Query params**:
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `assignedTo` | string | — | Filter by assignee name |
+| `status` | string | — | Single status, alias (`open`, `active`, `all`), or comma-separated list (e.g. `todo,in_progress`) |
+| `fields` | `lite` \| `full` | `lite` | `lite` = title/status/priority/assignee; `full` adds creation time |
+| `limit` | 1–200 | `20` | Maximum rows to return |
+| `createdBy` | string | — | Filter by creator name |
+| `lang` | `en` \| `fr` | `en` | Column header language |
+
+**HTML output**:
+
+```html
+<div class="vp-tasks-table" role="region" aria-label="VantagePeers tasks list">
+  <style>/* scoped CSS — Shadow DOM safe */</style>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Title</th>
+        <th scope="col">Status</th>
+        <th scope="col">Priority</th>
+        <th scope="col">Assigned to</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>My task title</td>
+        <td><span class="vp-status vp-status-in_progress">in_progress</span></td>
+        <td>high</td>
+        <td>sigma</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="vp-tasks-count" aria-live="polite">3 tasks</div>
+</div>
+```
+
+**Status badge classes**: `vp-status-todo` (blue), `vp-status-in_progress` (yellow), `vp-status-review` (purple), `vp-status-blocked` (red), `vp-status-done` (green).
+
+---
+
+### messages-feed
+
+Renders a chronological feed of VantagePeers messages.
+
+**URI**: `ui://vp/v1/messages-feed`
+
+**Query params**:
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `from` | string | — | Filter by sender name |
+| `channel` | string | — | Filter by channel name |
+| `limit` | 1–200 | `20` | Maximum messages to return |
+| `lang` | `en` \| `fr` | `en` | UI label language |
+
+**HTML output**: `<div class="vp-messages-feed">` with a list of message bubbles. Each bubble contains sender, timestamp, channel badge (if present), and XSS-escaped content.
+
+---
+
+### diary-entry
+
+Renders a structured diary entry or a list of recent entries.
+
+**URI**: `ui://vp/v1/diary-entry`
+
+**Query params**:
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `date` | `YYYY-MM-DD` | — | Fetch entry for a specific date |
+| `orchestrator` | string | — | Filter by orchestrator name |
+| `limit` | 1–50 | `5` | Maximum entries when fetching a list |
+| `lang` | `en` \| `fr` | `en` | UI label language |
+
+**HTML output**: `<div class="vp-diary-entry">` with date header, orchestrator badge, content block, highlights list (if present), and blockers list (if present).
+
+---
+
+### mission-timeline
+
+Renders a vertical timeline of VantagePeers missions.
+
+**URI**: `ui://vp/v1/mission-timeline`
+
+**Query params**:
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `pilot` | string | — | Filter by pilot (assigned orchestrator) |
+| `project` | string | — | Filter by project name |
+| `status` | string | — | Filter by mission status |
+| `limit` | 1–100 | `10` | Maximum missions to return |
+| `lang` | `en` \| `fr` | `en` | UI label language |
+
+**HTML output**: `<div class="vp-mission-timeline">` with a vertical timeline. Each entry shows mission name, project, status badge, pilot, priority chip, and progress bar (when `progress` is set).
+
+---
+
+### briefing-note
+
+Renders a single briefing note or a compact list of recent notes.
+
+**URI**: `ui://vp/v1/briefing-note`
+
+**Query params**:
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `noteId` | string | — | Fetch a specific note by Convex ID |
+| `topic` | string | — | Filter by topic when fetching a list |
+| `limit` | 1–50 | `5` | Maximum notes when no `noteId` is given |
+| `lang` | `en` \| `fr` | `en` | UI label language |
+
+**HTML output**: `<div class="vp-briefing-note">` with topic badge, title, participant chips (when `participants` is set), and content block (when `content` is set).
+
+---
+
+### memory-quote
+
+Renders a compact list of memory quotes from a namespace.
+
+**URI**: `ui://vp/v1/memory-quote`
+
+**Query params**:
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `namespace` | string | — | Memory namespace to query |
+| `type` | string | — | Memory type filter (`feedback`, `reference`, etc.) |
+| `limit` | 1–50 | `5` | Maximum quotes to return |
+| `lang` | `en` \| `fr` | `en` | UI label language |
+
+**HTML output**: `<div class="vp-memory-quote">` with a blockquote-style list. Each entry shows namespace badge, type chip, relevance score (when `score` is set), and XSS-escaped content.
+
+---
+
+## Common Behaviour Across All Primitives
+
+- **XSS safety**: all user-supplied content runs through an HTML escape function. No raw interpolation.
+- **Shadow DOM scoping**: CSS uses `.vp-*` class prefixes to avoid collision with host page styles. Intended for Shadow DOM root injection but works in regular DOM too.
+- **WCAG AA**: all tables have `scope="col"` headers; interactive regions use `role` and `aria-label`; status changes use `aria-live`.
+- **Bilingual**: all labels, counts, and accessible names are translated when `?lang=fr` is passed.
+- **Error boundary**: if the Convex query fails, the primitive returns an error `<div>` with the message — it never throws. The MCP `resources/read` call always succeeds with an HTML response.
+
+<Callout type="warn">
+The `ui://` protocol is a custom MCP URI scheme. Standard HTTP clients (`fetch`, `axios`) cannot call it. Only MCP SDK clients with a registered `resources/read` handler can consume these resources.
+</Callout>

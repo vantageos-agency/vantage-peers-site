@@ -1,0 +1,216 @@
+---
+title: Erreurs courantes
+description: Top 10 des erreurs VantagePeers avec diagnostic et étapes de correction — CONVEX_URL manquant, échecs d'authentification, outil introuvable, violations de schéma, et plus.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
+
+# Erreurs courantes
+
+<Accordions>
+
+<Accordion title="1. CONVEX_URL introuvable / non définie">
+
+**Message d'erreur** :
+```
+Error: CONVEX_URL not found.
+Set it via: export CONVEX_URL=https://your-deployment.convex.cloud
+Or create a .env.local file with CONVEX_URL=...
+```
+
+**Cause** : le serveur MCP n'a pas trouvé d'URL de déploiement Convex dans l'environnement ou le fichier `.env.local`.
+
+**Correction** :
+
+Option A — variable d'environnement :
+```bash
+export CONVEX_URL=https://votre-deploiement.convex.cloud
+```
+
+Option B — fichier `.env.local` dans le répertoire où vous lancez `npx vantage-peers-mcp` :
+```
+CONVEX_URL=https://votre-deploiement.convex.cloud
+```
+
+Trouvez l'URL de votre déploiement dans le [tableau de bord Convex](https://dashboard.convex.dev) → votre projet → Paramètres → URL de déploiement.
+
+</Accordion>
+
+<Accordion title="2. Échec d'authentification Bearer (transport HTTP)">
+
+**Message d'erreur** :
+```
+HTTP 401 Unauthorized
+{"error":"invalid_token","error_description":"Bearer token is missing or invalid"}
+```
+
+**Cause** : le transport HTTP requiert un jeton Bearer dans l'en-tête `Authorization`. Le jeton est soit manquant, soit expiré (OAuth), soit incorrect (non-concordance du token master).
+
+**Correction** :
+
+Pour le Bearer master (admin) :
+```bash
+export BEARER_SECRET_MASTER=votre-secret-ici
+# Puis ajoutez dans la config du client MCP : Authorization: Bearer <votre-secret>
+```
+
+Pour les tokens OAuth : ré-autorisez le client via le flux OAuth. Les tokens d'accès OAuth expirent — vérifiez que votre client se rafraîchit avec le token de rafraîchissement avant expiration.
+
+</Accordion>
+
+<Accordion title="3. Outil introuvable">
+
+**Message d'erreur** :
+```
+MCP error: Tool 'tool_name' not found
+UnknownToolError: No tool registered with name 'tool_name'
+```
+
+**Cause** : le nom d'outil utilisé dans l'appel MCP ne correspond à aucun outil enregistré. Causes courantes :
+- Faute de frappe dans le nom de l'outil (ex. `list_task` au lieu de `list_tasks`)
+- Utilisation d'un outil supprimé dans une version plus récente
+- Ancien client MCP avec une liste d'outils mise en cache
+
+**Correction** :
+
+1. Consultez la [Référence des outils](/docs/tools) pour le nom exact de l'outil
+2. Appelez `tools/list` pour obtenir la liste des outils du serveur actuel
+3. Si vous utilisez Claude Code, redémarrez la connexion au serveur MCP pour rafraîchir le cache
+
+</Accordion>
+
+<Accordion title="4. Erreur de validation Zod sur l'entrée d'un outil">
+
+**Message d'erreur** :
+```
+ZodError: [{"code":"invalid_type","expected":"string","received":"number","path":["assignedTo"]}]
+McpError: Invalid arguments for tool 'create_task'
+```
+
+**Cause** : les arguments passés à l'outil ne correspondent pas au schéma attendu.
+
+**Correction** : consultez le schéma de l'outil dans la [Référence des outils](/docs/tools). Problèmes courants :
+- Passer un nombre là où une chaîne est attendue (ex. `priority: 1` devrait être `priority: "high"`)
+- Passer un tableau comme chaîne JSON — le serveur normalise automatiquement la plupart des paramètres de tableau
+- Champs requis manquants
+
+</Accordion>
+
+<Accordion title="5. Fonction Convex introuvable">
+
+**Message d'erreur** :
+```
+ConvexError: Function "tasks:list" not found
+Error calling Convex: Could not find function with path "memories:search"
+```
+
+**Cause** : le déploiement Convex n'a pas la fonction attendue. Cela se produit quand :
+- Le backend Convex n'est pas déployé ou utilise une ancienne version
+- `npx convex deploy` n'a pas été lancé après une mise à jour du code
+- CONVEX_URL pointe vers le mauvais déploiement
+
+**Correction** :
+
+```bash
+# Depuis la racine du repo vantage-peers :
+npx convex deploy --prod
+```
+
+</Accordion>
+
+<Accordion title="6. Espace de noms mémoire introuvable (résultats vides, pas d'erreur)">
+
+**Symptôme** : `recall_memories` ou `search_memories` retourne un tableau vide, mais vous savez que des mémoires existent.
+
+**Cause** : les espaces de noms sont sensibles à la casse. `sigma` et `Sigma` sont des espaces de noms différents.
+
+**Correction** : utilisez des chaînes d'espaces de noms exactement en minuscules. Tous les orchestrateurs intégrés utilisent des lettres grecques minuscules (`sigma`, `pi`, `tau`, etc.).
+
+</Accordion>
+
+<Accordion title="7. Limite de débit GitHub webhook / API">
+
+**Message d'erreur** :
+```
+GitHub API error: 403 rate limit exceeded
+X-RateLimit-Remaining: 0
+```
+
+**Cause** : la variable d'environnement `GITHUB_TOKEN` n'est pas définie (limite non authentifiée : 60 req/heure) ou la limite de débit du token est épuisée.
+
+**Correction** :
+
+1. Définissez `GITHUB_TOKEN` dans le tableau de bord Convex :
+   - Paramètres → Variables d'environnement → `GITHUB_TOKEN`
+   - Utilisez un token d'accès personnel fin avec les permissions `issues:read` et `issues:write`
+2. Les requêtes authentifiées ont une limite de 5000 req/heure
+
+</Accordion>
+
+<Accordion title="8. Connexion MCP refusée (transport HTTP)">
+
+**Message d'erreur** :
+```
+connect ECONNREFUSED 127.0.0.1:3000
+Error: fetch failed — connection refused
+```
+
+**Cause** : le serveur MCP HTTP ne tourne pas, ou tourne sur un port différent.
+
+**Correction** :
+
+```bash
+cd mcp-server
+PORT=3000 CONVEX_URL=... BEARER_SECRET_MASTER=... node dist/server-http.js
+```
+
+Vérifiez qu'il écoute :
+```bash
+curl http://localhost:3000/health
+```
+
+</Accordion>
+
+<Accordion title="9. Échec de parse VpToolResultSchema (Paradigme B)">
+
+**Message d'erreur** :
+```
+TypeError: [stream-marker] wrapToolResult: invalid payload — ...
+```
+
+Ou `parseToolResult` retourne `null` quand vous attendez un résultat structuré.
+
+**Cause** : le payload n'est pas conforme à `VpToolResultSchema`. Problèmes courants :
+- La valeur de `kind` ne correspond pas à l'une des 6 chaînes autorisées
+- `diary-entry` et `briefing-note` utilisent `item` (singulier), pas `items` — confusion fréquente
+- Champs requis manquants (`_id`, `title` pour les tâches, etc.)
+
+**Correction** :
+
+```ts
+const result = VpToolResultSchema.safeParse(payload)
+if (!result.success) {
+  console.error('Erreur de schéma:', result.error.format())
+}
+```
+
+Consultez la [référence du marqueur de flux](/docs/paradigm-b/stream-marker) pour la définition complète de l'union discriminée.
+
+</Accordion>
+
+<Accordion title="10. VP_EMIT_UI_MARKERS sans effet">
+
+**Symptôme** : `VP_EMIT_UI_MARKERS=1` est défini mais les réponses des outils ne contiennent pas de marqueurs.
+
+**Cause** : la variable d'environnement doit être définie dans le **tableau de bord Convex** (côté serveur), pas dans le fichier `.env.local` local ou l'environnement shell.
+
+**Correction** :
+
+1. Ouvrez le tableau de bord Convex → votre déploiement → Paramètres → Variables d'environnement
+2. Ajoutez `VP_EMIT_UI_MARKERS` avec la valeur `1`
+3. Enregistrez — prend effet au prochain appel de fonction, sans redéploiement
+
+</Accordion>
+
+</Accordions>
