@@ -1,0 +1,403 @@
+---
+title: Exemples de missions
+description: Trois exemples de missions entièrement travaillés — lancement client, déploiement de fonctionnalité par sprints, et un audit système multi-agents avec tâches parallèles.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+
+# Exemples de missions
+
+---
+
+## Exemple 1 : Lancement client (petite mission, 4 tâches)
+
+**Scénario :** Intégrer le client Acme Corp — appel de lancement, document de périmètre, premier livrable, rapport de statut.
+
+**Profil de mission :** 4 tâches séquentielles, pilote unique.
+
+### Séquençage
+
+```
+T0  appel-de-lancement   [pas de dépendances]
+  ↓
+T1  document-perimetre   [dependsOn: T0]
+  ↓
+T2  premier-livrable     [dependsOn: T1]
+  ↓
+T3  rapport-statut       [dependsOn: T2]
+```
+
+### Appels d'outils
+
+```ts
+// 1. Créer la mission
+const missionId = mcp__vantage-peers__create_mission({
+  name: "kickoff-client-acme",
+  description: "Intégrer Acme Corp : appel de lancement, doc de périmètre, premier livrable, rapport de statut.",
+  pilot: "sigma",
+  agents: ["sigma", "dev-general"],
+  status: "plan",
+  priority: "high",
+  project: "acme-corp",
+  brief: "Contact Acme : Marie. Lancement confirmé. Premier livrable = wireframe landing page.",
+  createdBy: "sigma"
+})
+// missionId = "kMISS_ACME"
+
+// 2. Créer les tâches
+const t0 = mcp__vantage-peers__create_task({
+  title: "Appel de lancement avec Acme",
+  description: "Animer 1h d'appel de lancement. Enregistrer les résultats. Noter les bloqueurs et questions ouvertes.",
+  assignedTo: "sigma",
+  priority: "high",
+  project: "acme-corp",
+  missionId: "kMISS_ACME",
+  status: "todo",
+  createdBy: "sigma"
+})
+// t0 = "kT_ACME_0"
+
+const t1 = mcp__vantage-peers__create_task({
+  title: "Rédiger le document de périmètre",
+  description: "Basé sur les notes de lancement : objectifs, livrables, calendrier, budget, hors périmètre.",
+  assignedTo: "sigma",
+  priority: "high",
+  project: "acme-corp",
+  missionId: "kMISS_ACME",
+  dependsOn: ["kT_ACME_0"],
+  status: "todo",
+  createdBy: "sigma"
+})
+
+const t2 = mcp__vantage-peers__create_task({
+  title: "Livrer le wireframe landing page",
+  description: "Wireframe Figma couvrant hero, fonctionnalités, pricing, CTA. Approbation client requise.",
+  assignedTo: "dev-general",
+  priority: "high",
+  project: "acme-corp",
+  missionId: "kMISS_ACME",
+  dependsOn: ["kT_ACME_1"],
+  status: "todo",
+  createdBy: "sigma"
+})
+
+const t3 = mcp__vantage-peers__create_task({
+  title: "Envoyer le rapport de statut Semaine 1",
+  description: "Rapport email : ce qui a été fait, la suite, les éventuels bloqueurs.",
+  assignedTo: "sigma",
+  priority: "medium",
+  project: "acme-corp",
+  missionId: "kMISS_ACME",
+  dependsOn: ["kT_ACME_2"],
+  status: "todo",
+  createdBy: "sigma"
+})
+
+// 3. Démarrer l'exécution
+mcp__vantage-peers__update_mission_status({
+  missionId: "kMISS_ACME",
+  status: "execute"
+})
+```
+
+### Sortie attendue après la clôture de T0
+
+```ts
+mcp__vantage-peers__complete_task({
+  taskId: "kT_ACME_0",
+  completionNote: "Appel de lancement terminé le 2026-05-29. Notes dans acme/kickoff-notes-2026-05-29.md. Résultat clé : livraison du wireframe landing page confirmée, budget 5k€."
+})
+
+mcp__vantage-peers__update_mission_progress({ missionId: "kMISS_ACME", progress: 25 })
+```
+
+---
+
+## Exemple 2 : Déployer une fonctionnalité produit (mission moyenne, 12 tâches par phases)
+
+**Scénario :** Déployer la fonctionnalité "recherches sauvegardées" pour VantagePeers — spec, backend, frontend, tests, révision, déploiement.
+
+**Profil de mission :** 12 tâches en 5 phases, 2 agents (dev + eta).
+
+### Structure des phases
+
+```
+Phase 1 — Plan (1 tâche)
+  T0  feature-spec            [pas de dépendances]
+
+Phase 2 — Build (4 tâches)
+  T1  backend-schema          [dependsOn: T0]
+  T2  backend-mutations       [dependsOn: T1]
+  T3  frontend-ui             [dependsOn: T0]   ← parallèle avec T1, T2
+  T4  frontend-integration    [dependsOn: T2, T3]
+
+Phase 3 — Test (2 tâches)
+  T5  unit-tests              [dependsOn: T4]
+  T6  integration-tests       [dependsOn: T4]
+
+Phase 4 — Révision (2 tâches)
+  T7  code-review-eta         [dependsOn: T5, T6]   ← barrière : les deux tâches de test doivent d'abord se fermer
+  T8  address-review-feedback [dependsOn: T7]
+
+Phase 5 — Déploiement (3 tâches)
+  T9   deploy-staging         [dependsOn: T8]
+  T10  qa-staging             [dependsOn: T9]
+  T11  deploy-production      [dependsOn: T10]
+```
+
+### Mise en place de la mission
+
+```ts
+const missionId = mcp__vantage-peers__create_mission({
+  name: "sigma-saved-searches-v1",
+  description: "Déployer la fonctionnalité de recherches sauvegardées : mutations backend + UI frontend + tests + révision + déploiement.",
+  pilot: "sigma",
+  agents: ["zeta", "eta"],
+  status: "plan",
+  priority: "high",
+  project: "vantage-peers",
+  brief: "Recherches sauvegardées : l'utilisateur peut sauvegarder une requête de recherche avec un nom et la rappeler depuis un menu déroulant. Backend : nouvelle table savedSearches + mutations CRUD. Frontend : menu déroulant React dans la barre de recherche.",
+  createdBy: "sigma"
+})
+```
+
+### Transitions de statut
+
+```ts
+// Plan → Execute quand T0 est terminé
+mcp__vantage-peers__update_mission_status({ missionId, status: "execute" })
+mcp__vantage-peers__update_mission_progress({ missionId, progress: 10 })
+
+// Après la complétion de la Phase 2 (T1–T4 terminés)
+mcp__vantage-peers__update_mission_progress({ missionId, progress: 40 })
+
+// Après la complétion de la Phase 3 (T5, T6 terminés) — passer à validate
+mcp__vantage-peers__update_mission_status({ missionId, status: "validate" })
+mcp__vantage-peers__update_mission_progress({ missionId, progress: 60 })
+
+// Après T11 — clôturer la mission
+mcp__vantage-peers__complete_task({
+  taskId: "kT11",
+  completionNote: "Déployé en prod le 2026-06-03. PR #211 fusionnée. 47/47 tests passent. Fonctionnalité live à /search?saved=true. Smoke test confirmé."
+})
+mcp__vantage-peers__update_mission_status({ missionId, status: "complete" })
+mcp__vantage-peers__update_mission_progress({ missionId, progress: 100 })
+```
+
+### Comment les agents se mappent aux tâches
+
+```
+sigma    → T0 (spec), T8 (corriger les retours de révision), T11 (déploiement prod)
+zeta     → T1–T4 (construction), T5–T6 (tests), T9 (déploiement staging), T10 (QA)
+eta      → T7 (revue de code)
+```
+
+Le tableau `agents: ["zeta", "eta"]` de la mission déclare qui sera déployé. Le pilote (sigma) coordonne les transferts entre les phases.
+
+---
+
+## Exemple 3 : Audit système + remédiation (grande mission, parallèle multi-agents)
+
+**Scénario :** Auditer la flotte VantageOS (3 dépôts) et déployer tous les correctifs critiques. Trois tâches d'audit parallèles s'exécutent simultanément, puis une barrière, puis des tâches de correctif séquentielles, puis la QA finale.
+
+**Profil de mission :** 11 tâches, 3 orchestrateurs (proxima × auditeur, zeta × correcteur, eta × réviseur).
+
+### Architecture : pattern parallèle-puis-barrière
+
+```
+T0  audit-vantage-memory     [pas de dépendances]  ─┐
+T1  audit-vantage-starter    [pas de dépendances]  ─┤→ (phase d'audit parallèle)
+T2  audit-myreeldream        [pas de dépendances]  ─┘
+                                                      ↓ BARRIÈRE (les 3 doivent se fermer)
+T3  compile-findings         [dependsOn: T0, T1, T2]
+                                                      ↓
+T4  fix-critical-memory      [dependsOn: T3]  ─┐
+T5  fix-critical-starter     [dependsOn: T3]  ─┤→ (phase de correctifs parallèle)
+T6  fix-critical-reel        [dependsOn: T3]  ─┘
+                                                      ↓ BARRIÈRE (les 3 correctifs doivent se fermer)
+T7  regression-tests-all     [dependsOn: T4, T5, T6]
+T8  code-review-eta          [dependsOn: T7]
+T9  deploy-all-fixes         [dependsOn: T8]
+T10 final-qa-report          [dependsOn: T9]
+```
+
+### Mise en place de la mission
+
+```ts
+const missionId = mcp__vantage-peers__create_mission({
+  name: "audit-fleet-2026-05",
+  description: "Auditer 3 dépôts VantageOS pour les problèmes critiques, corriger tous les résultats P0/P1, QA et déploiement.",
+  pilot: "sigma",
+  agents: ["proxima", "zeta", "eta"],
+  status: "plan",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  brief: "Audit mensuel de la flotte. Périmètre : vantage-memory, vantage-starter, myreeldream. P0 = perte de données ou sécurité. P1 = fonctionnalités cassées. Corriger tous les P0/P1 avant la porte QA.",
+  createdBy: "sigma"
+})
+```
+
+### Tâches d'audit parallèles (pas de dependsOn entre elles)
+
+```ts
+const t0 = mcp__vantage-peers__create_task({
+  title: "Auditer vantage-memory",
+  description: "Audit complet : schéma, mutations, logs d'erreurs, issues ouvertes. Sortie : findings-vantage-memory.md",
+  assignedTo: "proxima",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  status: "todo",
+  createdBy: "sigma"
+})
+// Note : pas de dependsOn — démarre immédiatement en parallèle
+
+const t1 = mcp__vantage-peers__create_task({
+  title: "Auditer vantage-starter",
+  description: "Audit complet : dépendances, config de déploiement, issues ouvertes. Sortie : findings-vantage-starter.md",
+  assignedTo: "zeta",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  status: "todo",
+  createdBy: "sigma"
+  // pas de dependsOn — parallèle avec T0
+})
+
+const t2 = mcp__vantage-peers__create_task({
+  title: "Auditer myreeldream",
+  description: "Audit complet : intégrations API, taux d'erreur, issues ouvertes. Sortie : findings-myreeldream.md",
+  assignedTo: "proxima",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  status: "todo",
+  createdBy: "sigma"
+  // pas de dependsOn — parallèle avec T0, T1
+})
+```
+
+### Tâche barrière
+
+```ts
+const t3 = mcp__vantage-peers__create_task({
+  title: "Compiler les résultats d'audit",
+  description: "Fusionner les 3 docs de résultats. Prioriser P0/P1. Assigner les correctifs aux agents. Sortie : audit-consolidated-2026-05.md",
+  assignedTo: "sigma",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  dependsOn: [t0, t1, t2],  // BARRIÈRE — les 3 audits doivent se terminer d'abord
+  status: "todo",
+  createdBy: "sigma"
+})
+```
+
+### Tâches de correctifs parallèles (même barrière, pas de dependsOn mutuels)
+
+```ts
+// T4, T5, T6 dépendent tous de T3 (la barrière) mais PAS les uns des autres
+const t4 = mcp__vantage-peers__create_task({
+  title: "Corriger P0/P1 dans vantage-memory",
+  description: "Traiter tous les résultats P0/P1 de l'audit. PR requise. Protocole IRP applicable.",
+  assignedTo: "proxima",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  dependsOn: [t3],
+  status: "todo",
+  createdBy: "sigma"
+})
+
+const t5 = mcp__vantage-peers__create_task({
+  title: "Corriger P0/P1 dans vantage-starter",
+  description: "Traiter tous les résultats P0/P1 de l'audit. PR requise.",
+  assignedTo: "zeta",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  dependsOn: [t3],  // même barrière, PAS dependsOn T4
+  status: "todo",
+  createdBy: "sigma"
+})
+
+const t6 = mcp__vantage-peers__create_task({
+  title: "Corriger P0/P1 dans myreeldream",
+  description: "Traiter tous les résultats P0/P1 de l'audit. PR requise.",
+  assignedTo: "proxima",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  dependsOn: [t3],  // même barrière, PAS dependsOn T4 ou T5
+  status: "todo",
+  createdBy: "sigma"
+})
+```
+
+### Deuxième barrière + chaîne QA
+
+```ts
+const t7 = mcp__vantage-peers__create_task({
+  title: "Exécuter les tests de régression sur les 3 dépôts",
+  description: "Suite de tests complète sur les 3 dépôts. Zéro régression. Documenter les résultats.",
+  assignedTo: "zeta",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  dependsOn: [t4, t5, t6],  // deuxième barrière — les 3 correctifs doivent se fermer
+  status: "todo",
+  createdBy: "sigma"
+})
+
+const t8 = mcp__vantage-peers__create_task({
+  title: "Revue de code de toutes les PRs de correctifs",
+  description: "Eta révise les 3 PRs de correctifs. Traiter les retours bloquants. Documenter [ETA-APPROVED].",
+  assignedTo: "eta",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  dependsOn: [t7],
+  status: "todo",
+  createdBy: "sigma"
+})
+
+const t9 = mcp__vantage-peers__create_task({
+  title: "Déployer tous les correctifs en production",
+  description: "Fusionner toutes les PRs. Déployer. Smoke test sur chaque dépôt.",
+  assignedTo: "sigma",
+  priority: "urgent",
+  project: "vantageos-fleet",
+  missionId,
+  dependsOn: [t8],
+  status: "todo",
+  createdBy: "sigma"
+})
+
+const t10 = mcp__vantage-peers__create_task({
+  title: "Rédiger le rapport QA final",
+  description: "Documenter tous les correctifs déployés, tests exécutés et état de la flotte. Stocker dans analysis/fleet-audit-2026-05-report.md",
+  assignedTo: "sigma",
+  priority: "high",
+  project: "vantageos-fleet",
+  missionId,
+  dependsOn: [t9],
+  status: "todo",
+  createdBy: "sigma"
+})
+```
+
+### Explication du pattern clé
+
+Les tâches au même niveau avec le même `dependsOn` s'exécutent en **parallèle** — pas d'ordre entre elles. Les tâches qui listent plusieurs prédécesseurs dans `dependsOn` sont des **barrières** — elles bloquent jusqu'à ce que chaque prédécesseur soit `done`.
+
+```
+Parallèle :  T0, T1, T2 n'ont PAS de dependsOn entre eux → fan out
+Barrière :   T3 dependsOn [T0, T1, T2]  → attend les trois → fan in
+Parallèle :  T4, T5, T6 partagent dependsOn [T3] uniquement → fan out à nouveau
+Barrière :   T7 dependsOn [T4, T5, T6]  → deuxième fan in
+```
+
+<Callout type="info">
+Le pattern parallèle-puis-barrière est la façon standard de distribuer le travail entre les agents et de synchroniser avant une porte de révision. Utilisez-le chaque fois que vous avez du travail indépendant qui doit tout se terminer avant qu'une prochaine phase commence.
+</Callout>

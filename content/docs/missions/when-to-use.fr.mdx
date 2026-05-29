@@ -1,0 +1,87 @@
+---
+title: Quand utiliser les missions
+description: Guide de décision pour choisir entre une tâche et une mission, plus les signaux pour escalader d'une tâche vers une mission en cours.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+# Quand utiliser les missions
+
+## Le test de décision
+
+Parcourez ces quatre questions. Si deux réponses ou plus sont "oui", créez une mission. Si zéro ou une, créez une tâche.
+
+<Steps>
+  <Step>
+    **Le travail comporte-t-il plus d'une étape avec des contraintes de séquençage ?**
+
+    L'objectif nécessite-t-il des phases distinctes où la phase B ne peut pas démarrer avant la fin de la phase A ? Une mission vous donne `dependsOn` pour exprimer cette contrainte. Une tâche simple n'a pas de mécanisme de séquençage.
+
+    Exemples oui : auditer puis écrire puis réviser ; spécifier puis construire puis tester puis déployer.
+    Exemples non : "Mettre à jour le README", "Corriger une faute de frappe à la ligne 42".
+  </Step>
+  <Step>
+    **Cela nécessite-t-il plusieurs types de sous-agents travaillant en série ou en parallèle ?**
+
+    Si un agent dev écrit du code, un agent reviewer le vérifie, et un agent QA le valide — vous avez trois rôles distincts. Le tableau `agents` d'une mission les déclare tous dès le départ, indiquant clairement qui est impliqué et en quelle capacité.
+
+    Exemples oui : dev + eta + qa ; fumadocs-expert + railway-expert ; auditeur + correcteur.
+    Exemples non : un seul agent fait tout ; un seul appel d'outil suffit.
+  </Step>
+  <Step>
+    **Y a-t-il un livrable mesurable et vérifiable ?**
+
+    Une mission se ferme avec des preuves : un numéro de PR, un commit SHA, un ratio de tests ou une URL déployée. Si la sortie est ambiguë ("les choses vont mieux maintenant"), une tâche avec `completionNote` suffit. Si la sortie doit être vérifiable indépendamment, utilisez une mission et appliquez des preuves sur chaque tâche liée.
+
+    Exemples oui : déployer une PR, lancer une fonctionnalité, publier un rapport.
+    Exemples non : "Examiner l'erreur", "Vérifier si X fonctionne".
+  </Step>
+  <Step>
+    **Va-t-il s'étendre sur plusieurs jours ou plusieurs sessions ?**
+
+    Les sessions se terminent ; le contexte se réinitialise. Une mission persiste dans VantagePeers à travers les sessions. Le pilote peut reprendre exactement là où il s'était arrêté en appelant `get_mission` et `list_tasks_by_mission`. Une tâche qui s'étend sur plus d'une session risque d'être perdue à moins de faire partie d'une mission.
+
+    Exemples oui : construction de fonctionnalité sur 3 jours, audit d'une semaine, élément de roadmap multi-sprint.
+    Exemples non : "Corriger et pousser dans cette session", "Exécution de script ponctuelle".
+  </Step>
+</Steps>
+
+## Matrice de décision rapide
+
+| Scénario | Verdict |
+|----------|---------|
+| Agent unique, une session, résultat atomique | Tâche |
+| Deux agents, un transfert, même journée | Tâche (ou mission si preuve requise) |
+| Trois phases, deux agents, 2 jours | Mission |
+| Fonctionnalité complète de la spec au déploiement | Mission |
+| Correction de bug (1 fichier, pattern connu) | Tâche |
+| Correction de bug nécessitant audit + fix + test de régression + revue PR | Mission (utilisez le template `issue-resolution-v3`) |
+| Note de standup hebdomadaire | Tâche (ou tâche récurrente) |
+| Intégration d'un nouveau client | Mission |
+
+## Signaux pour escalader d'une tâche vers une mission
+
+Parfois, vous démarrez avec une tâche et découvrez en cours de route qu'elle a grandi. Voici les signaux pour vous arrêter, créer une mission et relier la tâche originale sous celle-ci :
+
+**Dérive du périmètre** — La description de la tâche a été modifiée trois fois ou plus, chaque fois en élargissant le périmètre. L'estimation originale n'est plus réaliste.
+
+**Plusieurs PRs nécessaires** — La tâche nécessite maintenant des changements sur plus d'un dépôt ou plus de deux fichiers. Une seule `completionNote` ne peut pas capturer la piste de preuves complète.
+
+**Dépendance bloquante** — Une autre tâche ou personne attend ce travail. Le statut d'une mission rend la relation de blocage visible pour toute l'équipe.
+
+**Porte de révision requise** — La sortie doit être vérifiée par Eta ou un autre orchestrateur avant de se fermer. Une mission vous permet de modéliser l'étape de validation explicitement plutôt que de laisser la révision implicite dans un commentaire de tâche.
+
+**Des jours ont passé sans clôture** — Si une tâche est `in_progress` depuis plus de 48 heures, elle cache probablement des sous-étapes qui devraient être explicites. Convertissez-la en mission et exposez ces étapes comme tâches liées.
+
+<Callout type="warn">
+L'escalade d'une tâche vers une mission ne nécessite pas de supprimer la tâche originale. Créez la mission, définissez `missionId` sur la tâche originale, puis créez les tâches restantes comme éléments frères. La tâche originale devient T0 dans la nouvelle mission.
+</Callout>
+
+## Anti-patterns à éviter
+
+**Mission pour chaque tâche** — Toutes les actions n'ont pas besoin de la surcharge d'orchestration. La sur-utilisation des missions crée du bruit et enterre les vrais signaux. Réservez les missions pour les travaux qui nécessitent véritablement du séquençage, de la coordination multi-agents ou de la persistance multi-jours.
+
+**Mission sans brief** — Une mission sans `brief` ni `description` est une boîte noire. Quiconque la reprend à froid n'a aucune idée de ce à quoi ressemble le succès. Écrivez toujours au moins une phrase.
+
+**Dérive du pilote** — Une mission qui commence avec un pilote et est silencieusement transférée à un autre sans appel `update_mission` perd sa responsabilité. Mettez à jour `pilot` explicitement lors du transfert de propriété.
