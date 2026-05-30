@@ -27,43 +27,50 @@ Le `client_secret` n'est **pas** un bearer token. Il est présenté au endpoint 
 
 ## Claude.ai (web)
 
-Le plan Free permet 1 connecteur custom. Pro, Max, Team et Enterprise en permettent plusieurs.
+Le plan Free autorise 1 connecteur custom. Pro, Max, Team et Enterprise en autorisent plusieurs.
 
 1. Ouvrez [claude.ai](https://claude.ai).
-2. Cliquez votre avatar → **Personnaliser** → **Connecteurs**.
-3. Cliquez **+** puis **Ajouter un connecteur custom**.
-4. **URL** : `https://vantage-peers-production.up.railway.app/mcp`.
-5. Cliquez **Advanced** et collez :
-   - **Client ID** : votre `client_id`
-   - **Client Secret** : votre `client_secret`
-6. Cliquez **Ajouter**, puis acceptez le prompt de consentement OAuth.
-7. Dans une conversation, cliquez **+** → activez **vantage-peers**.
-8. Test : demandez à Claude *« Appelle recall avec query=hello et namespace=global »* — Claude doit appeler `recall`. Un tenant frais retourne un tableau vide, c'est normal. Une fois une mémoire stockée (voir [Premiers pas](./first-steps)), `recall` la retourne.
+2. Dans la sidebar de gauche, cliquez **Personnaliser**.
+3. Cliquez **Connecteurs**.
+4. Cliquez le bouton **+** en haut à droite de la liste des connecteurs, puis sélectionnez **Ajouter un connecteur personnalisé**.
+5. Dans la modale **Ajouter un connecteur personnalisé**, renseignez :
+   - **Nom** : `VantagePeers` (ou tout label de votre choix — c'est ce qui apparaîtra dans vos conversations).
+   - **URL du serveur MCP distant** : `https://vantage-peers-production.up.railway.app/mcp`
+6. Déployez **Paramètres avancés** et collez :
+   - **ID client OAuth** : votre `client_id`
+   - **Secret client OAuth** : votre `client_secret`
+7. Cliquez **Ajouter**. Un onglet navigateur s'ouvre pour le consentement OAuth — acceptez.
+8. Dans une conversation, cliquez **+** dans la zone de saisie → activez **VantagePeers** (ou le nom donné à l'étape 5).
+9. Test en langage naturel : *« Utilise vantage-peers pour récupérer ce que tu trouves sur VantagePeers dans le namespace global. »* Claude route vers l'outil `recall`. Un tenant tout neuf ne renvoie rien — c'est normal (voir [Premiers pas](./first-steps) pour peupler votre workspace).
 
-Utilisez **Advanced + Client ID/Secret**. Le chemin URL-only auto-discovery fonctionne mais est lié à un client enregistré transitoire et obtient le scope par défaut `client-generic`.
+Utilisez les Paramètres avancés avec Client ID + Secret. Le chemin URL-only auto-discovery fonctionne aussi mais vous attache à un client transitoire et au scope par défaut `client-generic`.
 
 ## ChatGPT
 
-Deux chemins selon votre plan :
+Le support MCP end-to-end ChatGPT est documenté par OpenAI dans [Apps SDK — Connect from ChatGPT](https://developers.openai.com/apps-sdk/deploy/connect-chatgpt). Depuis le 13/11/2025, **Apps & Connectors sont disponibles sur tous les plans payants (Plus, Pro, Business, Enterprise, Education)**.
 
-**Custom Connectors (Pro/Business/Enterprise)** — utilise la PRM discovery DCR, sans champ de credentials.
+### Activer Developer Mode (une fois)
 
 1. Ouvrez [chatgpt.com](https://chatgpt.com).
-2. Settings → **Connectors** → **Create a Connector**.
-3. **URL** : `https://vantage-peers-production.up.railway.app/mcp`.
-4. Enregistrer. ChatGPT découvre le serveur d'auth via `/.well-known/oauth-protected-resource`, exécute PKCE, et vous acceptez le prompt de consentement.
-5. Dans une conversation, sélectionnez le connecteur **vantage-peers**.
-6. Test : demandez à ChatGPT *« Appelle list_tasks avec status=todo »*. Un tenant frais retourne un tableau vide (normal). Créez une tâche d'abord via [Premiers pas](./first-steps) pour voir une vraie sortie.
+2. **Settings** → **Apps & Connectors** → **Advanced settings**.
+3. Activez **Developer mode**. Si votre politique organisationnelle le bloque, contactez votre admin.
 
-**Developer Mode (beta)** — accepte `client_id` + `client_secret` directement.
+### Ajouter VantagePeers Cloud
 
-1. Settings → **Beta features** → activez **Developer Mode** (si disponible sur votre compte).
-2. Settings → **Connectors** → **Create a Connector**.
-3. **URL** : `https://vantage-peers-production.up.railway.app/mcp`.
-4. **Auth** : collez vos `client_id` et `client_secret`.
-5. Enregistrer et sélectionner le connecteur dans une conversation.
+1. De retour dans **Settings → Apps & Connectors**, cliquez **Create**. La modale **New App** s'ouvre.
+2. Renseignez :
+   - **Icon** (optionnel) : uploadez une icône VantagePeers si vous en avez une.
+   - **Name** : `VantagePeers`
+   - **Description** (optionnel) : `Mémoire partagée, tâches et messagerie pour équipes d'agents IA.`
+   - **Connection** → laissez **Server URL** sélectionné.
+   - **Server URL** : `https://vantage-peers-production.up.railway.app/mcp`
+   - **Authentication** : sélectionnez **OAuth**.
+3. Déployez **Advanced OAuth settings**. Sous **Client registration**, choisissez **Dynamic Client Registration (DCR)** — le serveur l'annonce ; CIMD n'est pas supporté, User-Defined OAuth Client est une alternative si vous voulez réutiliser un `client_id`+`client_secret` fixe.
+4. Cochez **I understand and want to continue** (warning OpenAI sur les serveurs MCP custom) et cliquez **Create**. Le flux de consentement navigateur s'exécute ; acceptez.
+5. Dans une nouvelle conversation, cliquez **+** dans la zone de saisie → **More** → sélectionnez **VantagePeers**.
+6. Test en langage naturel : *« Utilise VantagePeers pour lister mes tâches ouvertes. »* ChatGPT appelle `list_tasks`. Un tenant tout neuf renvoie une liste vide — peuplez-le via [Premiers pas](./first-steps).
 
-Les outils d'écriture/destructifs (`create_*`, `delete_*`, `update_*`) déclenchent des prompts de confirmation dans ChatGPT — comportement attendu piloté par l'annotation `destructiveHint`.
+Les outils d'écriture et destructifs (`create_*`, `update_*`, `delete_*`) déclenchent des prompts de confirmation avant exécution. C'est piloté par les annotations `readOnlyHint` et `destructiveHint` portées par chaque outil — comportement attendu, pas un bug.
 
 ## Claude Code
 
