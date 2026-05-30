@@ -8,6 +8,17 @@ const withMDX = createMDX();
 const nextConfig: NextConfig = {
 	async redirects() {
 		return [
+			// D88: connect-cloud moved from getting-started to cloud section
+			{
+				source: '/docs/getting-started/connect-cloud',
+				destination: '/docs/cloud/connect',
+				permanent: true,
+			},
+			{
+				source: '/fr/docs/getting-started/connect-cloud',
+				destination: '/fr/docs/cloud/connect',
+				permanent: true,
+			},
 			// P0-T2: block direct /docs/en/* access — 308 to canonical /docs/*
 			{
 				source: '/docs/en',
