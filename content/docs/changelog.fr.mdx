@@ -5,6 +5,36 @@ description: Historique des versions de vantage-peers-mcp.
 
 # Journal des modifications
 
+## v2.4.1 — 2026-05-30
+
+### Corrigé
+
+- **Régression 401 sur le chemin d'auth DCR** ([#556](https://github.com/vantageos-agency/vantage-peers/issues/556) / [#557](https://github.com/vantageos-agency/vantage-peers/pull/557)) — `oauthDcr:validateAccessToken` était déclaré `internalQuery` et inaccessible via le client HTTP, le Path 3 DCR retournait 401 même avec un token valide. Maintenant exposé en `query` publique. Les connecteurs custom Claude.ai via DCR fonctionnent de bout en bout.
+- **Format du header `WWW-Authenticate`** ([#557](https://github.com/vantageos-agency/vantage-peers/pull/557)) — émet `Bearer resource_metadata="..."` selon la spec MCP §Protected Resource Metadata Discovery. L'ancienne forme `Bearer resource="..."` cassait le bootstrap PRM de Claude.ai sur 401.
+
+### Ajouté
+
+- **Annotations d'outils ChatGPT Apps SDK** ([#555](https://github.com/vantageos-agency/vantage-peers/pull/555)) — les 84 outils MCP embarquent désormais `readOnlyHint`, `openWorldHint` et `destructiveHint`. 34 read-only + 41 write + 9 destructive. Les connecteurs custom ChatGPT n'affichent les prompts de confirmation que sur les opérations d'écriture/destructives.
+- **Isolation de scope DCR** ([#554](https://github.com/vantageos-agency/vantage-peers/pull/554)) — nouveau profil `public-readonly` + tests cross-tenant. Le flux DCR auto-discovery résout vers `scopeProfile=client-generic` (jamais `master`), même si un legacy token row porte `scope="mcp:full"`.
+- **Documentation VantagePeers Cloud** ([site #120](https://github.com/vantageos-agency/vantage-peers-site/pull/120)) — section `/docs/cloud/` dédiée à la version hébergée multi-tenant. Multi-client MCP : Claude.ai, ChatGPT, Claude Code, Codex, tout IDE supportant MCP.
+
+### Liens
+
+- Release GitHub : [v2.4.1](https://github.com/vantageos-agency/vantage-peers/releases/tag/v2.4.1)
+- npm : [vantage-peers-mcp@2.4.1](https://www.npmjs.com/package/vantage-peers-mcp)
+
+## v2.4.0 — 2026-05-29
+
+### Ajouté
+
+- **Table `iframeEmbedSessions` + marqueur de stream `__VP_TOOL_RESULT__`** ([#545](https://github.com/vantageos-agency/vantage-peers/pull/545)) — jalon M3. Primitive UI ack-checklist embarquée. 24 tests.
+- **httpAction `credentials:issueBearerFromClerk`** ([#546](https://github.com/vantageos-agency/vantage-peers/pull/546)) — émission de bearer côté serveur liée à une identité Clerk, avec audit log. Corrections P1 iter 2.
+
+### Liens
+
+- Release GitHub : [v2.4.0](https://github.com/vantageos-agency/vantage-peers/releases/tag/v2.4.0)
+- npm : [vantage-peers-mcp@2.4.0](https://www.npmjs.com/package/vantage-peers-mcp)
+
 ## v2.3.1 — 2026-05-26
 
 ### Ajouté
