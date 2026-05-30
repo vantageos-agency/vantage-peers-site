@@ -1,25 +1,97 @@
 ---
 title: Se connecter à VantagePeers Cloud
-description: Connectez VantagePeers Cloud (hébergé) à Claude Code, Claude.ai ou ChatGPT avec vos identifiants client.
+description: Connecter VantagePeers Cloud (hébergé, multi-tenant) à Claude Code, Claude.ai, ChatGPT ou Codex via MCP.
 ---
 
-Si vous avez reçu un `client_id` et un `client_secret` VantagePeers Cloud, cette page vous guide pour vous connecter via l'un des trois clients MCP supportés. Choisissez celui que vous utilisez. Aucun déploiement de votre côté.
+VantagePeers Cloud est la version hébergée multi-tenant. Un seul backend, 84 outils MCP, partagés par tous les clients supportant MCP : **Claude Code**, **Claude.ai**, **ChatGPT**, **Codex**, et tout autre IDE parlant le protocole MCP. Aucun serveur à déployer chez vous.
 
 ## Avant de commencer
 
 Vous avez besoin de :
 
-- Votre `client_id` et votre `client_secret`, transmis hors-bande par VantageOS
-- L'URL du serveur : `https://vantage-peers-production.up.railway.app/mcp`
-- L'un des clients suivants installé : Claude Code, Claude.ai (web), ou ChatGPT
+- Un `client_id` et un `client_secret` émis par VantageOS (envoyés hors bande — gardez le secret confidentiel, il n'est affiché qu'une fois).
+- L'URL du serveur MCP : `https://vantage-peers-production.up.railway.app/mcp`.
+- L'un des clients supportés installé.
 
-Gardez votre `client_secret` confidentiel. Il ne sera jamais redemandé. Si vous le perdez, contactez VantageOS pour en régénérer un.
+VantagePeers Cloud tourne sur **`vantage-peers-mcp@2.4.1`** (publié le 30/05/2026). Les 84 outils embarquent les annotations ChatGPT Apps SDK (`readOnlyHint`, `openWorldHint`, `destructiveHint`) — les opérations d'écriture/destructives déclenchent nativement des prompts de confirmation dans les connecteurs custom ChatGPT.
 
-## Path A — Claude Code
+## Comment fonctionne l'authentification
 
-1. Ouvrez le dossier de votre workspace dans un terminal
-2. Créez (ou ouvrez) le fichier `.mcp.json` à la racine
-3. Collez la configuration suivante :
+VantagePeers Cloud implémente **OAuth 2.1 avec Dynamic Client Registration (DCR, RFC 7591) + PKCE (RFC 7636) + Protected Resource Metadata Discovery (RFC 9728)**. Concrètement :
+
+- Les clients qui supportent l'auto-discovery (Claude.ai, ChatGPT) récupèrent les métadonnées depuis `/.well-known/oauth-protected-resource` et `/.well-known/oauth-authorization-server`, exécutent le flux PKCE et obtiennent un access token scopé — aucune configuration manuelle au-delà de l'URL n'est nécessaire.
+- Les clients qui supportent la configuration OAuth manuelle (Claude.ai Advanced, ChatGPT Developer Mode) acceptent vos `client_id` + `client_secret` pour bootstrap le même flux avec une identité client stable.
+- Le header `WWW-Authenticate` sur les réponses `401` suit le format MCP spec `Bearer resource_metadata="<URL-PRM>"`, qui permet au client de bootstrap la discovery depuis n'importe quelle requête non authentifiée.
+
+Le `client_secret` n'est **pas** un bearer token. Il est présenté au endpoint `/token` pour échanger un code d'autorisation validé par PKCE contre un access token. L'access token (courte durée, avec refresh) est ce qui est envoyé en `Authorization: Bearer <access_token>` sur les appels d'outils suivants. Votre client gère ça automatiquement.
+
+## Claude.ai (web)
+
+Le plan Free permet 1 connecteur custom. Pro, Max, Team et Enterprise en permettent plusieurs.
+
+1. Ouvrez [claude.ai](https://claude.ai).
+2. Cliquez votre avatar → **Personnaliser** → **Connecteurs**.
+3. Cliquez **+** puis **Ajouter un connecteur custom**.
+4. **URL** : `https://vantage-peers-production.up.railway.app/mcp`.
+5. Cliquez **Advanced** et collez :
+   - **Client ID** : votre `client_id`
+   - **Client Secret** : votre `client_secret`
+6. Cliquez **Ajouter**, puis acceptez le prompt de consentement OAuth.
+7. Dans une conversation, cliquez **+** → activez **vantage-peers**.
+8. Test : *« Liste mes mémoires VantagePeers »* — Claude doit appeler `recall`.
+
+Utilisez **Advanced + Client ID/Secret**. Le chemin URL-only auto-discovery fonctionne mais est lié à un client enregistré transitoire et obtient le scope par défaut `client-generic`.
+
+## ChatGPT
+
+Deux chemins selon votre plan :
+
+**Custom Connectors (Pro/Business/Enterprise)** — utilise la PRM discovery DCR, sans champ de credentials.
+
+1. Ouvrez [chatgpt.com](https://chatgpt.com).
+2. Settings → **Connectors** → **Create a Connector**.
+3. **URL** : `https://vantage-peers-production.up.railway.app/mcp`.
+4. Enregistrer. ChatGPT découvre le serveur d'auth via `/.well-known/oauth-protected-resource`, exécute PKCE, et vous acceptez le prompt de consentement.
+5. Dans une conversation, sélectionnez le connecteur **vantage-peers**.
+6. Test : *« Liste mes tâches VantagePeers »*.
+
+**Developer Mode (beta)** — accepte `client_id` + `client_secret` directement.
+
+1. Settings → **Beta features** → activez **Developer Mode** (si disponible sur votre compte).
+2. Settings → **Connectors** → **Create a Connector**.
+3. **URL** : `https://vantage-peers-production.up.railway.app/mcp`.
+4. **Auth** : collez vos `client_id` et `client_secret`.
+5. Enregistrer et sélectionner le connecteur dans une conversation.
+
+Les outils d'écriture/destructifs (`create_*`, `delete_*`, `update_*`) déclenchent des prompts de confirmation dans ChatGPT — comportement attendu piloté par l'annotation `destructiveHint`.
+
+## Claude Code
+
+Ajoutez `vantage-peers` à votre `.mcp.json` projet (ou global `~/.claude.json`) :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://vantage-peers-production.up.railway.app/mcp",
+      "oauth": {
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET"
+      }
+    }
+  }
+}
+```
+
+Puis :
+
+1. Redémarrez Claude Code (`exit` puis relancez dans votre workspace).
+2. Au premier appel, Claude Code exécute le flux PKCE contre `/authorize` et `/token`, cache l'access token et le rafraîchit automatiquement.
+3. Lancez `/mcp` pour confirmer que `vantage-peers` est connecté.
+4. Test : `recall query="hello"` — doit retourner une réponse JSON.
+
+Si votre build Claude Code ne supporte pas encore le champ `oauth`, pré-émettez un access token via PKCE (voir [Émettre un access token manuellement](#émettre-un-access-token-manuellement) ci-dessous) et utilisez-le ainsi :
 
 ```json
 {
@@ -28,64 +100,85 @@ Gardez votre `client_secret` confidentiel. Il ne sera jamais redemandé. Si vous
       "type": "http",
       "url": "https://vantage-peers-production.up.railway.app/mcp",
       "headers": {
-        "Authorization": "Bearer VOTRE_CLIENT_SECRET"
+        "Authorization": "Bearer YOUR_ACCESS_TOKEN"
       }
     }
   }
 }
 ```
 
-4. Remplacez `VOTRE_CLIENT_SECRET` par la valeur reçue
-5. Redémarrez Claude Code
-6. Lancez `/mcp` pour vérifier que `vantage-peers` est listé et connecté
-7. Testez avec : `recall query="hello"` — doit retourner une réponse JSON
+Les access tokens sont de courte durée. Refresh via le endpoint `/token` avec `grant_type=refresh_token` quand ils expirent.
 
-## Path B — Claude.ai (web)
+## Codex (CLI OpenAI)
 
-Le plan Free permet 1 connecteur custom. Pro, Max, Team et Enterprise en permettent plusieurs.
+Codex supporte MCP via son `~/.codex/config.toml` (ou équivalent au niveau projet) :
 
-1. Ouvrez claude.ai
-2. Cliquez sur votre avatar → **Customize** → **Connectors**
-3. Cliquez sur **+** puis **Add custom connector**
-4. **URL** : `https://vantage-peers-production.up.railway.app/mcp`
-5. Cliquez sur **Advanced** et collez :
-   - **Client ID** : votre `client_id`
-   - **Client Secret** : votre `client_secret`
-6. Cliquez sur **Add**
-7. Acceptez les permissions OAuth quand demandé
-8. Dans une conversation, cliquez sur **+** → activez **vantage-peers**
-9. Testez : « Lis mes mémoires VantagePeers » — Claude doit appeler `recall`
+```toml
+[[mcp_servers]]
+name = "vantage-peers"
+url = "https://vantage-peers-production.up.railway.app/mcp"
+type = "http"
 
-Important : utilisez bien Advanced + Client ID/Secret. N'utilisez pas l'option auto-discovery sans Advanced — elle attribue un scope plus large que prévu.
+[mcp_servers.oauth]
+client_id = "YOUR_CLIENT_ID"
+client_secret = "YOUR_CLIENT_SECRET"
+```
 
-## Path C — ChatGPT (Developer Mode)
+Si votre build Codex ne supporte pas encore le bloc `oauth`, fallback sur un access token pré-émis dans les headers (même pattern que Claude Code ci-dessus).
 
-ChatGPT Developer Mode permet d'ajouter un connecteur MCP custom sans soumission au registre public. La feature est disponible selon votre plan (vérifiez avec OpenAI).
+1. Enregistrez la config.
+2. Redémarrez `codex` pour qu'il prenne le nouveau serveur.
+3. Lister les outils : `codex mcp list` doit inclure `vantage-peers`.
+4. Test : demandez à Codex *« appelle recall avec query=hello »*.
 
-1. Ouvrez ChatGPT
-2. Settings → **Beta features** → activez **Developer Mode** (si disponible)
-3. Settings → **Connectors** → **Create a Connector**
-4. **URL** : `https://vantage-peers-production.up.railway.app/mcp`
-5. Authentification : collez votre `client_secret` (Bearer)
-6. Sauvegardez
-7. Dans une conversation, sélectionnez le connecteur **vantage-peers**
-8. Testez : « Liste mes tâches VantagePeers »
+## Émettre un access token manuellement
 
-Note : l'expérience UX peut classer les outils de façon plus prudente que dans Claude Code / Claude.ai (demandes de confirmation supplémentaires sur les écritures). C'est normal pour le mode beta actuel.
+Si votre client ne peut pas exécuter OAuth automatiquement, vous pouvez exécuter le flux PKCE vous-même et coller l'access token résultant dans un header `Bearer`. Bash :
+
+```bash
+BASE="https://vantage-peers-production.up.railway.app"
+CLIENT_ID="YOUR_CLIENT_ID"
+CLIENT_SECRET="YOUR_CLIENT_SECRET"
+REDIRECT="http://localhost:3000/callback"
+
+# 1. Verifier + challenge PKCE (S256)
+VERIFIER=$(openssl rand -base64 64 | tr -d "=+/" | head -c 64)
+CHALLENGE=$(printf "%s" "$VERIFIER" | openssl dgst -sha256 -binary | openssl base64 | tr -d "=" | tr "+/" "-_")
+
+# 2. Affichez l'URL d'authorize — ouvrez dans un navigateur, acceptez, copiez le `code` depuis l'URL de callback
+echo "$BASE/oauth/authorize?response_type=code&client_id=$CLIENT_ID&redirect_uri=$REDIRECT&code_challenge=$CHALLENGE&code_challenge_method=S256&scope=mcp:full"
+
+# 3. Après consentement, échangez le code contre un access_token
+read -p "Collez le code depuis l'URL de callback : " CODE
+curl -s -X POST "$BASE/oauth/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=authorization_code" \
+  -d "code=$CODE" \
+  -d "client_id=$CLIENT_ID" \
+  -d "client_secret=$CLIENT_SECRET" \
+  -d "redirect_uri=$REDIRECT" \
+  -d "code_verifier=$VERIFIER" | jq .
+```
+
+La réponse contient `access_token` (courte durée) et `refresh_token`. Envoyez `Authorization: Bearer <access_token>` sur chaque appel d'outil.
 
 ## Vérifier votre installation
 
-Quel que soit le path, ces trois appels doivent fonctionner :
+Quel que soit le client, ces trois appels doivent réussir :
 
-- `recall query="VantagePeers"` — recherche sémantique
-- `list_tasks` — vos tâches assignées
-- `list_memories namespace="global"` — mémoires globales
+- `recall query="VantagePeers"` — recherche sémantique dans votre scope.
+- `list_tasks` — vos tâches assignées.
+- `list_memories namespace="global"` — mémoires globales (scope public read-only).
 
-Si l'un échoue avec `401 Unauthorized` : votre `client_secret` est incorrect ou expiré. Contactez VantageOS.
+## Dépannage
 
-Si l'un échoue avec `403 Forbidden` : votre scope ne couvre pas cette ressource. Normal pour les namespaces hors de votre périmètre.
+- **`401 Unauthorized`** — access token expiré ou `client_secret` invalide. Refresh du token (les clients le font automatiquement) ou contactez VantageOS pour ré-émettre les credentials.
+- **`403 Forbidden`** — votre scope ne couvre pas cette ressource. Les tokens DCR-émis ont par défaut le scope `client-generic` (écriture sur votre tenant uniquement). Les tentatives de lecture sur `orchestrator/*` hors de votre tenant retournent `403`.
+- **`401` avec `WWW-Authenticate: Bearer resource_metadata="..."`** — votre client devrait auto-découvrir le serveur d'auth et exécuter le flux. S'il ne le fait pas, passez en config manuelle ou tokens pré-émis.
+- **Prompts de confirmation supplémentaires dans ChatGPT** — attendu. Pilotés par les annotations `destructiveHint` et `readOnlyHint` par outil.
 
 ## Aide
 
-- Documentation : [vantagepeers.com/docs](https://vantagepeers.com/docs)
-- Support : par le canal convenu avec VantageOS lors de votre onboarding
+- [Documentation](https://vantagepeers.com/docs)
+- [Journal des modifications](/docs/changelog)
+- Support : via le canal convenu avec VantageOS lors de votre onboarding.
