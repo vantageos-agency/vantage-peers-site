@@ -1,5 +1,5 @@
 {
   "title": "Démarrage",
   "defaultOpen": true,
-  "pages": ["index", "quickstart", "connect-cloud", "add-orchestrator", "supported-tools"]
+  "pages": ["index", "quickstart", "add-orchestrator", "supported-tools"]
 }
