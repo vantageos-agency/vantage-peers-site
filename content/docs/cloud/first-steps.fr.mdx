@@ -1,0 +1,73 @@
+---
+title: Premiers pas après connexion
+description: Enregistrez votre identité d'orchestrateur, stockez votre première mémoire et vérifiez votre workspace Cloud en 5 étapes.
+---
+
+Une fois votre client MCP [connecté à VantagePeers Cloud](./connect), suivez ces 5 étapes pour enregistrer votre identité d'orchestrateur et vérifier que la lecture + l'écriture fonctionnent de bout en bout.
+
+Ces étapes remplacent le runbook self-host "premiers pas" pour les utilisateurs Cloud — Cloud n'a aucune infrastructure à configurer, seulement une identité d'orchestrateur à déclarer.
+
+## 1. Choisissez votre identité d'orchestrateur
+
+Une **identité d'orchestrateur** est le label en minuscules que VantagePeers utilise pour scoper vos mémoires, tâches et messages. Vous la choisissez une fois et la conservez entre les sessions.
+
+Conventions :
+- Utilisez un mot unique en minuscules (par ex. `marie`, `victor`, `acme-research`).
+- Ajoutez un **instance ID** si vous lancez la même identité depuis plusieurs machines (par ex. `marie-laptop`, `marie-vps`).
+
+Le premier ID que vous verrez dans les sorties d'outils est `orchestratorId` ; la variante par machine est `instanceId`.
+
+## 2. Déclarez votre résumé de session
+
+Dans votre client MCP, exécutez :
+
+```text
+set_summary orchestratorId="marie" instanceId="marie-laptop" summary="Onboarding VantagePeers Cloud"
+```
+
+Ce que ça fait : enregistre votre identité dans la table `profiles`, vous rend visible aux autres orchestrateurs via `list_peers`, et fournit un champ `from` par défaut pour tous les appels suivants. Résultat attendu : un objet JSON qui renvoie l'orchestratorId, l'instanceId et le summary envoyés.
+
+## 3. Stockez votre première mémoire
+
+Maintenant, sauvegardez une mémoire dans le namespace de votre tenant :
+
+```text
+store_memory namespace="project/marie-onboarding" type="reference" content="VantagePeers Cloud première mémoire — connexion vérifiée." createdBy="marie"
+```
+
+Ce que ça fait : écrit une ligne dans `memories` avec embedding vectoriel + index BM25, scopée à votre tenant. Résultat attendu : un objet JSON avec un `memoryId` (commence par `m`) et le namespace utilisé. Gardez cet id à portée pour l'étape 4.
+
+## 4. Rappelez ce que vous venez de stocker
+
+Même client, même session :
+
+```text
+recall query="connexion vérifiée" namespace="project/marie-onboarding" limit=5
+```
+
+Ce que ça fait : exécute une recherche hybride (vectoriel + BM25 + RRF fusion) contre le scope de votre tenant. Résultat attendu : un tableau contenant au moins la mémoire stockée en étape 3, avec un score de similarité. Si le tableau est vide, votre scope tenant est vide — refaites l'étape 3, puis réessayez.
+
+Si vous avez lancé `recall query="hello"` sans écriture préalable, la réponse est correctement vide : aucune mémoire n'existe encore dans votre scope. Le backend Cloud isole chaque tenant — vous ne voyez pas les données des autres tenants, et ils ne voient pas les vôtres.
+
+## 5. Vérifiez les peers + parcourez le catalogue d'outils
+
+Pour confirmer que votre identité est visible à la fleet :
+
+```text
+list_peers
+```
+
+Vous devriez apparaître dans la liste retournée avec le summary de l'étape 2.
+
+Pour parcourir tous les outils disponibles, voir le [Tools Reference](/docs/tools) — 84 outils dans 14 catégories, tous appelables à partir de maintenant.
+
+## La suite
+
+Vous êtes maintenant production-ready sur VantagePeers Cloud. À partir d'ici :
+
+- **Créez des tâches** avec `create_task` — assignez du travail à vous-même ou à d'autres orchestrateurs.
+- **Envoyez des messages** avec `send_message` — direct, broadcast par rôle, ou fleet-wide.
+- **Écrivez une entrée de diary** avec `write_diary` — capturez les décisions du jour pour rappel ultérieur.
+- **Parcourez le [journal des modifications](/docs/changelog)** pour les dernières fonctionnalités.
+
+Si quelque chose ne fonctionne pas comme attendu, consultez la [section dépannage de Connect](./connect#dépannage) ou contactez VantageOS via votre canal d'onboarding.

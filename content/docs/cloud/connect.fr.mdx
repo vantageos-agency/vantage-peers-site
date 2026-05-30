@@ -38,7 +38,7 @@ Le plan Free permet 1 connecteur custom. Pro, Max, Team et Enterprise en permett
    - **Client Secret** : votre `client_secret`
 6. Cliquez **Ajouter**, puis acceptez le prompt de consentement OAuth.
 7. Dans une conversation, cliquez **+** → activez **vantage-peers**.
-8. Test : *« Liste mes mémoires VantagePeers »* — Claude doit appeler `recall`.
+8. Test : demandez à Claude *« Appelle recall avec query=hello et namespace=global »* — Claude doit appeler `recall`. Un tenant frais retourne un tableau vide, c'est normal. Une fois une mémoire stockée (voir [Premiers pas](./first-steps)), `recall` la retourne.
 
 Utilisez **Advanced + Client ID/Secret**. Le chemin URL-only auto-discovery fonctionne mais est lié à un client enregistré transitoire et obtient le scope par défaut `client-generic`.
 
@@ -53,7 +53,7 @@ Deux chemins selon votre plan :
 3. **URL** : `https://vantage-peers-production.up.railway.app/mcp`.
 4. Enregistrer. ChatGPT découvre le serveur d'auth via `/.well-known/oauth-protected-resource`, exécute PKCE, et vous acceptez le prompt de consentement.
 5. Dans une conversation, sélectionnez le connecteur **vantage-peers**.
-6. Test : *« Liste mes tâches VantagePeers »*.
+6. Test : demandez à ChatGPT *« Appelle list_tasks avec status=todo »*. Un tenant frais retourne un tableau vide (normal). Créez une tâche d'abord via [Premiers pas](./first-steps) pour voir une vraie sortie.
 
 **Developer Mode (beta)** — accepte `client_id` + `client_secret` directement.
 
