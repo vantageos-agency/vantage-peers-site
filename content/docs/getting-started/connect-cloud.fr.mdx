@@ -1,0 +1,91 @@
+---
+title: Se connecter à VantagePeers Cloud
+description: Connectez VantagePeers Cloud (hébergé) à Claude Code, Claude.ai ou ChatGPT avec vos identifiants client.
+---
+
+Si vous avez reçu un `client_id` et un `client_secret` VantagePeers Cloud, cette page vous guide pour vous connecter via l'un des trois clients MCP supportés. Choisissez celui que vous utilisez. Aucun déploiement de votre côté.
+
+## Avant de commencer
+
+Vous avez besoin de :
+
+- Votre `client_id` et votre `client_secret`, transmis hors-bande par VantageOS
+- L'URL du serveur : `https://vantage-peers-production.up.railway.app/mcp`
+- L'un des clients suivants installé : Claude Code, Claude.ai (web), ou ChatGPT
+
+Gardez votre `client_secret` confidentiel. Il ne sera jamais redemandé. Si vous le perdez, contactez VantageOS pour en régénérer un.
+
+## Path A — Claude Code
+
+1. Ouvrez le dossier de votre workspace dans un terminal
+2. Créez (ou ouvrez) le fichier `.mcp.json` à la racine
+3. Collez la configuration suivante :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://vantage-peers-production.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer VOTRE_CLIENT_SECRET"
+      }
+    }
+  }
+}
+```
+
+4. Remplacez `VOTRE_CLIENT_SECRET` par la valeur reçue
+5. Redémarrez Claude Code
+6. Lancez `/mcp` pour vérifier que `vantage-peers` est listé et connecté
+7. Testez avec : `recall query="hello"` — doit retourner une réponse JSON
+
+## Path B — Claude.ai (web)
+
+Le plan Free permet 1 connecteur custom. Pro, Max, Team et Enterprise en permettent plusieurs.
+
+1. Ouvrez claude.ai
+2. Cliquez sur votre avatar → **Customize** → **Connectors**
+3. Cliquez sur **+** puis **Add custom connector**
+4. **URL** : `https://vantage-peers-production.up.railway.app/mcp`
+5. Cliquez sur **Advanced** et collez :
+   - **Client ID** : votre `client_id`
+   - **Client Secret** : votre `client_secret`
+6. Cliquez sur **Add**
+7. Acceptez les permissions OAuth quand demandé
+8. Dans une conversation, cliquez sur **+** → activez **vantage-peers**
+9. Testez : « Lis mes mémoires VantagePeers » — Claude doit appeler `recall`
+
+Important : utilisez bien Advanced + Client ID/Secret. N'utilisez pas l'option auto-discovery sans Advanced — elle attribue un scope plus large que prévu.
+
+## Path C — ChatGPT (Developer Mode)
+
+ChatGPT Developer Mode permet d'ajouter un connecteur MCP custom sans soumission au registre public. La feature est disponible selon votre plan (vérifiez avec OpenAI).
+
+1. Ouvrez ChatGPT
+2. Settings → **Beta features** → activez **Developer Mode** (si disponible)
+3. Settings → **Connectors** → **Create a Connector**
+4. **URL** : `https://vantage-peers-production.up.railway.app/mcp`
+5. Authentification : collez votre `client_secret` (Bearer)
+6. Sauvegardez
+7. Dans une conversation, sélectionnez le connecteur **vantage-peers**
+8. Testez : « Liste mes tâches VantagePeers »
+
+Note : l'expérience UX peut classer les outils de façon plus prudente que dans Claude Code / Claude.ai (demandes de confirmation supplémentaires sur les écritures). C'est normal pour le mode beta actuel.
+
+## Vérifier votre installation
+
+Quel que soit le path, ces trois appels doivent fonctionner :
+
+- `recall query="VantagePeers"` — recherche sémantique
+- `list_tasks` — vos tâches assignées
+- `list_memories namespace="global"` — mémoires globales
+
+Si l'un échoue avec `401 Unauthorized` : votre `client_secret` est incorrect ou expiré. Contactez VantageOS.
+
+Si l'un échoue avec `403 Forbidden` : votre scope ne couvre pas cette ressource. Normal pour les namespaces hors de votre périmètre.
+
+## Aide
+
+- Documentation : [vantagepeers.com/docs](https://vantagepeers.com/docs)
+- Support : par le canal convenu avec VantageOS lors de votre onboarding
