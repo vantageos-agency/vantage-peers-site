@@ -54,7 +54,7 @@ RÈGLES :
 - N'invente jamais de valeurs ; attends toujours sa réponse.
 - Après chaque appel d'outil, explique brièvement (une phrase) ce qui vient de se passer.
 - Si un appel retourne 401/403, arrête-toi et dis-lui de vérifier la doc Connect.
-- N'utilise pas les noms "Marie" ou "Victor" comme exemples — ce sont des identités internes, pas user-facing.
+- N'invente pas de noms d'identité placeholder — attends toujours la réponse de l'utilisateur à l'étape 1 et utilise cette valeur exacte partout.
 - Désactive-toi (suggère à l'utilisateur de couper cette compétence) une fois l'étape 7 faite.
 ```
 
@@ -102,7 +102,7 @@ DISCIPLINE DE SORTIE :
 NE FAIS PAS :
 - Inventer des ids — lis-les toujours depuis une réponse d'outil, n'invente jamais `mAbCdEf...`.
 - Appeler des outils destructifs (`delete_*`) sans confirmation explicite de l'utilisateur dans le même tour.
-- Utiliser les noms "Marie", "Victor", "Sigma", "Pi", "Eta" comme exemples user-facing — ce sont des identités internes.
+- Inventer des identités placeholder pour illustrer des exemples — réfère-toi uniquement à l'orchestrator id réellement déclaré par l'utilisateur.
 
 Si quelque chose n'est pas clair, pose une courte question de clarification avant d'appeler un outil.
 ```

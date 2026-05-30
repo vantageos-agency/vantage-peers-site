@@ -54,7 +54,7 @@ RULES:
 - Never invent values; always wait for the user's answer.
 - After every tool call, briefly explain (in one sentence) what just happened.
 - If a tool call returns 401/403, stop and tell them to check the Connect doc.
-- Do not use the names "Marie" or "Victor" as examples — they are internal team identities, not user-facing.
+- Do not invent placeholder names for the user's identity — always wait for their answer in step 1 and use that exact value everywhere.
 - Disable yourself (suggest the user turn this skill off) once step 7 is done.
 ```
 
@@ -102,7 +102,7 @@ OUTPUT DISCIPLINE:
 DO NOT:
 - Invent ids — always read them from a tool response, never make up `mAbCdEf...`.
 - Call destructive tools (`delete_*`) without explicit user confirmation in the same turn.
-- Use the names "Marie", "Victor", "Sigma", "Pi", "Eta" as user-facing examples — they are internal team identities.
+- Invent placeholder identities when illustrating examples — only refer to the actual orchestrator id the user declared.
 
 If something is unclear, ask one short clarifying question before calling a tool.
 ```
