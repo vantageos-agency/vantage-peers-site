@@ -1,73 +1,51 @@
 ---
 title: Premiers pas après connexion
-description: Enregistrez votre identité d'orchestrateur, stockez votre première mémoire et vérifiez votre workspace Cloud en 5 étapes.
+description: Un parcours en 5 étapes en langage naturel pour enregistrer votre identité, écrire votre première mémoire et confirmer que VantagePeers Cloud fonctionne.
 ---
 
-Une fois votre client MCP [connecté à VantagePeers Cloud](./connect), suivez ces 5 étapes pour enregistrer votre identité d'orchestrateur et vérifier que la lecture + l'écriture fonctionnent de bout en bout.
+Votre client MCP est [connecté](./connect). Vous parlez maintenant à l'assistant en langage naturel — vous ne tapez **pas** de noms d'outils comme `set_summary` ni de JSON. L'assistant choisit le bon outil VantagePeers pour chaque demande.
 
-Ces étapes remplacent le runbook self-host "premiers pas" pour les utilisateurs Cloud — Cloud n'a aucune infrastructure à configurer, seulement une identité d'orchestrateur à déclarer.
+Remplacez `<votre-nom>` ci-dessous par le label en minuscules que vous voulez utiliser (un mot court). VantagePeers s'en sert pour scoper vos mémoires, tâches et messages à vous.
 
-## 1. Choisissez votre identité d'orchestrateur
+## 1. Dites à l'assistant qui vous êtes
 
-Une **identité d'orchestrateur** est le label en minuscules que VantagePeers utilise pour scoper vos mémoires, tâches et messages. Vous la choisissez une fois et la conservez entre les sessions.
+Dans votre conversation, dites :
 
-Conventions :
-- Utilisez un mot unique en minuscules (par ex. `marie`, `victor`, `acme-research`).
-- Ajoutez un **instance ID** si vous lancez la même identité depuis plusieurs machines (par ex. `marie-laptop`, `marie-vps`).
+> *« Utilise VantagePeers. Enregistre-moi comme orchestrateur `<votre-nom>` avec le summary `démarrage`. »*
 
-Le premier ID que vous verrez dans les sorties d'outils est `orchestratorId` ; la variante par machine est `instanceId`.
+L'assistant appelle `set_summary`. Vous devez obtenir une courte confirmation contenant votre nom. C'est votre identité — chaque mémoire et tâche que vous créerez ensuite y sera attachée.
 
-## 2. Déclarez votre résumé de session
+## 2. Sauvegardez votre première mémoire
 
-Dans votre client MCP, exécutez :
+> *« Sauvegarde dans VantagePeers, dans le namespace `project/<votre-nom>-onboarding`, une mémoire de type reference : 'Ma première mémoire — connexion confirmée.' »*
 
-```text
-set_summary orchestratorId="marie" instanceId="marie-laptop" summary="Onboarding VantagePeers Cloud"
-```
+L'assistant appelle `store_memory`. Vous obtenez en retour un memory id (un code court commençant par `m`). Cette ligne est maintenant dans votre tenant privé.
 
-Ce que ça fait : enregistre votre identité dans la table `profiles`, vous rend visible aux autres orchestrateurs via `list_peers`, et fournit un champ `from` par défaut pour tous les appels suivants. Résultat attendu : un objet JSON qui renvoie l'orchestratorId, l'instanceId et le summary envoyés.
+## 3. Retrouvez-la
 
-## 3. Stockez votre première mémoire
+> *« Utilise VantagePeers pour rappeler tout ce qui parle de 'connexion' dans `project/<votre-nom>-onboarding`. »*
 
-Maintenant, sauvegardez une mémoire dans le namespace de votre tenant :
+L'assistant appelle `recall`. Vous devez voir votre phrase de l'étape 2 dans les résultats. Si le résultat est vide, refaites l'étape 2 — parfois la requête est traitée sans outil ; reformuler par *« appelle l'outil recall »* force l'appel.
 
-```text
-store_memory namespace="project/marie-onboarding" type="reference" content="VantagePeers Cloud première mémoire — connexion vérifiée." createdBy="marie"
-```
+## 4. Créez une première tâche
 
-Ce que ça fait : écrit une ligne dans `memories` avec embedding vectoriel + index BM25, scopée à votre tenant. Résultat attendu : un objet JSON avec un `memoryId` (commence par `m`) et le namespace utilisé. Gardez cet id à portée pour l'étape 4.
+> *« Utilise VantagePeers pour créer une tâche assignée à `<votre-nom>` : titre 'Tester les tâches VantagePeers', priorité medium. »*
 
-## 4. Rappelez ce que vous venez de stocker
+L'assistant appelle `create_task`. Vous obtenez un task id. Vous avez utilisé les trois capacités principales — écriture mémoire, lecture mémoire, création de tâche.
 
-Même client, même session :
+## 5. Découvrez le reste
 
-```text
-recall query="connexion vérifiée" namespace="project/marie-onboarding" limit=5
-```
+> *« Liste les outils VantagePeers disponibles pour moi. »*
 
-Ce que ça fait : exécute une recherche hybride (vectoriel + BM25 + RRF fusion) contre le scope de votre tenant. Résultat attendu : un tableau contenant au moins la mémoire stockée en étape 3, avec un score de similarité. Si le tableau est vide, votre scope tenant est vide — refaites l'étape 3, puis réessayez.
+L'assistant renvoie la liste — 84 outils pour mémoire, messagerie, tâches, missions, journal, notes de briefing, recherche, fix patterns, composants, et plus. Référence complète : [Tools](/docs/tools).
 
-Si vous avez lancé `recall query="hello"` sans écriture préalable, la réponse est correctement vide : aucune mémoire n'existe encore dans votre scope. Le backend Cloud isole chaque tenant — vous ne voyez pas les données des autres tenants, et ils ne voient pas les vôtres.
+## Si ça ne marche pas
 
-## 5. Vérifiez les peers + parcourez le catalogue d'outils
-
-Pour confirmer que votre identité est visible à la fleet :
-
-```text
-list_peers
-```
-
-Vous devriez apparaître dans la liste retournée avec le summary de l'étape 2.
-
-Pour parcourir tous les outils disponibles, voir le [Tools Reference](/docs/tools) — 84 outils dans 14 catégories, tous appelables à partir de maintenant.
+- L'assistant répond sans appeler d'outil → dites *« Appelle explicitement l'outil VantagePeers `<nom-outil>` avec ces arguments : ... »*.
+- `401 Unauthorized` → votre access token a expiré ; le client le rafraîchit automatiquement, réessayez. Si ça persiste, contactez VantageOS.
+- `403 Forbidden` → vous avez tenté d'écrire ou lire en dehors de votre tenant. Utilisez `project/<votre-nom>-...` ou `global` pour vos propres données.
+- Rien ne se passe / spinner infini → consultez la section [Dépannage de Connect](./connect#dépannage), puis pinguez VantageOS via votre canal d'onboarding.
 
 ## La suite
 
-Vous êtes maintenant production-ready sur VantagePeers Cloud. À partir d'ici :
-
-- **Créez des tâches** avec `create_task` — assignez du travail à vous-même ou à d'autres orchestrateurs.
-- **Envoyez des messages** avec `send_message` — direct, broadcast par rôle, ou fleet-wide.
-- **Écrivez une entrée de diary** avec `write_diary` — capturez les décisions du jour pour rappel ultérieur.
-- **Parcourez le [journal des modifications](/docs/changelog)** pour les dernières fonctionnalités.
-
-Si quelque chose ne fonctionne pas comme attendu, consultez la [section dépannage de Connect](./connect#dépannage) ou contactez VantageOS via votre canal d'onboarding.
+Vous êtes production-ready. À partir d'ici, tout ce qui est décrit dans la [référence des outils](/docs/tools) est à une phrase en langage naturel — envoyer un message à un autre agent, écrire une entrée de journal pour capturer une décision, créer une mission pour regrouper des tâches liées, logger un fix pattern quand vous résolvez un bug.
