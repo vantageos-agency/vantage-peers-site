@@ -1,80 +1,35 @@
 ---
 title: Connect to VantagePeers Cloud
-description: Connect VantagePeers Cloud (hosted, multi-tenant) to Claude Code, Claude.ai, ChatGPT, or Codex via MCP.
+description: Connect VantagePeers Cloud to your client using two distinct paths — Path 1 (Claude Code CLI plugin) or Path 2 (Claude.ai web MCP connector). Also covers ChatGPT and Codex.
 ---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+<Callout type="warning">
+**Two install paths — pick the one that matches your client.** Claude.ai web does **NOT** support uploading the Claude Code plugin zip (different format). If you use Claude.ai web, follow **Path 2** (MCP custom connector). If you use the Claude Code CLI, follow **Path 1**. The two paths are mutually exclusive — do not mix them.
+</Callout>
 
 VantagePeers Cloud is the hosted, multi-tenant version. One backend, 84 MCP tools, shared by every MCP-supporting client: **Claude Code**, **Claude.ai**, **ChatGPT**, **Codex**, and any other IDE that speaks the MCP protocol. No server to deploy on your side.
 
-## Before you start
+## Path 1 — Claude Code CLI (developer)
 
-You need:
+**Audience:** developers with Claude Code installed locally.
 
-- A `client_id` and `client_secret` issued by VantageOS (sent out-of-band — keep the secret confidential, it is shown only once).
-- The MCP server URL: `https://vantage-peers-production.up.railway.app/mcp`.
-- One of the supported clients installed.
+The recommended way to connect Claude Code is through the Claude Code plugin marketplace. One command gives you the MCP backend connection **plus** 37+ skills, 7 quality hooks, and 9 slash commands — no manual `.mcp.json` editing required.
 
-VantagePeers Cloud runs **`vantage-peers-mcp@2.4.1`** (released 2026-05-30). All 84 tools ship with ChatGPT Apps SDK annotations (`readOnlyHint`, `openWorldHint`, `destructiveHint`), so write/destructive operations surface confirmation prompts natively in ChatGPT custom connectors.
+The plugin (`@elpiarthera/vantage-peers-plugin`) ships with a `.claude-plugin/plugin.json` manifest at root, alongside `skills/`, `agents/`, `commands/`, and `hooks/` directories. It wires the VantagePeers MCP server in automatically and registers the full suite of memory, messaging, and task tools in your Claude Code workspace.
 
-## How authentication works
+### Install
 
-VantagePeers Cloud implements **OAuth 2.1 with Dynamic Client Registration (DCR, RFC 7591) + PKCE (RFC 7636) + Protected Resource Metadata Discovery (RFC 9728)**. Concretely:
+```bash
+claude plugin install @elpiarthera/vantage-peers-plugin
+```
 
-- Clients that support auto-discovery (Claude.ai, ChatGPT) fetch metadata from `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server`, run the PKCE flow, and obtain a scoped access token — no manual config beyond the URL is required.
-- Clients that support manual OAuth config (Claude.ai Advanced, ChatGPT Developer Mode) accept your `client_id` + `client_secret` to bootstrap the same flow with a stable client identity.
-- The `WWW-Authenticate` header on `401` responses follows the MCP spec format `Bearer resource_metadata="<PRM-URL>"`, which lets the client bootstrap discovery from any unauthenticated request.
+For marketplace documentation and discovery, see the [Claude Code plugin marketplaces](https://code.claude.com/docs/fr/plugin-marketplaces) reference.
 
-The `client_secret` is **not** a bearer token. It is presented to the `/token` endpoint to exchange a PKCE-validated authorization code for an access token. The access token (short-lived, with refresh) is what gets sent as `Authorization: Bearer <access_token>` on subsequent tool calls. Your client handles this automatically.
+### Configure Cloud credentials
 
-## Claude.ai (web)
-
-The Free plan allows 1 custom connector. Pro, Max, Team, and Enterprise allow multiple.
-
-1. Open [claude.ai](https://claude.ai).
-2. In the left sidebar, click **Customize** (in French: **Personnaliser**).
-3. Click **Connectors** (in French: **Connecteurs**).
-4. Click the **+** button at the top right of the connector list, then select **Add custom connector** (in French: **Ajouter un connecteur personnalisé**).
-5. In the modal **Add custom connector**, fill in:
-   - **Name** (in French: **Nom**): `VantagePeers` (any label you want — this is what will appear in your conversations).
-   - **Remote MCP server URL** (in French: **URL du serveur MCP distant**): `https://vantage-peers-production.up.railway.app/mcp`
-6. Expand **Advanced settings** (in French: **Paramètres avancés**) and paste:
-   - **OAuth Client ID** (in French: **ID client OAuth**): your `client_id`
-   - **OAuth Client Secret** (in French: **Secret client OAuth**): your `client_secret`
-7. Click **Add** (in French: **Ajouter**). A browser tab opens for OAuth consent — accept.
-8. In a conversation, click **+** in the composer → toggle **VantagePeers** on (or whatever name you used in step 5).
-9. Test in natural language: *"Use vantage-peers to recall anything you find about VantagePeers in the global namespace."* Claude routes the request to the `recall` tool. A brand-new tenant returns nothing — that is correct (see [First steps](./first-steps) to populate your workspace).
-
-Use Advanced settings with your Client ID + Secret. The URL-only auto-discovery path also works but binds you to a transient registered client and the default `client-generic` scope.
-
-## ChatGPT
-
-End-to-end ChatGPT MCP support is documented by OpenAI in [Apps SDK — Connect from ChatGPT](https://developers.openai.com/apps-sdk/deploy/connect-chatgpt). As of 2025-11-13, **Apps & Connectors are available on all paid plans (Plus, Pro, Business, Enterprise, Education)**.
-
-### Enable Developer Mode (one-time)
-
-1. Open [chatgpt.com](https://chatgpt.com).
-2. Go to **Settings** → **Apps & Connectors** → **Advanced settings**.
-3. Toggle **Developer mode** on. If your org policy blocks this, contact your admin.
-
-### Add VantagePeers Cloud
-
-1. Back in **Settings → Apps & Connectors**, click **Create**. The **New App** modal opens.
-2. Fill in:
-   - **Icon** (optional): upload a VantagePeers icon if you have one.
-   - **Name**: `VantagePeers`
-   - **Description** (optional): `Shared memory, tasks and messaging for AI agent teams.`
-   - **Connection** → keep **Server URL** selected.
-   - **Server URL**: `https://vantage-peers-production.up.railway.app/mcp`
-   - **Authentication**: select **OAuth**.
-3. Expand **Advanced OAuth settings**. Under **Client registration**, choose **Dynamic Client Registration (DCR)** — the server advertises it; CIMD is not supported, User-Defined OAuth Client is an alternative if you want to reuse your fixed `client_id`+`client_secret`.
-4. Tick **I understand and want to continue** (the OpenAI risk warning for custom MCP servers) and click **Create**. A browser consent flow runs; accept.
-5. In a new conversation, click **+** in the composer → **More** → select **VantagePeers**.
-6. Test in natural language: *"Use VantagePeers to list my open tasks."* ChatGPT calls `list_tasks`. A brand-new tenant returns an empty list — populate it via [First steps](./first-steps).
-
-Write and destructive tools (`create_*`, `update_*`, `delete_*`) surface confirmation prompts before execution. This is driven by the `readOnlyHint` and `destructiveHint` annotations shipped on every tool — expected behavior, not a bug.
-
-## Claude Code
-
-Add `vantage-peers` to your project `.mcp.json` (or global `~/.claude.json`):
+After install, set your credentials in `.mcp.json` at the workspace root:
 
 ```json
 {
@@ -91,12 +46,40 @@ Add `vantage-peers` to your project `.mcp.json` (or global `~/.claude.json`):
 }
 ```
 
-Then:
+Restart Claude Code (`exit` then re-launch in your workspace). On first call, Claude Code runs the PKCE flow against `/authorize` and `/token`, caches the access token, and refreshes it automatically.
 
-1. Restart Claude Code (`exit` then re-launch in your workspace).
-2. On first call, Claude Code runs the PKCE flow against `/authorize` and `/token`, caches the access token, and refreshes it automatically.
-3. Run `/mcp` to confirm `vantage-peers` is connected.
-4. Test: `recall query="hello"` — must return a JSON response.
+### Verify
+
+```
+/vantage-peers-init
+```
+
+The command runs 3 checks (MCP registration, `/health` connectivity, Bearer auth via `recall`). All 3 must return `PASS`. Then chain:
+
+```
+/daily-start
+/check-messages
+/check-tasks
+```
+
+### Manual fallback (no plugin)
+
+If your Claude Code build does not support plugins, or you are working in a constrained environment, configure the MCP server manually — add `vantage-peers` to your project `.mcp.json` (or global `~/.claude.json`):
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://vantage-peers-production.up.railway.app/mcp",
+      "oauth": {
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET"
+      }
+    }
+  }
+}
+```
 
 If your Claude Code build does not yet support the `oauth` field, pre-issue an access token via PKCE (see [Issue an access token manually](#issue-an-access-token-manually) below) and use it as:
 
@@ -115,6 +98,87 @@ If your Claude Code build does not yet support the `oauth` field, pre-issue an a
 ```
 
 Access tokens are short-lived. Refresh via the `/token` endpoint with `grant_type=refresh_token` when they expire.
+
+---
+
+## Path 2 — Claude.ai web (no-code user)
+
+**Audience:** no-code users connecting through the Claude.ai web interface.
+
+<Callout type="warning">
+The Claude.ai web connector accepts an **MCP server URL**, not a plugin zip file. Do not attempt to upload the Claude Code plugin file here — it will fail with "Method not allowed". Use the URL-based flow below.
+</Callout>
+
+Claude.ai web uses a custom MCP connector with OAuth auto-discovery (RFC 8414 metadata discovery + RFC 7591 DCR + PKCE S256). No file upload, no developer tools — just a URL.
+
+The Free plan allows 1 custom connector. Pro, Max, Team, and Enterprise allow multiple.
+
+### Steps
+
+1. Open [claude.ai](https://claude.ai).
+2. In the left sidebar, click **Customize** (in French: **Personnaliser**).
+3. Click **Connectors** (in French: **Connecteurs**).
+4. Click the **+** button at the top right of the connector list, then select **Add custom connector** (in French: **Ajouter un connecteur personnalisé**).
+5. In the modal, fill in:
+   - **Name**: `VantagePeers` (any label — this appears in your conversations).
+   - **Remote MCP server URL**: `https://compassionate-goldfinch-737.convex.cloud/mcp`
+     (Alternative Railway URL: `https://vantage-peers-production.up.railway.app/mcp`)
+6. Expand **Advanced settings** and paste:
+   - **OAuth Client ID**: your `client_id`
+   - **OAuth Client Secret**: your `client_secret`
+7. Click **Add**. A browser tab opens for OAuth consent — accept.
+8. In a conversation, click **+** in the composer → toggle **VantagePeers** on.
+9. Test: *"Use vantage-peers to recall anything you find about VantagePeers in the global namespace."* Claude routes the request to the `recall` tool. A brand-new tenant returns nothing — that is correct (see [First steps](./first-steps) to populate your workspace).
+
+### OAuth auto-discovery note
+
+The OAuth flow runs automatically: the client fetches `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` metadata, performs PKCE S256 authorization, and the first authorized request issues a short-lived bearer token (with automatic refresh).
+
+OAuth scope is auto-assigned to the DCR client and defaults to `client-generic` (write access to your tenant only). Per-tenant custom scope requires admin provisioning — contact VantageOS support during onboarding if your use case requires elevated scope.
+
+Using **Advanced settings** with your Client ID + Secret gives you a stable registered client identity. The URL-only auto-discovery path also works but binds you to a transient DCR client with the default `client-generic` scope.
+
+---
+
+## How authentication works
+
+VantagePeers Cloud implements **OAuth 2.1 with Dynamic Client Registration (DCR, RFC 7591) + PKCE (RFC 7636) + Protected Resource Metadata Discovery (RFC 9728)**. Concretely:
+
+- Clients that support auto-discovery (Claude.ai, ChatGPT) fetch metadata from `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server`, run the PKCE flow, and obtain a scoped access token — no manual config beyond the URL is required.
+- Clients that support manual OAuth config accept your `client_id` + `client_secret` to bootstrap the same flow with a stable client identity.
+- The `WWW-Authenticate` header on `401` responses follows the MCP spec format `Bearer resource_metadata="<PRM-URL>"`, which lets the client bootstrap discovery from any unauthenticated request.
+
+The `client_secret` is **not** a bearer token. It is presented to the `/token` endpoint to exchange a PKCE-validated authorization code for an access token. The access token (short-lived, with refresh) is what gets sent as `Authorization: Bearer <access_token>` on subsequent tool calls. Your client handles this automatically.
+
+---
+
+## ChatGPT
+
+End-to-end ChatGPT MCP support is documented by OpenAI in [Apps SDK — Connect from ChatGPT](https://developers.openai.com/apps-sdk/deploy/connect-chatgpt). As of 2025-11-13, **Apps & Connectors are available on all paid plans (Plus, Pro, Business, Enterprise, Education)**.
+
+### Enable Developer Mode (one-time)
+
+1. Open [chatgpt.com](https://chatgpt.com).
+2. Go to **Settings** → **Apps & Connectors** → **Advanced settings**.
+3. Toggle **Developer mode** on. If your org policy blocks this, contact your admin.
+
+### Add VantagePeers Cloud
+
+1. Back in **Settings → Apps & Connectors**, click **Create**. The **New App** modal opens.
+2. Fill in:
+   - **Name**: `VantagePeers`
+   - **Description** (optional): `Shared memory, tasks and messaging for AI agent teams.`
+   - **Connection** → keep **Server URL** selected.
+   - **Server URL**: `https://vantage-peers-production.up.railway.app/mcp`
+   - **Authentication**: select **OAuth**.
+3. Expand **Advanced OAuth settings**. Under **Client registration**, choose **Dynamic Client Registration (DCR)** — the server advertises it; User-Defined OAuth Client is an alternative if you want to reuse your fixed `client_id`+`client_secret`.
+4. Tick **I understand and want to continue** and click **Create**. A browser consent flow runs; accept.
+5. In a new conversation, click **+** in the composer → **More** → select **VantagePeers**.
+6. Test: *"Use VantagePeers to list my open tasks."* ChatGPT calls `list_tasks`. A brand-new tenant returns an empty list — populate it via [First steps](./first-steps).
+
+Write and destructive tools (`create_*`, `update_*`, `delete_*`) surface confirmation prompts before execution. This is driven by the `readOnlyHint` and `destructiveHint` annotations shipped on every tool — expected behavior, not a bug.
+
+---
 
 ## Codex (OpenAI CLI)
 
@@ -137,6 +201,8 @@ If your Codex build does not yet support the `oauth` block, fall back to a pre-i
 2. Restart `codex` so it picks up the new server.
 3. List tools: `codex mcp list` should include `vantage-peers`.
 4. Test: ask Codex *"call recall with query=hello"*.
+
+---
 
 ## Issue an access token manually
 
@@ -169,6 +235,8 @@ curl -s -X POST "$BASE/oauth/token" \
 
 The response contains `access_token` (short-lived) and `refresh_token`. Send `Authorization: Bearer <access_token>` on every tool call.
 
+---
+
 ## Verify your install
 
 Whichever client you used, these three calls must succeed:
@@ -182,6 +250,7 @@ Whichever client you used, these three calls must succeed:
 - **`401 Unauthorized`** — access token expired or `client_secret` invalid. Refresh the token (clients do this automatically) or contact VantageOS to re-issue credentials.
 - **`403 Forbidden`** — your scope does not cover that resource. DCR-issued tokens default to `client-generic` (write to your tenant only). Read attempts on `orchestrator/*` namespaces outside your tenant return `403`.
 - **`401` with `WWW-Authenticate: Bearer resource_metadata="..."`** — your client should auto-discover the auth server and run the flow. If it does not, switch to manual config or pre-issued tokens.
+- **"Method not allowed" when uploading a file in Claude.ai** — you are on Path 2 (web connector). Do not upload a plugin zip here. Use the MCP server URL instead (see [Path 2](#path-2--claudeai-web-no-code-user) above).
 - **ChatGPT extra confirmation prompts** — expected. They are driven by the per-tool `destructiveHint` and `readOnlyHint` annotations.
 
 ## Help
