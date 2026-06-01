@@ -91,13 +91,13 @@ Installation : `claude plugin marketplace add vantageos-agency/vantage-peers-plu
 
 ### `dispatch-message`
 
-- **Trigger phrases** : « send a message », « DM <orch> », « broadcast », « reply to <orch> », « tell <orch> X »
+- **Trigger phrases** : « send a message », « DM `<orch>` », « broadcast », « reply to `<orch>` », « tell `<orch>` X »
 - **Ce que ça fait** : Préformate chaque message peer sortant pour satisfaire les hooks de la flotte (marqueur no-task-in-message, signature, pas d'estimations de temps).
 - **Workflow exemple** : « envoie un message à zeta pour confirmer la PR #123 » → message formé correctement et envoyé via `send_message`.
 
 ### `messages-history`
 
-- **Trigger phrases** : « messages history », « show past messages », « messages from <peer> », « broadcast status », « who read the broadcast »
+- **Trigger phrases** : « messages history », « show past messages », « messages from `<peer>` », « broadcast status », « who read the broadcast »
 - **Ce que ça fait** : Parcourt l'historique des messages peer avec filtres jour/sender, audits broadcast, mark-as-read et delete sûrs.
 - **Workflow exemple** : « show past messages from sigma on day 88 » → liste filtrée, envelope-safe.
 
@@ -119,7 +119,7 @@ Installation : `claude plugin marketplace add vantageos-agency/vantage-peers-plu
 
 - **Trigger phrases** : « edit memory », « update memory », « patch memory », « amend memory »
 - **Ce que ça fait** : Édite une mémoire existante via le pattern immutable edit-by-replacement (fetch → patch → validate → store → soft-delete ancienne version).
-- **Workflow exemple** : « fix memory <id> : corriger le numéro de PR à #567 » → nouvelle version stockée, ancienne soft-supprimée.
+- **Workflow exemple** : « fix memory `<id>` : corriger le numéro de PR à #567 » → nouvelle version stockée, ancienne soft-supprimée.
 
 ### `recall-deep`
 
@@ -131,17 +131,17 @@ Installation : `claude plugin marketplace add vantageos-agency/vantage-peers-plu
 
 ### `dispatch-task-create`
 
-- **Trigger phrases** : « create task for <orch> », « dispatch task », « queue work for <orch> », « ask <orch> to do X »
+- **Trigger phrases** : « create task for `<orch>` », « dispatch task », « queue work for `<orch>` », « ask `<orch>` to do X »
 - **Ce que ça fait** : Crée une tâche pour un autre orchestrateur avec description bien formée (blocs VERIFICATION + TESTS + IRP) pour que le hook `enforce-task-quality` ne bloque jamais.
 
 ### `dispatch-task-start`
 
-- **Trigger phrases** : « start task <id> », « begin task », « pick up <id> », « start_task »
+- **Trigger phrases** : « start task `<id>` », « begin task », « pick up `<id>` », « start_task »
 - **Ce que ça fait** : Wrap `start_task` avec sweep automatique des `in_progress` stales pour que le hook `enforce-irp-sequence` ne bloque jamais.
 
 ### `dispatch-task-complete`
 
-- **Trigger phrases** : « complete task <id> », « mark done », « close <id> », « finish task », « task done »
+- **Trigger phrases** : « complete task `<id>` », « mark done », « close `<id>` », « finish task », « task done »
 - **Ce que ça fait** : Ferme une tâche avec une `completionNote` proof-token auto-assemblée pour que le hook `evidence-bound-done` ne bloque jamais.
 
 ### `task-structure`
@@ -178,7 +178,7 @@ Installation : `claude plugin marketplace add vantageos-agency/vantage-peers-plu
 
 ### `diary-discover`
 
-- **Trigger phrases** : « find diary », « list diaries », « show diary entries », « what did <orch> log on day N »
+- **Trigger phrases** : « find diary », « list diaries », « show diary entries », « what did `<orch>` log on day N »
 - **Ce que ça fait** : Découvre les diary entries avec filtres orchestrateur, envelope-safe listing, fetch ciblé par date.
 
 ### `friction-digest`
@@ -200,7 +200,7 @@ Installation : `claude plugin marketplace add vantageos-agency/vantage-peers-plu
 
 ### `profile-lookup`
 
-- **Trigger phrases** : « profile lookup », « who is <orch> », « show profile », « lookup peer »
+- **Trigger phrases** : « profile lookup », « who is `<orch>` », « show profile », « lookup peer »
 - **Ce que ça fait** : Lookup read-only via `get_profile` ou scan via `list_peers` avec filtres bu/role.
 
 ### `peers-discovery`
@@ -324,7 +324,7 @@ RÈGLES :
 
 ## Compétence 2 — VantagePeers Agent
 
-- **Trigger phrases (côté utilisateur)** : « utilise VantagePeers », « stocke ça en mémoire », « rappelle-moi ce qu'on sait sur X », « crée une tâche pour Y », « envoie un message à <orch> » — la Compétence est activée passivement sur toute la conversation, donc tu n'as pas besoin de la « déclencher » à chaque tour.
+- **Trigger phrases (côté utilisateur)** : « utilise VantagePeers », « stocke ça en mémoire », « rappelle-moi ce qu'on sait sur X », « crée une tâche pour Y », « envoie un message à `<orch>` » — la Compétence est activée passivement sur toute la conversation, donc tu n'as pas besoin de la « déclencher » à chaque tour.
 - **Quand l'utiliser** : sur chaque conversation Claude.ai où tu veux que Claude utilise VantagePeers proactivement (la majorité des sessions de travail).
 - **Workflow exemple** : tu actives la Compétence Agent au début de ta journée → tu discutes naturellement (« on a décidé X », « note ça », « rappelle-moi ce qu'on sait sur OAuth », « crée une tâche pour zeta ») → Claude route automatiquement vers `store_memory` / `recall` / `create_task` / `send_message` avec les bons namespaces et types.
 
