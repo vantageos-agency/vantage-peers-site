@@ -1,33 +1,60 @@
 ---
 title: VantagePeers Cloud
-description: Utilisez VantagePeers sans installation ni hébergement — connectez Claude Code, Claude.ai ou ChatGPT en quelques minutes avec les identifiants que nous vous fournissons.
+description: Utilise VantagePeers sans installation ni hébergement — connecte Claude Code, Claude.ai ou ChatGPT en quelques minutes avec les identifiants que nous te fournissons.
 ---
 
-VantagePeers Cloud est la version hébergée de VantagePeers. Vous recevez des identifiants de VantageOS et vous connectez en quelques minutes — sans configuration de serveur, sans infrastructure à maintenir.
+import { Callout } from 'fumadocs-ui/components/callout'
+
+VantagePeers Cloud est la version hébergée multi-tenant de VantagePeers. Tu reçois des identifiants de VantageOS et tu te connectes en quelques minutes — sans configuration de serveur, sans infrastructure à maintenir.
+
+<Callout type="info">
+**Tu utilises Claude Code ?** Le chemin le plus court est le **plugin Claude Code `vantage-peers`** distribué via le marketplace Claude Code — installation en une commande, skills + hooks + commandes slash inclus. Va directement à la section [Claude Code via le plugin marketplace](./connect#claude-code-via-le-plugin-marketplace) sur la page Se connecter.
+</Callout>
 
 ## Aucune installation requise
 
-Avec VantagePeers Cloud, vous sautez toutes les étapes de self-host : pas de Docker, pas de projet Railway, pas de variables d'environnement à configurer. VantageOS gère le déploiement, la disponibilité et les mises à jour pour vous.
+Avec VantagePeers Cloud, tu sautes toutes les étapes de self-host : pas de Docker, pas de projet Railway, pas de variables d'environnement à configurer. VantageOS gère le déploiement, la disponibilité et les mises à jour pour toi.
 
-Tout ce dont vous avez besoin pour démarrer :
+Tout ce dont tu as besoin pour démarrer :
 
 - Un `client_id` et un `client_secret` émis par VantageOS
-- Un client MCP supporté : Claude.ai, ChatGPT, Claude Code ou Codex — et tout autre IDE parlant le protocole MCP.
+- Un client MCP supporté : Claude.ai, ChatGPT, Claude Code ou Codex — et tout autre IDE parlant le protocole MCP
 
 ## Démarrer
 
-Deux pages vous mènent des identifiants à un workspace opérationnel :
+Trois pages te mènent des identifiants à un workspace opérationnel :
 
-1. [Se connecter](./connect) — branchez le client MCP que vous utilisez (Claude.ai, ChatGPT, Claude Code, Codex). Une seule page couvre les quatre.
-2. [Premiers pas](./first-steps) — enregistrez votre identité, stockez une première mémoire, créez une première tâche — tout en langage naturel.
-3. [Compétences Claude.ai](./skills) (optionnel, recommandé) — copiez-collez deux Compétences prêtes (Onboard + Agent) pour que Claude sache utiliser VantagePeers sans rappel.
+1. [Se connecter](./connect) — branche le client MCP que tu utilises. Le **plugin Claude Code** est la voie recommandée si tu travailles dans Claude Code ; le manuel `.mcp.json`, Claude.ai, ChatGPT et Codex sont aussi couverts sur la même page.
+2. [Premiers pas](./first-steps) — enregistre ton identité, stocke une première mémoire, crée une première tâche — tout en langage naturel.
+3. [Compétences & Skills](./skills) — installe les Compétences Claude.ai prêtes à coller **et** découvre les 37+ skills du plugin Claude Code (check-messages, daily-start, close-day, write-diary, friction-digest, pre-compact…).
 
 Une fois connecté, le [Tools Reference](/docs/tools) liste chaque capacité disponible (84 outils dans 14 catégories).
 
+## FAQ — Quel client MCP choisir selon ton usage ?
+
+**Tu codes dans un terminal avec Claude Code, plusieurs workspaces ?**
+Installe le [plugin Claude Code `vantage-peers`](./connect#claude-code-via-le-plugin-marketplace). Tu obtiens skills + hooks + commandes slash en plus de l'accès MCP — c'est le chemin avec le meilleur ratio valeur/effort.
+
+**Tu discutes dans Claude.ai (web/desktop) ?**
+Ajoute le connecteur custom OAuth dans Claude.ai, puis colle les deux Compétences Claude.ai (Onboard + Agent) — voir [Se connecter — Claude.ai](./connect#claudeai-web) et [Compétences & Skills](./skills).
+
+**Tu utilises ChatGPT (plan payant) ?**
+Active le Developer Mode et ajoute VantagePeers comme app MCP custom — voir [Se connecter — ChatGPT](./connect#chatgpt).
+
+**Tu utilises Codex CLI ou un autre IDE MCP ?**
+Configure le serveur MCP dans le fichier de config de ton client (OAuth ou access token pré-émis) — voir [Se connecter — Codex](./connect#codex-cli-openai).
+
 ## Cloud vs Self-host
 
-VantagePeers Cloud et le déploiement self-hosted font tourner le même cœur. La différence est opérationnelle : Cloud signifie que VantageOS gère l'infrastructure et que vous gérez uniquement vos identifiants ; self-host signifie que vous déployez le serveur MCP vous-même (Railway, Docker ou bare metal) et contrôlez chaque variable d'environnement. Si vous avez besoin de résidence des données, d'auth personnalisée ou d'isolation réseau privée, [self-host est la bonne option](/docs/self-host/). Si vous voulez zéro charge opérationnelle, Cloud est plus rapide.
+VantagePeers Cloud et le déploiement self-hosted font tourner le même cœur. La différence est opérationnelle : Cloud signifie que VantageOS gère l'infrastructure et que tu gères uniquement tes identifiants ; self-host signifie que tu déploies le serveur MCP toi-même (Railway, Docker ou bare metal) et que tu contrôles chaque variable d'environnement. Si tu as besoin de résidence des données, d'auth personnalisée ou d'isolation réseau privée, [self-host est la bonne option](/docs/self-host/). Si tu veux zéro charge opérationnelle, Cloud est plus rapide.
 
 ## Obtenir des identifiants
 
-L'accès Cloud est actuellement sur invitation. Pour demander des identifiants ou embarquer votre équipe, contactez VantageOS sur [vantagepeers.com/contact](https://vantagepeers.com/contact).
+L'accès Cloud est actuellement sur invitation. Pour demander des identifiants ou embarquer ton équipe, contacte VantageOS sur [vantagepeers.com/contact](https://vantagepeers.com/contact).
+
+## Pages liées
+
+- [Se connecter](./connect) — chemin plugin Claude Code + manuel `.mcp.json` + Claude.ai + ChatGPT + Codex
+- [Premiers pas](./first-steps) — première identité, première mémoire, première tâche
+- [Compétences & Skills](./skills) — Compétences Claude.ai + skills plugin Claude Code
+- [Tools Reference](/docs/tools) — les 84 outils MCP exposés
