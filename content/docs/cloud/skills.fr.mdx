@@ -1,26 +1,290 @@
 ---
-title: Compétences Claude.ai pour VantagePeers
-description: Deux compétences Claude.ai prêtes à coller pour transformer toute conversation Claude en workspace VantagePeers.
+title: Compétences & Skills VantagePeers Cloud
+description: Deux sources de compétences pour VantagePeers Cloud — les skills du plugin Claude Code (37+) et les Compétences Claude.ai prêtes à coller (Onboard + Agent).
 ---
 
-Les Compétences Claude.ai vous permettent de précharger des instructions que Claude suit à chaque conversation. VantagePeers Cloud fournit deux compétences à copier-coller dans votre compte :
+import { Callout } from 'fumadocs-ui/components/callout'
+
+VantagePeers Cloud expose **deux familles de "compétences"** qui sont souvent confondues. Cette page les sépare clairement :
+
+1. **Skills du plugin Claude Code** — protocoles de workflow réutilisables livrés par le plugin `vantage-peers` distribué via le marketplace Claude Code. Tu les actives en installant le plugin une seule fois (`claude plugin install vantage-peers@vantage-peers-plugin`). Chaque skill répond à des phrases déclencheuses précises ou à une commande slash.
+2. **Compétences Claude.ai (Custom Skills)** — instructions préchargées que Claude.ai applique à chaque conversation sur claude.ai (web/desktop). Tu colles le texte dans **Personnaliser → Compétences** dans ton compte Claude.ai.
+
+Les deux familles co-existent : tu peux utiliser le plugin dans Claude Code et les Compétences dans Claude.ai en parallèle. Voir [Se connecter](./connect) pour brancher chaque client.
+
+---
+
+# Section 1 — Skills du plugin Claude Code
+
+Le plugin `vantage-peers` (companion de `vantage-peers-mcp` v2.4.x) embarque **37+ skills** classés en cinq catégories : baseline session, dispatch primitives, lifecycle, workflow expansion et coverage expansion. Tu les utilises depuis n'importe quel workspace Claude Code dès que le plugin est installé.
+
+<Callout type="info">
+Installation : `claude plugin marketplace add vantageos-agency/vantage-peers-plugin` puis `claude plugin install vantage-peers@vantage-peers-plugin`. Voir [Se connecter — plugin Claude Code](./connect#claude-code-via-le-plugin-marketplace) pour le pas-à-pas complet et [Toolkit — Installation](/docs/toolkit/install) pour la version détaillée.
+</Callout>
+
+## Skills baseline session (les plus utilisés)
+
+### `check-messages`
+
+- **Trigger phrases** : « check messages », « inbox », « any messages », « peers », « new messages », « read messages »
+- **Commande slash** : `/check-messages`
+- **Ce que ça fait** : Récupère les messages non lus des autres orchestrateurs et, en mode autonome, sélectionne automatiquement la prochaine tâche non bloquée. En mode humain, ramène aussi les tâches dispatchées et complétées.
+- **Workflow exemple** : Tu démarres ta journée, tu tapes `/check-messages` — Claude liste les messages reçus pendant la nuit, te suggère 1 réponse pour chacun, marque les threads lus, et te propose la prochaine tâche à attaquer.
+
+### `daily-start`
+
+- **Trigger phrases** : « daily start », « morning routine », « begin day », « what should I work on », « start the day », « morning plan », « session start »
+- **Commande slash** : `/daily-start`
+- **Ce que ça fait** : Charge le contexte VantagePeers (mémoires récentes, tâches in_progress, messages non lus), présente les routines et tâches en attente, et — en mode autonome — auto-démarre la prochaine tâche non bloquée via `dispatch-task-start`.
+- **Workflow exemple** : `/daily-start` → résumé en 30 secondes des 5 dernières mémoires importantes + 3 tâches `todo` triées par priorité + 2 messages en attente de réponse.
+
+### `close-day`
+
+- **Trigger phrases** : « close day », « end of day », « fin de journée », « bonne nuit », « wrap up », « call it a day »
+- **Commande slash** : `/close-day`
+- **Ce que ça fait** : Routine de fin de journée — met à jour les statuts de tâches, écrit l'entrée de journal du jour, capture les frictions rencontrées, stocke un résumé de session.
+- **Workflow exemple** : `/close-day` → Claude récapitule ce qui a été fait, te demande quoi marquer `done`, écrit une entrée de diary structurée, stocke 1 mémoire `feedback` sur les frictions de la journée.
+
+### `write-diary`
+
+- **Trigger phrases** : « write diary », « diary entry », « log today », « journal entry », « daily log »
+- **Commande slash** : `/write-diary`
+- **Ce que ça fait** : Écrit une entrée structurée de diary pour la journée (highlights, blockers, decisions) dans VantagePeers via `write_diary`.
+- **Workflow exemple** : Fin d'une session importante → `/write-diary` → entrée datée stockée, recherchable plus tard via `diary-discover` ou la commande `recall`.
+
+### `check-tasks`
+
+- **Trigger phrases** : « check tasks », « my tasks », « what tasks », « pending tasks », « task list », « todo list », « what should I work on », « backlog »
+- **Commande slash** : `/check-tasks`
+- **Ce que ça fait** : Liste les tâches assignées à l'orchestrateur courant, triées par priorité et conscience des dépendances, avec projection `lite` pour rester sous l'envelope de 60 KB.
+- **Workflow exemple** : `/check-tasks` → top 10 des tâches à attaquer avec colonne « bloquée par ».
+
+### `pre-compact`
+
+- **Trigger phrases** : « save context », « save session », « before compaction », « I will compact », « snapshot session », « context save », « freeze state »
+- **Commande slash** : `/pre-compact`
+- **Ce que ça fait** : Sauvegarde l'état complet de la session (mémoire + briefing note) dans VantagePeers avant que Claude Code ne compacte le contexte. Indispensable pour ne pas perdre le fil sur les longues sessions.
+- **Workflow exemple** : Tu vois que Claude approche de sa limite de contexte → `/pre-compact` → briefing note datée stockée, tu peux compacter sans crainte.
+
+### `recall`
+
+- **Trigger phrases** : « recall », « remember », « what do we know about », « search memory », « look up », « find in memory »
+- **Commande slash** : `/recall`
+- **Ce que ça fait** : Recherche sémantique + BM25 hybride dans les mémoires VantagePeers via `recall`. Renvoie les hits scopés.
+- **Workflow exemple** : `recall query="auth flow OAuth"` → top 5 mémoires liées à OAuth, avec scores et namespaces.
+
+### `standup`
+
+- **Trigger phrases** : « standup », « status report », « daily report », « sitrep », « progress report », « report »
+- **Commande slash** : `/standup`
+- **Ce que ça fait** : Génère un rapport quotidien structuré (fait / en cours / bloqueurs / git status) et le dépose comme briefing note.
+- **Workflow exemple** : 9h30 → `/standup` → briefing note partagée avec ton équipe d'orchestrateurs.
+
+### `vantage-peers-init`
+
+- **Trigger phrases** : « verify VP setup », « test vantage-peers », « VP smoke test », « init vantage-peers », « check VP connection », « is VP configured »
+- **Commande slash** : `/vantage-peers-init`
+- **Ce que ça fait** : Smoke-test du setup MCP — enregistrement, connectivité `/health`, auth Bearer/OAuth via `recall`.
+- **Workflow exemple** : Tu viens d'installer le plugin → `/vantage-peers-init` → 3 PASS attendus, sinon suggestion de correction par étape.
+
+## Skills de messages & coordination
+
+### `dispatch-message`
+
+- **Trigger phrases** : « send a message », « DM <orch> », « broadcast », « reply to <orch> », « tell <orch> X »
+- **Ce que ça fait** : Préformate chaque message peer sortant pour satisfaire les hooks de la flotte (marqueur no-task-in-message, signature, pas d'estimations de temps).
+- **Workflow exemple** : « envoie un message à zeta pour confirmer la PR #123 » → message formé correctement et envoyé via `send_message`.
+
+### `messages-history`
+
+- **Trigger phrases** : « messages history », « show past messages », « messages from <peer> », « broadcast status », « who read the broadcast »
+- **Ce que ça fait** : Parcourt l'historique des messages peer avec filtres jour/sender, audits broadcast, mark-as-read et delete sûrs.
+- **Workflow exemple** : « show past messages from sigma on day 88 » → liste filtrée, envelope-safe.
+
+### `closure-notify`
+
+- **Trigger phrases** : « send closure », « notify pi done », « [DONE] status », « shipped report »
+- **Ce que ça fait** : Préformate chaque message de clôture `[DONE]` pour que chaque claim soit ancrée à une commande shell + sortie brute, supprimant le risque d'over-claim.
+- **Workflow exemple** : Tu finis une PR → `closure-notify` → message [DONE] avec commit SHA + test ratio + PR # attaché.
+
+## Skills mémoire
+
+### `memory-write`
+
+- **Trigger phrases** : « store memory », « save note », « remember this », « write memory », « log decision »
+- **Ce que ça fait** : Wrap `store_memory` avec guardrails namespace + type + pré-flight UTF-8 byte-size pour ne jamais tripper la limite Convex 1 MiB ou le hook `assertContentSize`. Auto-classifie le type (reference / feedback / project / decision / episode).
+- **Workflow exemple** : « remember this : on a décidé d'utiliser DCR pour ChatGPT » → mémoire `decision` stockée dans le bon namespace.
+
+### `memory-edit`
+
+- **Trigger phrases** : « edit memory », « update memory », « patch memory », « amend memory »
+- **Ce que ça fait** : Édite une mémoire existante via le pattern immutable edit-by-replacement (fetch → patch → validate → store → soft-delete ancienne version).
+- **Workflow exemple** : « fix memory <id> : corriger le numéro de PR à #567 » → nouvelle version stockée, ancienne soft-supprimée.
+
+### `recall-deep`
+
+- **Trigger phrases** : « deep recall », « search memory deep », « recall everything about X », « find all references to Y »
+- **Ce que ça fait** : Ensemble de recherches mémoire — vectorielle, BM25, hybride RRF — puis dedup et union avec provenance par hit.
+- **Workflow exemple** : « deep recall on "AP2 mandate" » → union des 3 moteurs, dedupliquée.
+
+## Skills tâches & missions
+
+### `dispatch-task-create`
+
+- **Trigger phrases** : « create task for <orch> », « dispatch task », « queue work for <orch> », « ask <orch> to do X »
+- **Ce que ça fait** : Crée une tâche pour un autre orchestrateur avec description bien formée (blocs VERIFICATION + TESTS + IRP) pour que le hook `enforce-task-quality` ne bloque jamais.
+
+### `dispatch-task-start`
+
+- **Trigger phrases** : « start task <id> », « begin task », « pick up <id> », « start_task »
+- **Ce que ça fait** : Wrap `start_task` avec sweep automatique des `in_progress` stales pour que le hook `enforce-irp-sequence` ne bloque jamais.
+
+### `dispatch-task-complete`
+
+- **Trigger phrases** : « complete task <id> », « mark done », « close <id> », « finish task », « task done »
+- **Ce que ça fait** : Ferme une tâche avec une `completionNote` proof-token auto-assemblée pour que le hook `evidence-bound-done` ne bloque jamais.
+
+### `task-structure`
+
+- **Trigger phrases** : « block task », « add dependency », « tasks by mission », « checkout task », « task graph »
+- **Ce que ça fait** : Quatre outils de structure de tâches — block, add_task_dependency, list_tasks_by_mission, checkout_task — avec envelope-safe defaults.
+
+### `mission-bootstrap`
+
+- **Trigger phrases** : « bootstrap mission », « start a mission for X », « scaffold IRP for X »
+- **Ce que ça fait** : Bootstrap une mission avec la chaîne IRP complète (plan → execute → verify → ship) pré-câblée avec dépendances.
+
+### `mission-template-apply`
+
+- **Trigger phrases** : « apply mission template », « instantiate template X for Y », « create mission from template »
+- **Ce que ça fait** : Instancie un template de mission stocké en mission live avec chaîne de tâches T0..Tn pré-câblée.
+
+### `recurring-schedule`
+
+- **Trigger phrases** : « recurring task », « cron task », « schedule a daily/weekly task », « pause recurring », « resume recurring »
+- **Ce que ça fait** : Gère les templates de tâches récurrentes — création cron, pause/resume, delete — avec validation cron et descriptions IRP-compliant.
+
+## Skills briefings, diaries & friction
+
+### `briefing-write`
+
+- **Trigger phrases** : « write briefing note », « briefing », « decision note », « create briefing »
+- **Ce que ça fait** : Wrap `create_briefing_note` / `update_briefing_note` avec taxonomie de topics, normalisation participants, byte-budget pré-flight et auto-link des taskIds/missionIds mentionnés.
+
+### `briefing-recall`
+
+- **Trigger phrases** : « recall briefing », « find briefing », « list briefings », « show decision notes », « postmortem search »
+- **Ce que ça fait** : Recall briefing notes avec filtres topic, envelope-safe listing, fetch sélectif par noteId.
+
+### `diary-discover`
+
+- **Trigger phrases** : « find diary », « list diaries », « show diary entries », « what did <orch> log on day N »
+- **Ce que ça fait** : Découvre les diary entries avec filtres orchestrateur, envelope-safe listing, fetch ciblé par date.
+
+### `friction-digest`
+
+- **Trigger phrases** : weekly cron Sunday 22:30 `/friction-digest`, « friction digest », « weekly friction harvest », « friction review »
+- **Ce que ça fait** : Agrégateur hebdomadaire des mémoires `audit/friction` (7 derniers jours) — rank par fréquence, top 10, auto-crée missions d'amélioration pour le top 3, génère briefing note récap.
+
+### `episode-log`
+
+- **Trigger phrases** : « log episode », « store episode », « record AI incident », « 8-sins log »
+- **Ce que ça fait** : Wrap `store_episode` avec schéma 8-Sins enforcement (sin classification, raw text, source, severity 1-5).
+
+## Skills profile, peers & mandates
+
+### `identity-set`
+
+- **Trigger phrases** : « set identity », « set summary », « bootstrap my identity », « register orchestrator »
+- **Ce que ça fait** : Bootstrap une nouvelle identité d'orchestrateur en un appel — set_summary + update_profile (role, instance, bu, schedule, on-call).
+
+### `profile-lookup`
+
+- **Trigger phrases** : « profile lookup », « who is <orch> », « show profile », « lookup peer »
+- **Ce que ça fait** : Lookup read-only via `get_profile` ou scan via `list_peers` avec filtres bu/role.
+
+### `peers-discovery`
+
+- **Trigger phrases** : « list peers », « who is online », « active peers », « fleet roster », « who is up »
+- **Ce que ça fait** : Roster léger — liste les peers actifs avec last-seen et summary, filtres optionnels role/BU.
+
+### `mandate-lifecycle`
+
+- **Trigger phrases** : « create mandate », « accept mandate », « update mandate », « settle mandate », « validate mandate spending »
+- **Ce que ça fait** : Cycle de vie complet d'un mandate AP2 — create, accept, update, validate spending, settle, list.
+
+## Skills composants, repos & deploys
+
+### `component-register`
+
+- **Trigger phrases** : « register component », « update component », « delete component », « publish component »
+- **Ce que ça fait** : Enregistre/met à jour/supprime des composants flotte (skills, hooks, agents, runbooks, templates, prompts) avec brief canonique + contentHash + naming convention checks.
+
+### `component-discover`
+
+- **Trigger phrases** : « list components », « find component », « search components », « component lookup »
+- **Ce que ça fait** : Discovery envelope-safe — list, search, fetch one component sous le cap Day 89.
+
+### `repo-link`
+
+- **Trigger phrases** : « add repo mapping », « list repo mappings », « remove repo mapping », « link commit »
+- **Ce que ça fait** : Gère les mappings GitHub repo→BU et lie un commit SHA à un issue existant.
+
+### `deploy-track`
+
+- **Trigger phrases** : « track deployment », « add deployment », « monitor deployment », « remove deployment »
+- **Ce que ça fait** : Register/deactivate/audit des deployments Convex trackés par le monitoring proactif d'erreurs avec validation deploy-key + format repo GitHub.
+
+### `bu-manage`
+
+- **Trigger phrases** : « create BU », « register business unit », « update BU », « list business units »
+- **Ce que ça fait** : Gère les business units VantagePeers end-to-end — create/update/get/list/delete avec required-field validation et orchestrator-ownership guardrails.
+
+## Skills issues, fix patterns & subagents
+
+### `issue-triage`
+
+- **Trigger phrases** : « triage issues », « list issues », « issue stats », « update issue status », « verify issue »
+- **Ce que ça fait** : Cycle de vie complet issues — list envelope-safe, get, update status avec preuve, verify, stats, link commits.
+
+### `fix-pattern-cycle`
+
+- **Trigger phrases** : « fix pattern », « create fix pattern », « add fix attempt », « validate fix », « link issue to pattern »
+- **Ce que ça fait** : Cycle de vie complet d'un fix-pattern — create depuis un incident récurrent, log fix attempts, validate, link aux issues, search/list.
+
+### `dispatch-subagent`
+
+- **Trigger phrases** : « dispatch a subagent », « agent for X », « spawn agent », « delegate to subagent »
+- **Ce que ça fait** : Compose et dispatch un subagent Claude Code (outil `Agent`) avec le marker brief template pré-injecté pour que le hook `enforce-brief-template` ne bloque jamais.
+
+---
+
+# Section 2 — Compétences Claude.ai (Custom Skills)
+
+Les Compétences Claude.ai sont des instructions préchargées que Claude.ai applique sur chaque conversation. Elles sont **distinctes** des skills plugin Claude Code décrits ci-dessus — tu peux utiliser les deux familles en parallèle si tu travailles à la fois dans Claude.ai et dans Claude Code.
+
+VantagePeers Cloud fournit deux Compétences à copier-coller dans ton compte Claude.ai :
 
 - **VantagePeers Onboard** — guide un utilisateur tout neuf à travers l'enregistrement de son identité, l'écriture de la première mémoire, la création de la première tâche. À utiliser une fois.
-- **VantagePeers Agent** — donne à Claude le modèle opérationnel dont il a besoin pour être un utilisateur productif au quotidien : aperçu des outils, conventions de namespace, quand écrire une mémoire vs une tâche vs une entrée de journal, comment découvrir les autres agents.
+- **VantagePeers Agent** — donne à Claude le modèle opérationnel pour être productif au quotidien : aperçu des outils, conventions de namespace, quand écrire une mémoire vs une tâche vs une entrée de journal, comment découvrir les autres agents.
 
-Les deux compétences supposent que votre connecteur custom est déjà configuré (voir [Connect](./connect)). Elles ne contiennent aucune credential.
+Les deux Compétences supposent que ton connecteur custom Claude.ai est déjà configuré — voir [Se connecter — Claude.ai](./connect#claudeai-web). Elles ne contiennent aucune credential.
 
-## Installer une compétence dans Claude.ai
+## Installer une Compétence dans Claude.ai
 
-1. Ouvrez [claude.ai](https://claude.ai).
-2. Dans la sidebar de gauche, cliquez **Personnaliser** → **Compétences**.
-3. Cliquez **+** → **Créer une compétence personnalisée**.
-4. Collez le **Nom**, la **Description** et les **Instructions** depuis l'une des compétences ci-dessous.
-5. Enregistrez. La compétence est maintenant disponible — activez-la dans toute conversation via le menu **+**.
+1. Ouvre [claude.ai](https://claude.ai).
+2. Dans la sidebar de gauche, clique **Personnaliser** → **Compétences**.
+3. Clique **+** → **Créer une compétence personnalisée**.
+4. Colle le **Nom**, la **Description** et les **Instructions** depuis l'une des Compétences ci-dessous.
+5. Enregistre. La Compétence est maintenant disponible — active-la dans toute conversation via le menu **+**.
 
-Vous pouvez installer les deux en même temps. Elles ne sont pas en conflit.
+Tu peux installer les deux en même temps. Elles ne sont pas en conflit.
 
 ## Compétence 1 — VantagePeers Onboard
+
+- **Trigger phrases (côté utilisateur)** : « onboarding VantagePeers », « set up VantagePeers », « commence avec VantagePeers », « je découvre VantagePeers »
+- **Quand l'utiliser** : une seule fois, sur ta toute première conversation Claude.ai après avoir installé le connecteur custom. Désactive-la après l'étape 7.
+- **Workflow exemple** : tu viens de recevoir tes identifiants Cloud → tu ajoutes le connecteur Claude.ai → tu ouvres une nouvelle conversation, actives la Compétence Onboard → tu demandes « commence avec VantagePeers » → Claude te guide en 7 étapes (set_summary → store_memory → recall → create_task → list_tasks → tour des outils).
 
 **Nom :**
 
@@ -59,6 +323,10 @@ RÈGLES :
 ```
 
 ## Compétence 2 — VantagePeers Agent
+
+- **Trigger phrases (côté utilisateur)** : « utilise VantagePeers », « stocke ça en mémoire », « rappelle-moi ce qu'on sait sur X », « crée une tâche pour Y », « envoie un message à <orch> » — la Compétence est activée passivement sur toute la conversation, donc tu n'as pas besoin de la « déclencher » à chaque tour.
+- **Quand l'utiliser** : sur chaque conversation Claude.ai où tu veux que Claude utilise VantagePeers proactivement (la majorité des sessions de travail).
+- **Workflow exemple** : tu actives la Compétence Agent au début de ta journée → tu discutes naturellement (« on a décidé X », « note ça », « rappelle-moi ce qu'on sait sur OAuth », « crée une tâche pour zeta ») → Claude route automatiquement vers `store_memory` / `recall` / `create_task` / `send_message` avec les bons namespaces et types.
 
 **Nom :**
 
@@ -107,8 +375,20 @@ NE FAIS PAS :
 Si quelque chose n'est pas clair, pose une courte question de clarification avant d'appeler un outil.
 ```
 
-## Dépannage des compétences
+## Dépannage des Compétences Claude.ai
 
-- Claude n'utilise pas la compétence → vérifiez qu'elle est activée pour la conversation (**+** → **Compétences**) et que le connecteur VantagePeers l'est aussi.
-- Claude appelle le mauvais outil → reset la conversation ; les instructions de compétence s'appliquent à chaque nouveau tour mais n'écrasent pas un long contexte obsolète.
-- Vous avez changé d'orchestrator id → relancez avec la compétence Onboard pour que set_summary capture la nouvelle valeur.
+- Claude n'utilise pas la Compétence → vérifie qu'elle est activée pour la conversation (**+** → **Compétences**) et que le connecteur VantagePeers l'est aussi.
+- Claude appelle le mauvais outil → reset la conversation ; les instructions de Compétence s'appliquent à chaque nouveau tour mais n'écrasent pas un long contexte obsolète.
+- Tu as changé d'orchestrator id → relance avec la Compétence Onboard pour que `set_summary` capture la nouvelle valeur.
+
+---
+
+## Pages liées
+
+- [VantagePeers Cloud — aperçu](./index) — quel client MCP choisir
+- [Se connecter](./connect) — plugin Claude Code + manuel + Claude.ai + ChatGPT + Codex
+- [Premiers pas](./first-steps) — première identité, première mémoire, première tâche
+- [Toolkit — Installation](/docs/toolkit/install) — démarrage rapide plugin en 5 étapes
+- [Toolkit — Skills](/docs/toolkit/skills) — référence détaillée des skills plugin (version anglaise canonique)
+- [Toolkit — Commandes](/docs/toolkit/commands) — commandes slash mappées
+- [Toolkit — Hooks](/docs/toolkit/hooks) — guardrails automatiques du plugin
