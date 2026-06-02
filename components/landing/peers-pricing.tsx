@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Github } from "lucide-react";
+import { Check } from "lucide-react";
 
 const content = {
 	en: {
@@ -61,7 +61,6 @@ const content = {
 				highlight: false,
 			},
 		],
-		sponsor: "Support the project on GitHub Sponsors",
 	},
 	fr: {
 		title: "Tarifs simples. Gratuit pour commencer.",
@@ -120,7 +119,6 @@ const content = {
 				highlight: false,
 			},
 		],
-		sponsor: "Soutenez le projet sur GitHub Sponsors",
 	},
 };
 
@@ -196,22 +194,6 @@ export function PeersPricing({ locale }: PeersPricingProps) {
 						</motion.div>
 					))}
 				</div>
-
-				<motion.div
-					className="text-center mt-8"
-					initial={{ opacity: 0 }}
-					whileInView={{ opacity: 1 }}
-					viewport={{ once: true }}
-					transition={{ duration: 0.5, delay: 0.4 }}
-				>
-					<a
-						href="https://github.com/sponsors/vantageos"
-						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-					>
-						<Github className="size-4" aria-hidden="true" />
-						{t.sponsor}
-					</a>
-				</motion.div>
 			</div>
 		</section>
 	);
