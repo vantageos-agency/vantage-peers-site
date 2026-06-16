@@ -1,36 +1,37 @@
 ---
 title: Tools Reference
-description: All 84 MCP tools across 14 capability categories in VantagePeers.
+description: All 114 MCP tools across 15 capability categories in VantagePeers.
 ---
 
 # Tools Reference
 
-VantagePeers exposes 84 MCP tools organized into 14 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
+VantagePeers exposes 114 MCP tools organized into 15 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
 
 ## Tool Categories
 
 | Category | Tool Count | Description |
 |----------|-----------|-------------|
-| [Memory](#memory-tools) | 6 | Store, recall, and manage typed memories with vector search |
-| [Search](#search-tools) | 2 | Full-text and hybrid search over memories |
-| [Messaging](#messaging-tools) | 7 | Send messages across machines with read receipts |
-| [Tasks](#task-tools) | 10 | Create and manage tasks with full lifecycle tracking |
-| [Missions](#mission-tools) | 5 | Group tasks into missions with stage tracking |
-| [Profiles & Sessions](#profile-and-session-tools) | 8 | Agent identity, session state, diary, and briefings |
-| [Recurring Tasks](#recurring-task-tools) | 6 | Cron-based automation |
-| [Registry](#registry-tools) | 6 | Component backup and inventory |
-| [Mandates](#mandate-tools) | 6 | Cross-agent service requests with budgets |
+| [Memory + Episodes](#memory--episode-tools) | 14 | Typed memories, episodic learning, semantic and keyword search |
+| [Messaging](#messaging-tools) | 8 | Send messages across machines with read receipts |
+| [Tasks](#task-tools) | 13 | Create and manage tasks with full lifecycle tracking |
+| [Missions + Templates](#mission--template-tools) | 8 | Group tasks into missions; instantiate templates |
+| [Profiles + Session](#profile-and-session-tools) | 6 | Agent identity, session state, and identity resolution |
+| [Diary + Briefing Notes](#diary--briefing-note-tools) | 9 | Daily journals, briefing notes, and keyword search |
+| [Components](#component-tools) | 7 | Component backup and inventory |
+| [Recurring Tasks](#recurring-task-tools) | 7 | Cron-based automation |
+| [Mandates](#mandate-tools) | 8 | Cross-agent service requests with budgets |
 | [Business Units](#business-unit-tools) | 5 | BU strategy, pricing, and KPIs |
-| [GitHub Issues](#github-issue-tools) | 10 | Issue tracking with webhook sync |
-| [Fix Patterns](#fix-pattern-tools) | 6 | Bug fix knowledge base with semantic search |
-| [Mission Templates](#mission-template-tools) | 2 | Configurable mission templates |
-| [Error Monitoring](#error-monitoring-tools) | 4 | Proactive deployment error detection |
+| [GitHub Issues + Repos](#github-issue--repo-tools) | 13 | Issue tracking with webhook sync and repo mappings |
+| [Fix Patterns](#fix-pattern-tools) | 9 | Bug fix knowledge base with semantic search |
+| [Error Monitoring](#error-monitoring-tools) | 2 | Proactive deployment error detection |
+| [Deployments](#deployment-tools) | 4 | Register and manage monitored deployments |
+| [Utility](#utility-tools) | 1 | Payload validation |
 
 ---
 
-## Memory Tools
+## Memory + Episode Tools
 
-The memory system stores typed, namespaced knowledge with semantic vector embeddings. All memories are searchable by meaning, not just keyword.
+The memory system stores typed, namespaced knowledge with semantic vector embeddings. All memories are searchable by meaning, not just keyword. Episodes are structured memories capturing a full event: context, goal, action, outcome, and insight.
 
 ### `store_memory`
 
@@ -47,9 +48,41 @@ Stores a new memory with optional vector embedding.
 
 Returns the new memory ID.
 
-### `recall`
+### `get_memory`
 
-Semantic search over memories in a namespace. Uses vector similarity + optional keyword filters.
+Fetch a single memory by its ID.
+
+```json
+{
+  "memoryId": "jn7abc123..."
+}
+```
+
+### `list_memories`
+
+Lists memories in a namespace, optionally filtered by type.
+
+```json
+{
+  "namespace": "project/vantage-starter",
+  "type": "project",
+  "limit": 20
+}
+```
+
+### `soft_delete_memory`
+
+Soft-delete a memory so it stops appearing in recall results.
+
+```json
+{
+  "memoryId": "jn7abc123..."
+}
+```
+
+### `search_memories_by_semantic`
+
+Semantic search over memories in a namespace. Uses vector similarity + optional keyword filters. Alias: `recall`.
 
 ```json
 {
@@ -60,6 +93,38 @@ Semantic search over memories in a namespace. Uses vector similarity + optional 
 ```
 
 Returns an array of matching memories ranked by relevance.
+
+### `recall`
+
+Alias of `search_memories_by_semantic`. Prefer the canonical name for new code.
+
+### `search_memories_by_keyword`
+
+BM25 full-text keyword search over memories. Alias: `text_search`.
+
+```json
+{
+  "query": "deployment error",
+  "namespace": "global",
+  "limit": 10
+}
+```
+
+### `text_search`
+
+Alias of `search_memories_by_keyword`. Prefer the canonical name for new code.
+
+### `hybrid_search`
+
+Combined vector + BM25 search using RRF fusion.
+
+```json
+{
+  "query": "deployment error",
+  "namespace": "global",
+  "limit": 10
+}
+```
 
 ### `store_episode`
 
@@ -80,65 +145,47 @@ Stores a structured episode (a failure or success event with full context).
 
 Severity levels: `minor`, `major`, `critical`.
 
-### `list_memories`
+### `get_episode`
 
-Lists memories in a namespace, optionally filtered by type.
+Fetch a single episode by its memory document ID. Episodes are memories with `type='episode'`.
 
 ```json
 {
-  "namespace": "project/vantage-starter",
-  "type": "project",
+  "memoryId": "jn7abc123..."
+}
+```
+
+### `list_episodes`
+
+List episodes ordered newest first, with optional namespace and orchestrator filters.
+
+```json
+{
+  "namespace": "orchestrator/alice",
   "limit": 20
 }
 ```
 
-### `soft_delete_memory`
+### `search_episodes_by_keyword`
 
-Soft-delete a memory so it stops appearing in recall results.
+BM25 full-text keyword search restricted to episodes.
 
 ```json
 {
-  "memoryId": "memory-abc123"
+  "query": "deployment race condition",
+  "namespace": "global"
 }
 ```
 
-### `get_memory`
+### `search_episodes_by_semantic`
 
-Fetch a single memory by its ID.
-
-```json
-{
-  "memoryId": "memory-abc123"
-}
-```
-
----
-
-## Search Tools
-
-Full-text and hybrid search over the memory store.
-
-### `text_search`
-
-BM25 full-text keyword search over memories.
+Semantic vector search restricted to episodes, ranked by cosine similarity.
 
 ```json
 {
-  "query": "deployment error",
+  "query": "build broke after dependency upgrade",
   "namespace": "global",
-  "limit": 10
-}
-```
-
-### `hybrid_search`
-
-Combined vector + BM25 search using RRF fusion.
-
-```json
-{
-  "query": "deployment error",
-  "namespace": "global",
-  "limit": 10
+  "limit": 5
 }
 ```
 
@@ -160,17 +207,6 @@ Sends a message to a channel, role, or specific instance.
 }
 ```
 
-To send to a specific instance:
-
-```json
-{
-  "from": "alice",
-  "channel": "bob",
-  "instanceId": "bob-chromebook",
-  "content": "Targeting the Chromebook instance specifically."
-}
-```
-
 To broadcast to all agents:
 
 ```json
@@ -183,16 +219,7 @@ To broadcast to all agents:
 
 ### `check_messages`
 
-Retrieves unread messages for a recipient. Optionally filter by instance or poll incrementally via `since`.
-
-```json
-{
-  "recipient": "alice",
-  "recipientInstanceId": "alice-main"
-}
-```
-
-For high-frequency polling, pass `since` (Unix ms timestamp of your last check) to receive only messages created after that point. This is the recommended pattern for long-running agents — it avoids re-transferring the full unread backlog on every call.
+Retrieves unread messages for a recipient. Pass `since` (Unix ms timestamp) for incremental polling to avoid re-transferring the full unread backlog.
 
 ```json
 {
@@ -214,6 +241,26 @@ Marks one or more messages as read using receipt IDs.
 }
 ```
 
+### `delete_message`
+
+Delete a message by ID (sender or system only).
+
+```json
+{
+  "messageId": "jn7..."
+}
+```
+
+### `get_message`
+
+Fetch a single message by its Convex document ID with full body, channel, sender, and tenant scope.
+
+```json
+{
+  "messageId": "jn7..."
+}
+```
+
 ### `list_messages`
 
 List messages with optional filters (from, channel).
@@ -225,26 +272,6 @@ List messages with optional filters (from, channel).
 }
 ```
 
-### `delete_message`
-
-Delete a message by ID.
-
-```json
-{
-  "messageId": "jn7..."
-}
-```
-
-### `list_peers`
-
-Returns all known agent instances and their current status.
-
-```json
-{}
-```
-
-Returns orchestrator IDs, instance IDs, last seen timestamps, and current tasks.
-
 ### `list_broadcast_status`
 
 Show who read a broadcast message and who didn't.
@@ -252,6 +279,17 @@ Show who read a broadcast message and who didn't.
 ```json
 {
   "messageId": "msg-abc123"
+}
+```
+
+### `search_messages_by_keyword`
+
+BM25 full-text keyword search over message content, ranked by relevance.
+
+```json
+{
+  "query": "PR review approved",
+  "limit": 10
 }
 ```
 
@@ -277,31 +315,48 @@ Creates a new task and assigns it to an orchestrator.
 
 Priority levels: `low`, `medium`, `high`, `urgent`.
 
+### `get_task`
+
+Fetch a single task by its Convex document ID with all fields: title, description, status, priority, assignment, dependencies, mission link, completion note.
+
+```json
+{
+  "taskId": "jn7abc123..."
+}
+```
+
 ### `list_tasks`
 
 Lists tasks filtered by assignee and/or status.
 
-```json
-{
-  "assignedTo": "alice",
-  "status": "in_progress"
-}
-```
+**v2.3.x params:**
 
-**v2.3.1 — `fields` + `status` array/aliases.**
-
-`status` accepts:
-- a single value (exact match)
-- an array: `["todo", "in_progress"]`
-- an alias: `"open"` → todo+in_progress+review+blocked, `"active"` → todo+in_progress, `"all"` → no filter
-
-`fields=lite` returns a compact projection (`_id`, `_creationTime`, `title`, `status`, `priority`, `assignedTo`, `missionId`). Omit or pass `"full"` for the unchanged default payload.
+| Param | Notes |
+|-------|-------|
+| `status` | Single value, array `["todo","in_progress"]`, or alias: `"open"` → todo+in_progress+review+blocked, `"active"` → todo+in_progress, `"all"` → no filter |
+| `fields` | `"lite"` returns compact projection (5-10x smaller). Default `"full"`. |
+| `createdBy` | Filter to tasks created by a specific orchestrator (e.g. `"pi"`). |
+| `updatedSince` | Unix ms timestamp; filter to rows updated after this time. |
+| `cursor` | Opaque cursor for paging past the 200-row cap. |
 
 ```json
 {
   "assignedTo": "alice",
   "status": "active",
-  "fields": "lite"
+  "fields": "lite",
+  "createdBy": "pi",
+  "limit": 30
+}
+```
+
+### `search_tasks_by_keyword`
+
+BM25 full-text keyword search over task titles.
+
+```json
+{
+  "query": "migration hero section",
+  "limit": 10
 }
 ```
 
@@ -329,7 +384,7 @@ Marks a task as `in_progress` and records the start timestamp.
 
 ### `complete_task`
 
-Marks a task as `done` with a completion note.
+Marks a task as `done` with a mandatory completion note.
 
 ```json
 {
@@ -351,7 +406,7 @@ Sets a task to `blocked` status with a reason.
 
 ### `add_task_dependency`
 
-Links two tasks so one cannot start before the other completes.
+Links two tasks so one cannot start before the other completes. Alias: `create_task_dependency`.
 
 ```json
 {
@@ -384,15 +439,7 @@ Permanently delete a task (creator or system only).
 
 ### `list_tasks_by_mission`
 
-List all tasks linked to a specific mission.
-
-```json
-{
-  "missionId": "mission-abc123"
-}
-```
-
-**v2.3.1** — accepts the same `status` array/aliases (`"open"`, `"active"`, `"all"`) and `fields=lite|full` projection as `list_tasks`, scoped to the given mission.
+List all tasks linked to a specific mission. Accepts the same `status`, `fields`, `createdBy`, `cursor` params as `list_tasks`.
 
 ```json
 {
@@ -402,11 +449,15 @@ List all tasks linked to a specific mission.
 }
 ```
 
+### `create_task_dependency`
+
+Alias of `add_task_dependency`. Prefer the canonical name for new code.
+
 ---
 
-## Mission Tools
+## Mission + Template Tools
 
-Missions group related tasks and track progress through defined lifecycle stages.
+Missions group related tasks and track progress through defined lifecycle stages. Templates enable one-shot mission instantiation.
 
 ### `create_mission`
 
@@ -425,26 +476,21 @@ Creates a new mission and assigns a pilot.
 }
 ```
 
+### `get_mission`
+
+Returns a mission with all its linked tasks and current status.
+
+```json
+{
+  "missionId": "mission-abc123"
+}
+```
+
 ### `list_missions`
 
 Lists all missions, optionally filtered by status or pilot.
 
-```json
-{
-  "status": "execute"
-}
-```
-
-Status values: `brainstorm`, `plan`, `execute`, `validate`, `complete`.
-
-**v2.3.1 — `fields` + `status` array/aliases.**
-
-`status` accepts a single value, an array (`["plan", "execute"]`), or a mission-specific alias:
-- `"open"` → brainstorm+plan+execute+validate (excludes `complete`)
-- `"active"` → plan+execute
-- `"all"` → no filter
-
-`fields=lite` returns `_id`, `_creationTime`, `name`, `status`, `pilot`, `priority`, `project` only.
+**v2.3.x:** accepts `status` array/aliases (`"open"` → brainstorm+plan+execute+validate; `"active"` → plan+execute; `"all"` → no filter), `fields=lite|full`, and `cursor` for paging.
 
 ```json
 {
@@ -464,19 +510,9 @@ Advances a mission to the next stage or updates its metadata.
 }
 ```
 
-### `get_mission`
-
-Returns a mission with all its linked tasks and current status.
-
-```json
-{
-  "missionId": "mission-abc123"
-}
-```
-
 ### `update_mission_status`
 
-Change a mission's lifecycle status.
+Change a mission's lifecycle status in a single call without touching other fields.
 
 ```json
 {
@@ -485,11 +521,49 @@ Change a mission's lifecycle status.
 }
 ```
 
+### `get_mission_template`
+
+Fetch a mission template by name with all steps, or null if not found.
+
+```json
+{
+  "name": "irp"
+}
+```
+
+Built-in templates: `irp` (13 steps), `repo-fix` (10 steps), `new-feature` (10 steps).
+
+### `update_mission_template`
+
+Create or upsert a mission template by name. Existing templates are overwritten.
+
+```json
+{
+  "name": "custom-review",
+  "steps": [
+    { "title": "Audit codebase", "assignedTo": "eta" },
+    { "title": "Write report", "assignedTo": "sigma" }
+  ]
+}
+```
+
+### `instantiate_template_into_mission`
+
+Create one task per template step inside a mission, pre-assigned to each step's declared orchestrator.
+
+```json
+{
+  "missionId": "mission-abc123",
+  "templateName": "irp",
+  "createdBy": "pi"
+}
+```
+
 ---
 
 ## Profile and Session Tools
 
-Agent profiles store static identity and dynamic state. The diary provides persistent session logs.
+Agent profiles store static identity and dynamic state.
 
 ### `get_profile`
 
@@ -498,57 +572,6 @@ Returns the profile for an orchestrator.
 ```json
 {
   "orchestratorId": "alice"
-}
-```
-
-### `set_summary`
-
-Updates the current working summary for an orchestrator instance. Used to communicate what an agent is doing right now to peers.
-
-```json
-{
-  "orchestratorId": "alice",
-  "instanceId": "alice-main",
-  "summary": "Migrating HeroSection to lit-ui — ETA 30 minutes"
-}
-```
-
-### `write_diary`
-
-Writes a diary entry for a given date. Overwrites any existing entry for that date.
-
-```json
-{
-  "date": "2026-03-29",
-  "orchestrator": "alice",
-  "content": "Completed Phase 1 of landing page migration. Nav and Hero sections done.",
-  "highlights": [
-    "Nav fully migrated to lit-ui",
-    "Hero responsive layout fixed",
-    "Biome and tsc passing on all changed files"
-  ]
-}
-```
-
-### `get_diary`
-
-Fetch a specific diary entry by orchestrator and date.
-
-```json
-{
-  "orchestrator": "alice",
-  "date": "2026-03-29"
-}
-```
-
-### `list_diaries`
-
-List diary entries for an orchestrator, optionally filtered by date range.
-
-```json
-{
-  "orchestrator": "alice",
-  "limit": 10
 }
 ```
 
@@ -568,6 +591,83 @@ Create or update an orchestrator profile (partial updates supported).
 }
 ```
 
+### `list_peers`
+
+Returns all known agent instances and their current status, newest first. Supports `cursor` paging.
+
+```json
+{}
+```
+
+### `set_summary`
+
+Updates the current working summary for an orchestrator instance. Alias: `update_summary`.
+
+```json
+{
+  "orchestratorId": "alice",
+  "instanceId": "alice-main",
+  "summary": "Migrating HeroSection to lit-ui"
+}
+```
+
+### `update_summary`
+
+Alias of `set_summary`. Prefer the canonical name for new code.
+
+### `whoami`
+
+Returns the orchestrator identity baked into the current bearer's OAuth scope context. Use at session start to confirm your identity.
+
+```json
+{}
+```
+
+Returns: `{ "orchestratorId": "alice", "orgSlug": "vantageos" }`.
+
+---
+
+## Diary + Briefing Note Tools
+
+### `write_diary`
+
+Writes a diary entry for a given date. Overwrites any existing entry for that date. Alias: `create_diary`.
+
+```json
+{
+  "date": "2026-03-29",
+  "orchestrator": "alice",
+  "content": "Completed Phase 1 of landing page migration.",
+  "highlights": ["Nav migrated to lit-ui", "Hero responsive layout fixed"]
+}
+```
+
+### `create_diary`
+
+Alias of `write_diary`. Prefer the canonical name for new code.
+
+### `get_diary`
+
+Fetch a specific diary entry by orchestrator and date.
+
+```json
+{
+  "orchestrator": "alice",
+  "date": "2026-03-29"
+}
+```
+
+### `list_diaries`
+
+List diary entries for an orchestrator, optionally filtered by date range. Supports `cursor` paging.
+
+```json
+{
+  "orchestrator": "alice",
+  "limit": 10
+}
+```
+
 ### `create_briefing_note`
 
 Creates a structured briefing record.
@@ -577,7 +677,7 @@ Creates a structured briefing record.
   "title": "Landing page migration kickoff",
   "topic": "migration",
   "participants": ["alice", "bob"],
-  "content": "Discussed the plan to migrate the landing page from shadcn to lit-ui components.",
+  "content": "Discussed the plan to migrate the landing page.",
   "decisions": [
     "Migrate section by section, not all at once",
     "Each section gets its own commit"
@@ -586,24 +686,129 @@ Creates a structured briefing record.
 }
 ```
 
+### `update_briefing_note`
+
+Partial-update an existing briefing note (RBAC: `createdBy` or `system` only).
+
+```json
+{
+  "briefingNoteId": "jn7...",
+  "decisions": ["Migrate section by section", "Deploy on Friday"]
+}
+```
+
+### `get_briefing_note`
+
+Fetch a single briefing note by ID with all fields: title, topic, participants, content, decisions, and memory links.
+
+```json
+{
+  "briefingNoteId": "jn7..."
+}
+```
+
 ### `list_briefing_notes`
 
-Lists briefings, optionally filtered by participant.
+Lists briefings, optionally filtered by topic. Accepts `fields=lite|full` and `cursor` for paging.
 
 ```json
 {
-  "participant": "alice"
+  "topic": "migration",
+  "fields": "lite",
+  "limit": 20
 }
 ```
 
-**v2.3.1** — accepts `fields=lite|full`. Lite returns `_id`, `_creationTime`, `topic`, `title`, `participants`, `createdBy`. Briefing notes have no status lifecycle, so no status aliases apply.
+### `search_briefing_notes_by_keyword`
+
+BM25 full-text keyword search over briefing note content, ranked by relevance.
 
 ```json
 {
-  "participant": "alice",
-  "fields": "lite"
+  "query": "lit-ui migration decision",
+  "limit": 10
 }
 ```
+
+---
+
+## Component Tools
+
+The component registry stores your agent team's capability inventory — agents, skills, hooks, and plugins.
+
+### `register_component`
+
+Registers a component with full content backup.
+
+```json
+{
+  "name": "dev-frontend",
+  "type": "agent",
+  "content": "...full agent file content...",
+  "version": "1.2.0",
+  "createdBy": "carol"
+}
+```
+
+Type values: `agent`, `skill`, `hook`, `plugin`.
+
+### `get_component`
+
+Retrieves a component by name and type.
+
+```json
+{
+  "name": "dev-frontend",
+  "type": "agent"
+}
+```
+
+### `list_components`
+
+Lists all registered components, optionally filtered by type. Supports `cursor` paging.
+
+```json
+{
+  "type": "agent"
+}
+```
+
+### `update_component`
+
+Updates a component's content or version.
+
+```json
+{
+  "componentId": "component-abc123",
+  "content": "...updated content...",
+  "version": "1.3.0"
+}
+```
+
+### `delete_component`
+
+Removes a component from the registry.
+
+```json
+{
+  "componentId": "component-abc123"
+}
+```
+
+### `search_components_by_keyword`
+
+BM25 / substring keyword search over components by name or team with optional type filter. Alias: `search_components`.
+
+```json
+{
+  "query": "lit-ui frontend",
+  "type": "agent"
+}
+```
+
+### `search_components`
+
+Alias of `search_components_by_keyword`. Prefer the canonical name for new code.
 
 ---
 
@@ -626,9 +831,19 @@ Defines a recurring task template.
 
 Standard cron expressions. Convex runs the scheduler.
 
+### `get_recurring_task`
+
+Fetch a single recurring task definition by its Convex document ID.
+
+```json
+{
+  "recurringTaskId": "jn7..."
+}
+```
+
 ### `list_recurring_tasks`
 
-Lists all recurring task templates.
+Lists all recurring task templates. Supports `cursor` paging.
 
 ```json
 {}
@@ -677,80 +892,6 @@ Resume a paused recurring task.
 
 ---
 
-## Registry Tools
-
-The component registry stores your agent team's capability inventory — agents, skills, hooks, and plugins.
-
-### `register_component`
-
-Registers a component with full content backup.
-
-```json
-{
-  "name": "dev-frontend",
-  "type": "agent",
-  "content": "...full agent file content...",
-  "version": "1.2.0",
-  "createdBy": "carol"
-}
-```
-
-Type values: `agent`, `skill`, `hook`, `plugin`.
-
-### `get_component`
-
-Retrieves a component by name.
-
-```json
-{
-  "name": "dev-frontend"
-}
-```
-
-### `list_components`
-
-Lists all registered components, optionally filtered by type.
-
-```json
-{
-  "type": "agent"
-}
-```
-
-### `update_component`
-
-Updates a component's content or version.
-
-```json
-{
-  "componentId": "component-abc123",
-  "content": "...updated content...",
-  "version": "1.3.0"
-}
-```
-
-### `delete_component`
-
-Removes a component from the registry.
-
-```json
-{
-  "componentId": "component-abc123"
-}
-```
-
-### `search_components`
-
-Full-text search over component names and content.
-
-```json
-{
-  "query": "lit-ui frontend"
-}
-```
-
----
-
 ## Mandate Tools
 
 Cross-agent service requests with budget tracking. See [Mandates](/docs/capabilities/mandates) for full documentation.
@@ -762,7 +903,9 @@ Cross-agent service requests with budget tracking. See [Mandates](/docs/capabili
 | `update_mandate` | Update mandate fields |
 | `settle_mandate` | Record actual cost, close mandate |
 | `validate_mandate_spending` | Check if transaction is within limits |
+| `check_mandate_spending` | Alias of `validate_mandate_spending` |
 | `list_mandates` | List mandates with filters |
+| `get_mandate` | Fetch a single mandate by Convex document ID |
 
 ---
 
@@ -780,15 +923,12 @@ Track organizational units with strategy and KPIs. See [Business Units](/docs/in
 
 ---
 
-## GitHub Issue Tools
+## GitHub Issue + Repo Tools
 
 Issue tracking with webhook sync and auto-linking. See [GitHub Issues](/docs/infrastructure/issues) for full documentation.
 
 | Tool | Description |
 |------|-------------|
-| `add_repo_mapping` | Map a GitHub repo to an orchestrator |
-| `list_repo_mappings` | List all repo mappings |
-| `remove_repo_mapping` | Remove a repo mapping |
 | `list_issues` | List issues with filters |
 | `get_issue` | Fetch a single issue |
 | `update_issue_status` | Update issue status |
@@ -796,6 +936,12 @@ Issue tracking with webhook sync and auto-linking. See [GitHub Issues](/docs/inf
 | `verify_issue` | Mark an issue as verified |
 | `issue_stats` | Get issue count stats |
 | `link_issue_to_pattern` | Link an issue to a fix pattern |
+| `add_repo_mapping` | Map a GitHub repo to an orchestrator |
+| `register_repo_mapping` | Alias of `add_repo_mapping` |
+| `list_repo_mappings` | List all repo mappings |
+| `remove_repo_mapping` | Remove a repo mapping |
+| `delete_repo_mapping` | Alias of `remove_repo_mapping` |
+| `get_repo_mapping` | Fetch a single repo mapping by slug (owner/name) |
 
 ---
 
@@ -806,22 +952,14 @@ Bug fix knowledge base with semantic search. See [Fix Patterns KB](/docs/capabil
 | Tool | Description |
 |------|-------------|
 | `create_fix_pattern` | Create a fix pattern documenting a bug, root cause, and fix |
+| `get_fix_pattern` | Fetch a single fix pattern by Convex document ID |
 | `add_fix_attempt` | Document a fix attempt (worked/failed) with reasoning |
+| `create_fix_attempt` | Alias of `add_fix_attempt` |
 | `validate_fix` | Set the validated fix on a pattern |
-| `search_fix_patterns` | Semantic search over patterns |
-| `list_fix_patterns` | List patterns by project |
-| `link_issue_to_pattern` | Link a VantagePeers issue to a fix pattern |
-
----
-
-## Mission Template Tools
-
-Configurable templates for auto-creating missions with predefined steps. See [Issue Resolution Protocol](/docs/infrastructure/issue-resolution) for usage.
-
-| Tool | Description |
-|------|-------------|
-| `get_mission_template` | Fetch a template by name |
-| `update_mission_template` | Update template steps and config |
+| `check_fix` | Alias of `validate_fix` |
+| `search_fix_patterns_by_semantic` | Semantic search over patterns by symptom |
+| `search_fix_patterns` | Alias of `search_fix_patterns_by_semantic` |
+| `list_fix_patterns` | List patterns by project with cursor paging |
 
 ---
 
@@ -831,7 +969,38 @@ Proactive deployment error detection with automatic GitHub issue creation. See [
 
 | Tool | Description |
 |------|-------------|
+| `list_errors` | List detected errors with dedup counts and linked issue numbers |
+| `get_error` | Fetch a single error log entry by Convex document ID |
+
+---
+
+## Deployment Tools
+
+Register Convex deployments for proactive error monitoring.
+
+| Tool | Description |
+|------|-------------|
 | `add_deployment` | Register a deployment for monitoring |
+| `register_deployment` | Alias of `add_deployment` |
 | `remove_deployment` | Deactivate a monitored deployment |
-| `list_errors` | List detected errors with filters |
-| `get_error` | Fetch a single error by ID |
+| `delete_deployment` | Alias of `remove_deployment` |
+
+---
+
+## Utility Tools
+
+### `validate_task_payload`
+
+Dry-run lint for VP write-path tools. Checks all validation axes and returns failures with fix snippets. Use before `create_task` or `complete_task` when building automation.
+
+```json
+{
+  "tool": "complete_task",
+  "payload": {
+    "taskId": "jn7...",
+    "completionNote": "done"
+  }
+}
+```
+
+Returns: `{ "valid": false, "failures": [{ "field": "completionNote", "reason": "must be ≥ 40 chars with a verifiable proof token" }] }`.

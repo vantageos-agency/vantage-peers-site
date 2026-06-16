@@ -5,6 +5,42 @@ description: Release history for vantage-peers-mcp.
 
 # Changelog
 
+## v2.12.0 — 2026-06-06 (current)
+
+### Security
+
+- **D6 + D7 OAuth 2.1 hardening** — confidential `client_secret` at `/token` (constant-time compare) and `redirect_uri` exact-match at `/authorize`. PR [#621](https://github.com/vantageos-agency/vantage-peers/pull/621).
+- **`patchScopeProfileEmergency`** — master-token-gated mutation for tenant rename/scope-profile rewrite with D4 enforcement, D9 cascade, and append-only audit ledger. PRs [#622](https://github.com/vantageos-agency/vantage-peers/pull/622), [#623](https://github.com/vantageos-agency/vantage-peers/pull/623).
+- **S3.1 scope-aware filter framework** — row-level OAuth scope enforcement on `list_memories`, `get_memory`, `list_briefing_notes`, `list_messages`, `list_peers`. PRs [#624](https://github.com/vantageos-agency/vantage-peers/pull/624), [#625](https://github.com/vantageos-agency/vantage-peers/pull/625).
+- **S2.3 D8** — `masterOnlyMiddleware` migrated to `@vantageos/cloud-identity@0.1.0` shared brick (constant-time sha256 comparison). 254/254 tests PASS.
+
+### Added
+
+- **Tool count reaches 114** — 17 net new tools since v2.5.0: episodes API (`get_episode`, `list_episodes`, `search_episodes_by_keyword`, `search_episodes_by_semantic`), single-entity getters (`get_task`, `get_message`, `get_fix_pattern`, `get_mandate`, `get_recurring_task`, `get_repo_mapping`, `get_briefing_note`), search tools (`search_tasks_by_keyword`, `search_messages_by_keyword`, `search_briefing_notes_by_keyword`), `instantiate_template_into_mission`, `whoami`, `validate_task_payload`, plus canonical aliases.
+- **Cursor paging** — all 19 `list_*` and `search_*` tools now support opaque `cursor` + `nextCursor` for draining past the 200-row cap. 3 documented exceptions (`list_broadcast_status`, `search_components`, `search_fix_patterns`).
+- **Day 98 F4** — webhook `issue_comment` events routed Bridge-only, preventing double-processing. PR [#796](https://github.com/vantageos-agency/vantage-peers/pull/796).
+
+### Links
+
+- GitHub: [vantageos-agency/vantage-peers](https://github.com/vantageos-agency/vantage-peers)
+- npm: [vantage-peers-mcp@2.12.0](https://www.npmjs.com/package/vantage-peers-mcp)
+
+---
+
+## v2.5.0 — 2026-06-06
+
+### Added
+
+- **Day 92 quality overhaul** (C0–C4, A1–A4, B1–B3, F1–F2) — 14 P0 zero-auth write tools closed with master-only gates; 87 Zod `outputSchema` exports; Unicode NFC normalization at all write paths; 97 tool descriptions standardized (1-line + WHEN + EXAMPLE); `whoami` identity tool (PR [#661](https://github.com/vantageos-agency/vantage-peers/pull/661)); `validate_task_payload` MCP validator tool; tools-quality-standard doc.
+- **S3.3 B8 cursor paging** — `list_tasks`, `list_memories`, `list_briefing_notes` + 12 more list tools gain opaque `cursor` + `nextCursor`. Shared `src/paging.ts` utility. 302/302 tests PASS.
+- **D90 kill-switch hardening** — `AUTO_IRP_PAUSED` guard applied at all 3 auto-IRP pipeline entries; `errorMonitorKillSwitch.ts` with `isKillSwitchActive()` + startup health check.
+
+### Links
+
+- npm: [vantage-peers-mcp@2.5.0](https://www.npmjs.com/package/vantage-peers-mcp)
+
+---
+
 ## v2.4.1 — 2026-05-30
 
 ### Fixed
@@ -14,7 +50,7 @@ description: Release history for vantage-peers-mcp.
 
 ### Added
 
-- **ChatGPT Apps SDK tool annotations** ([#555](https://github.com/vantageos-agency/vantage-peers/pull/555)) — all 84 MCP tools now ship with `readOnlyHint`, `openWorldHint`, and `destructiveHint`. 34 read-only + 41 write + 9 destructive. ChatGPT custom connectors render confirmation prompts only on writes/destructive ops.
+- **ChatGPT Apps SDK tool annotations** ([#555](https://github.com/vantageos-agency/vantage-peers/pull/555)) — all MCP tools now ship with `readOnlyHint`, `openWorldHint`, and `destructiveHint`. ChatGPT custom connectors render confirmation prompts only on writes/destructive ops.
 - **DCR scope isolation** ([#554](https://github.com/vantageos-agency/vantage-peers/pull/554)) — new `public-readonly` profile + cross-tenant assertion tests. The DCR auto-discovery flow now resolves to `scopeProfile=client-generic` (never `master`), even if a legacy token row carries `scope="mcp:full"`.
 - **VantagePeers Cloud documentation** ([site #120](https://github.com/vantageos-agency/vantage-peers-site/pull/120)) — dedicated `/docs/cloud/` section for the hosted, multi-tenant version. Multi-client MCP: Claude.ai, ChatGPT, Claude Code, Codex, any MCP-supporting IDE.
 
