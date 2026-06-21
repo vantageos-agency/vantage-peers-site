@@ -1,5 +1,5 @@
 {
   "title": "Cloud",
   "defaultOpen": true,
-  "pages": ["index", "connect", "first-steps", "skills"]
+  "pages": ["index", "connect", "first-steps", "skills", "mcp-tools"]
 }
