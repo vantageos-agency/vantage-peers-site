@@ -1,0 +1,85 @@
+---
+title: list_components
+description: List components with pagination, projection, and filters.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# list_components
+
+List components (agents, skills, hooks, plugins) registered in VantagePeers, with pagination, projection (`lite|full`), and optional filters.
+
+## Args
+
+| Arg | Type | Default | Description |
+|---|---|---|---|
+| `type` | `"agent" \| "skill" \| "hook" \| "plugin"` | — | Filter by component type. |
+| `team` | string | — | Filter by team (e.g. `"development"`). |
+| `limit` | number 1-200 | `20` | Page size. Default `20`, capped at `200`. |
+| `cursor` | string | — | Opaque pagination token returned as `nextCursor` from prior call. |
+| `fields` | `"lite" \| "full"` | `"full"` | `"lite"` returns compact projection (5 keys). `"full"` returns complete component object. |
+
+## Returns
+
+```ts
+{
+  items: Component[] | ComponentLite[],
+  nextCursor: string | null
+}
+```
+
+`nextCursor` is `null` when the current page is the last one; non-null when more rows exist.
+
+## Examples
+
+### Compact list (fields=lite)
+
+```jsonc
+// call
+{ "limit": 20, "fields": "lite" }
+
+// response (~3KB for 100 components)
+{
+  "items": [
+    {
+      "_id": "j5xxx...",
+      "_creationTime": 1782050000000,
+      "name": "dev-convex-expert",
+      "type": "agent",
+      "team": "development"
+    }
+  ],
+  "nextCursor": "eyJjcmVhdGlvblRpbWUiOjE3ODIwNDk5MDAwMDAsImlkIjoiajV5eXkifQ=="
+}
+```
+
+### Paginate through all skill components
+
+```jsonc
+// page 1
+{ "type": "skill", "limit": 20 }
+// → { items: [...], nextCursor: "..." }
+
+// page 2 (use nextCursor)
+{ "type": "skill", "limit": 20, "cursor": "<nextCursor from page 1>" }
+```
+
+## Pagination + envelope safety
+
+`list_components` follows the standard VantagePeers envelope safety pattern (PR-B):
+
+- **Default limit**: `20`. Keeps payloads small (~2-3KB) for typical interactive calls.
+- **Cap**: `200`. Requests with `limit > 200` are clamped server-side.
+- **fields=lite**: projects to 5 stable keys (`_id`, `_creationTime`, `name`, `type`, `team`). Payload stays under 25KB even for 100 components.
+- **Cursor**: opaque token encoding `{creationTime, id}` to survive same-millisecond inserts. Treat as opaque — do not parse client-side.
+- **Hybrid cursor decode**: old-format `{createdBefore}` cursors (S3.3 B8 callers) are decoded and forwarded as `createdBefore` for back-compat. New-format opaque cursors pass through directly.
+
+Same pattern applies to `list_bus` (PR-A) and `list_repo_mappings` (PR-C).
+
+## Why this matters
+
+<Callout type="info">
+Before PR-B: `list_components` had no cap, `fields=lite` was a no-op (returned full rows regardless), and default limit was 100. A registry with many components could return a 64KB+ payload, overflowing the MCP envelope (25K-token cap) in client sessions.
+
+PR-B enforces strict defaults and an actual lite projection, eliminating envelope overflow as a failure mode. Audit ref: `analysis/mcp-crud-baseline-vp-audit-2026-06-14.md` section 9.
+</Callout>
