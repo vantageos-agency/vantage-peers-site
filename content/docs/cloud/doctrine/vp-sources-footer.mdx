@@ -1,0 +1,104 @@
+---
+title: VP-Sources answer-footer doctrine
+description: Advisory doctrine embedded in 5 MCP tool descriptions requiring source citation in the answer footer.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+
+# VP-Sources answer-footer doctrine
+
+## What this doctrine says
+
+Each of the 5 covered tools embeds two verbatim doctrine paragraphs appended after the existing tool description:
+
+> **VP-Sources doctrine**: MUST be called before any factual claim about fleet state, audits, dette tooling, mission/task/client status, incident history, doctrine references.
+
+> Cite returned ids in the answer footer as `VP-Sources: recall("<q>")→[ids] | none-needed:<reason>`.
+
+These two strings appear verbatim in every covered tool's `description` field. Any MCP client that requests the tool list receives them inline — no additional system prompt injection is required.
+
+## Why
+
+MCP clients receive the full tool list (names + descriptions) in a single response before the first tool call. Embedding the doctrine there means any agent that calls one of the 5 covered tools has already been instructed about the citation obligation at tool-list time.
+
+The alternative — adding the rule to a system prompt — requires every client deployment to be updated independently. Inline embedding is deployment-agnostic: it travels with the tool definition.
+
+## Tools covered
+
+The following 5 tools carry the VP-Sources doctrine strings as of PR-H (T-GREEN `908fd67`):
+
+| Tool | Exported constant (mcp-server/src/tools.ts) |
+|------|---------------------------------------------|
+| `recall` | `RECALL_TOOL_DESCRIPTION` |
+| `hybrid_search` | `HYBRID_SEARCH_TOOL_DESCRIPTION` |
+| `text_search` | `TEXT_SEARCH_TOOL_DESCRIPTION` |
+| `list_briefing_notes` | `LIST_BRIEFING_NOTES_TOOL_DESCRIPTION` |
+| `search_briefing_notes_by_keyword` | `SEARCH_BRIEFING_NOTES_BY_KEYWORD_TOOL_DESCRIPTION` |
+
+Each constant is exported from `mcp-server/src/tools.ts` and tested with a snapshot assertion in `mcp-server/src/__tests__/tools-descriptions.test.ts`.
+
+## Footer format
+
+When a search tool returns results the agent must cite them in the final answer footer.
+
+**Full citation (sources found):**
+
+```
+VP-Sources: recall("Pi feedback rules")→[j57dy3049btafda9m2f5d2ggk987ph3f, j572s2bh4e0n20n0ttxynwrnts891nb5]
+```
+
+**No search needed:**
+
+```
+VP-Sources: none-needed:trivial code edit
+```
+
+**Worked example** — an agent answers a question about current mission status:
+
+1. Agent calls `recall` with `query="VP-MCP top level Bloc A mission status"`.
+2. Search returns documents `k571gcctka8mq5jbkgpj0a0b2n892ctg` and `k977bvf03qzas7v7g0zqca9c7n8937zh`.
+3. Agent answers the question based on those documents.
+4. Footer:
+
+```
+VP-Sources: recall("VP-MCP top level Bloc A mission status")→[k571gcctka8mq5jbkgpj0a0b2n892ctg, k977bvf03qzas7v7g0zqca9c7n8937zh]
+```
+
+<Callout type="info">
+The footer is appended to the agent's final answer, not to intermediate reasoning steps. One footer per user-facing response is sufficient even if multiple tool calls were made.
+</Callout>
+
+## Advisory only
+
+<Callout type="warn">
+No hook enforces absence of the footer. An agent that omits the footer will not be blocked.
+</Callout>
+
+This is intentional. The doctrine is designed for progressive adoption:
+
+- Agents that implement it immediately gain auditability and trust with human reviewers.
+- Agents that do not implement it are not broken — they simply lack the citation trail.
+- A blocking hook would create friction for all callers including non-VP clients using the same MCP server.
+
+The advisory status may be revisited in a future sprint if adoption data shows systematic omission.
+
+## When `none-needed` is acceptable
+
+Use `none-needed:<reason>` when a factual search was genuinely not required:
+
+- Trivial mechanical code edit with no claim about system state (e.g. renaming a variable).
+- Calling a tool that returns the answer directly (`get_task`, `get_mission`, `whoami`) — the tool ID itself is the source.
+- Pure arithmetic or string formatting with no fleet-state dependency.
+- Iterative follow-up in the same tool-call chain where all sources are already cited in the prior response.
+- The user asked a question answerable from the current conversation context alone.
+
+Do not use `none-needed` to avoid searching. If the answer involves any claim about fleet state, doctrine, task status, or incident history, call one of the 5 covered tools first.
+
+## References
+
+- Doctrine source: Eta Q1 msg `k977bvf03qzas7v7g0zqca9c7n8937zh`
+- Mission: `k571gcctka8mq5jbkgpj0a0b2n892ctg` (VP-MCP top level Bloc A)
+- Audit sections 27+28.4
+- T-RED `0b4dc84`, T-GREEN `908fd67`
+- MCP tool references: [list_briefing_notes](/docs/cloud/mcp-tools/list-bus), [list_bus](/docs/cloud/mcp-tools/list-bus), [list_components](/docs/cloud/mcp-tools/list-components), [list_repo_mappings](/docs/cloud/mcp-tools/list-repo-mappings)
