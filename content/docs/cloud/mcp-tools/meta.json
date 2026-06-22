@@ -4,6 +4,7 @@
   "pages": [
     "list-bus",
     "list-components",
-    "list-repo-mappings"
+    "list-repo-mappings",
+    "list-tasks"
   ]
 }
