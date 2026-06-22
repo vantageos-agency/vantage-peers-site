@@ -1,0 +1,83 @@
+---
+title: list_repo_mappings
+description: List GitHub repo to orchestrator mappings with pagination, projection, and filters.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# list_repo_mappings
+
+List GitHub repository to orchestrator webhook mappings registered in VantagePeers, newest first, with pagination and projection (`lite|full`).
+
+## Args
+
+| Arg | Type | Default | Description |
+|---|---|---|---|
+| `limit` | number 1-200 | `20` | Page size. Default `20`, capped at `200`. |
+| `cursor` | string | — | Opaque pagination token returned as `nextCursor` from prior call. |
+| `fields` | `"lite" \| "full"` | `"full"` | `"lite"` returns compact projection (5 keys). `"full"` returns complete mapping object. |
+
+## Returns
+
+```ts
+{
+  items: RepoMapping[] | RepoMappingLite[],
+  nextCursor: string | null
+}
+```
+
+`nextCursor` is `null` when the current page is the last one; non-null when more rows exist.
+
+## Examples
+
+### Compact list (fields=lite)
+
+```jsonc
+// call
+{ "limit": 20, "fields": "lite" }
+
+// response (~2KB for 100 mappings)
+{
+  "items": [
+    {
+      "_id": "j5xxx...",
+      "_creationTime": 1782050000000,
+      "repo": "vantageos-agency/vantage-peers",
+      "orchestrator": "sigma",
+      "project": "vantage-peers"
+    }
+  ],
+  "nextCursor": "eyJ0aW1lIjoxNzgyMDQ5OTAwMDAwLCJpZCI6Imo1eXl5In0="
+}
+```
+
+### Paginate through all mappings
+
+```jsonc
+// page 1
+{ "limit": 20 }
+// → { items: [...], nextCursor: "..." }
+
+// page 2 (use nextCursor)
+{ "limit": 20, "cursor": "<nextCursor from page 1>" }
+```
+
+## Pagination + envelope safety
+
+`list_repo_mappings` follows the standard VantagePeers envelope safety pattern (PR-C):
+
+- **Default limit**: `20`. Keeps payloads small (~2KB) for typical interactive calls.
+- **Cap**: `200`. Requests with `limit > 200` are clamped server-side.
+- **fields=lite**: projects to 5 stable keys (`_id`, `_creationTime`, `repo`, `orchestrator`, `project`). Excludes `active`, `lastDeployedSHA`, `lastDeployedAt`.
+- **Cursor**: opaque token encoding `{time, id}` to survive same-millisecond inserts. Treat as opaque — do not parse client-side.
+- **Hybrid cursor decode**: old-format `{createdBefore}` cursors (S3.3 B8 batch 2 callers) are decoded and forwarded as `createdBefore` for back-compat. New-format opaque cursors pass through directly.
+
+Same pattern applies to `list_bus` (PR-A) and `list_components` (PR-B).
+
+## Why this matters
+
+<Callout type="info">
+Before PR-C: `list_repo_mappings` had no cap, `fields=lite` was a no-op (returned full rows regardless), and default limit was 50. A deployment with many repo mappings could return a large payload, overflowing the MCP envelope (25K-token cap) in client sessions.
+
+PR-C enforces strict defaults and an actual lite projection, eliminating envelope overflow as a failure mode. Audit ref: `analysis/mcp-crud-baseline-vp-audit-2026-06-14.md` section 9.
+</Callout>

@@ -3,6 +3,7 @@
   "description": "Reference for individual MCP tools (list_bus, list_components, etc.)",
   "pages": [
     "list-bus",
-    "list-components"
+    "list-components",
+    "list-repo-mappings"
   ]
 }
