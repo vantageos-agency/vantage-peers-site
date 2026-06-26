@@ -6,6 +6,7 @@
     "list-components",
     "list-repo-mappings",
     "list-tasks",
-    "bulk-complete-tasks"
+    "bulk-complete-tasks",
+    "improvisation-digest"
   ]
 }

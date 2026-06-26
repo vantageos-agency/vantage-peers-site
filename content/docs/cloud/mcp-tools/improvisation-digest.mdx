@@ -1,0 +1,120 @@
+---
+title: improvisation_digest
+description: Weekly advisory digest scanning VP records for fleet/state claims missing the VP-Sources footer.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# improvisation_digest
+
+Scan a rolling time window of VP tasks, messages, and memories for records that carry durable-artifact fleet/state tokens (commit SHA, PR number, VP document ID, or decisive verb such as `merged`, `deployed`, `approved`) but have **no VP-Sources footer**. This is the Eta heuristic proxy for an orchestrator having made a fleet-state claim without a prior `recall` upstream.
+
+<Callout type="info">
+ADVISORY-only — pure read query. `improvisation_digest` never blocks any action. Results are informational: a high improvisation rate indicates a team should increase VP-Sources citation hygiene, but the tool itself takes no automated action and has no side effects.
+</Callout>
+
+## Args
+
+| Arg | Type | Default | Description |
+|---|---|---|---|
+| `windowDays` | number | `7` | Number of days to look back. |
+| `orchestrators` | string[] | — | Scope to these orchestrator roles only (e.g. `["sigma","pi"]`). Omit to scan all orchestrators. |
+
+## Returns
+
+```ts
+{
+  countsByOrch: Record<string, number>,      // hit count per orchestrator
+  countsByCategory: Record<string, number>,  // hit count per record type: "task" | "message" | "memory"
+  samples: Array<{                           // up to 50 representative snippets
+    id: string,
+    category: string,
+    orchestrator: string,
+    snippet: string
+  }>
+}
+```
+
+`countsByOrch` and `countsByCategory` are both zero-initialized for all observed orchestrators/categories — entries with zero hits are omitted from the returned map. `samples` is sorted newest-first and capped at 50 entries.
+
+## Examples
+
+### Default 7-day window across all orchestrators
+
+```jsonc
+// call
+{ "windowDays": 7 }
+
+// response (illustrative)
+{
+  "countsByOrch": { "sigma": 3, "pi": 1 },
+  "countsByCategory": { "task": 2, "message": 2 },
+  "samples": [
+    {
+      "id": "k17abc...",
+      "category": "task",
+      "orchestrator": "sigma",
+      "snippet": "completionNote: merged PR #954 into main — VP-MCP top level..."
+    },
+    {
+      "id": "k97def...",
+      "category": "message",
+      "orchestrator": "pi",
+      "snippet": "deployed vantage-peers-mcp@2.13.0 to Railway at commit ef91f6f"
+    }
+  ]
+}
+```
+
+### Scoped to a single orchestrator
+
+```jsonc
+// call — audit sigma's last 14 days
+{ "windowDays": 14, "orchestrators": ["sigma"] }
+
+// response — only sigma records are evaluated
+{
+  "countsByOrch": { "sigma": 5 },
+  "countsByCategory": { "task": 3, "memory": 2 },
+  "samples": [
+    {
+      "id": "k17xxx...",
+      "category": "memory",
+      "orchestrator": "sigma",
+      "snippet": "approved PR-C — list_repo_mappings envelope safety shipped at 4ddca2b"
+    }
+  ]
+}
+```
+
+## Detection heuristic (Eta A5 scope filter)
+
+A record is flagged when **both** conditions hold simultaneously:
+
+| Condition | Check |
+|---|---|
+| **Durable-artifact token present** | Body contains at least one of: 7–40 hex commit SHA; `#NNN` PR/issue ref; Convex document ID (`k1…` or `j…` prefix); decisive verb (`merged`, `deployed`, `approved`, `shipped`, `released`, `fixed`). |
+| **VP-Sources footer absent** | Body does NOT contain the `VP-Sources:` substring. |
+
+**A5 scope exclusions** — the following are never flagged regardless of content:
+
+- Records authored by `system`
+- Records where `createdBy` matches `/^cron-/i` (dash mandatory)
+- Records originating from webhook ingestion paths
+
+The A5 exclusions prevent false positives from automated infrastructure records that legitimately reference SHAs or PR numbers without a VP-Sources footer obligation.
+
+## V1 scope and V2 roadmap
+
+<Callout type="warn">
+V1 (current) scans VP records only — tasks, messages, and memories stored in VantagePeers (Option C). Per Pi Day-113 arbitration (msg `k97a0pp6kq1axkj6cmc4pecpy989ce1w`), the fallback if V1 misses too many improvisations is **Option B** — a new dedicated `sessions` Convex table — **not** Option A (transcript-replay from JSONL conversation logs).
+</Callout>
+
+V1 was selected because VP records are already structured, queryable, and authorship-attributed. Monitor `countsByOrch` trends over 2–4 weeks; if V1 coverage proves insufficient (because agents do not store all fleet-state claims as VP records), the next iteration introduces a dedicated `sessions` table (Option B) where the digest can pull richer per-session context without the transcript ingestion pipeline complexity of Option A.
+
+## Cross-reference
+
+- [VP-Sources answer-footer doctrine](/docs/cloud/doctrine/vp-sources-footer) — full reference including worked examples, `none-needed` acceptable cases, and advisory-only rationale.
+- Convex query: `improvisationDigest:scanWindow`
+- Mission: `k571gcctka8mq5jbkgpj0a0b2n892ctg` (VP-MCP top level Bloc A, PR-I)
+- T-RED `cd6cda3` · T-GREEN `b9414dc`
