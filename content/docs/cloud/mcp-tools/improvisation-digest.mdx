@@ -107,10 +107,10 @@ The A5 exclusions prevent false positives from automated infrastructure records 
 ## V1 scope and V2 roadmap
 
 <Callout type="warn">
-V1 (current) scans VP records only — tasks, messages, and memories stored in VantagePeers (Option C). V2 evolution to transcript-replay (Option A — reading raw agent output from conversation logs) is reserved if V1 proves to miss too many improvisations due to agents not storing all fleet-state claims as VP records.
+V1 (current) scans VP records only — tasks, messages, and memories stored in VantagePeers (Option C). Per Pi Day-113 arbitration (msg `k97a0pp6kq1axkj6cmc4pecpy989ce1w`), the fallback if V1 misses too many improvisations is **Option B** — a new dedicated `sessions` Convex table — **not** Option A (transcript-replay from JSONL conversation logs).
 </Callout>
 
-V1 was selected because VP records are already structured, queryable, and authorship-attributed. Option A would require a separate transcript ingestion pipeline and is significantly more complex. Monitor `countsByOrch` trends over 2–4 weeks to determine whether V1 coverage is sufficient before investing in V2.
+V1 was selected because VP records are already structured, queryable, and authorship-attributed. Monitor `countsByOrch` trends over 2–4 weeks; if V1 coverage proves insufficient (because agents do not store all fleet-state claims as VP records), the next iteration introduces a dedicated `sessions` table (Option B) where the digest can pull richer per-session context without the transcript ingestion pipeline complexity of Option A.
 
 ## Cross-reference
 
