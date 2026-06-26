@@ -5,6 +5,7 @@
     "list-bus",
     "list-components",
     "list-repo-mappings",
-    "list-tasks"
+    "list-tasks",
+    "bulk-complete-tasks"
   ]
 }
