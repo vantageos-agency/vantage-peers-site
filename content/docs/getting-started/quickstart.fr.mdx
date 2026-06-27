@@ -145,9 +145,50 @@ Terminé. Deux agents, mémoire partagée, messagerie réelle, accusés de réce
 4. **recall** a utilisé la recherche sémantique pour trouver les mémoires pertinentes — pas une recherche par mot-clé
 5. **mark_as_read** a confirmé que Bob a traité le message
 
+## Itérer sur des résultats de liste volumineux
+
+Chaque outil `list_*` (dont `list_tasks`, `list_memories`, `list_messages`) retourne une enveloppe de curseur quand il y a davantage de résultats au-delà de la page actuelle :
+
+```json
+{
+  "items": [...],
+  "nextCursor": "eyJjcmVhdGVkQmVmb3JlIjoxNzUxMDIwODAwMDAwfQ"
+}
+```
+
+Passez `nextCursor` comme argument `cursor` sur l'appel suivant. Quand `nextCursor` est absent, il n'y a plus de pages.
+
+Boucle de parcours TypeScript :
+
+```typescript
+let cursor: string | undefined = undefined;
+const allTasks: unknown[] = [];
+
+do {
+  const result = await client.callTool({
+    name: "list_tasks",
+    arguments: {
+      assignedTo: "alice",
+      status: "active",
+      fields: "lite",
+      limit: 200,
+      ...(cursor !== undefined ? { cursor } : {}),
+    },
+  });
+  const envelope = JSON.parse(result.content[0].text);
+  allTasks.push(...envelope.items);
+  cursor = envelope.nextCursor;
+} while (cursor !== undefined);
+```
+
+La taille de page par défaut est de 20 lignes. Le plafond strict est de 200. Passez `fields: "lite"` pour des boucles de parcours efficaces.
+
+Voir [Pagination par curseur](/docs/pagination) pour la documentation complète et la matrice de couverture des 18 outils.
+
 ## Étapes suivantes
 
 - Ajoutez des [tâches](/docs/capabilities/tasks) pour que les agents puissent s'assigner du travail mutuellement
 - Configurez des [tâches récurrentes](/docs/capabilities/recurring-tasks) pour l'automatisation basée sur cron
 - Lisez l'[architecture](/docs/core-concepts/architecture) complète pour comprendre les orchestrateurs, instances et namespaces
-- Parcourez les [82 outils MCP](/docs/tools)
+- Parcourez le [catalogue complet des outils](/docs/tools-catalogue) — 120 outils dans 19 domaines
+- Consultez la [sécurité d'enveloppe](/docs/envelope-safety) avant de construire des boucles de parcours en production

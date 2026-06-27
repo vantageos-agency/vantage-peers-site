@@ -5,6 +5,26 @@ description: Release history for vantage-peers-mcp.
 
 # Changelog
 
+## v2.13.1 — 2026-06-27
+
+### Fixed
+
+- **CRITICAL — `list_memories` + `list_episodes` silently returning `items: []` on every call** — Day-114 audit (`projects/vantage-peers/mcp-pagination-audit-day114.md`) found both handlers reading `memories?.page` from the Convex `listMemories` return shape `{value, continueCursor, isDone}`. `.page` is undefined → empty results on every invocation regardless of stored data. Fixed in PR [#978](https://github.com/vantageos-agency/vantage-peers/pull/978) (squash `0db28d5`). Pre-2.13.1 callers MUST upgrade. See [Day-114 release notes](/docs/release-notes/day-114).
+
+### Added
+
+- **MCP Tools Standard doctrine v1** — cross-fleet `list_*` pagination doctrine canonicalized as a versioned standard. PR [#980](https://github.com/vantageos-agency/vantage-peers/pull/980) (squash `d09fc5b`). VantageRegistry runbook `kd750j7z7tqre6hxqmfsa8s9ed89erng`. Covers: mandatory Zod schema, return envelope, 7 banned anti-patterns, coverage matrix template, fleet compliance table, migration playbook.
+- **Day-114 documentation** — [Cursor Pagination](/docs/pagination), [Envelope Safety](/docs/envelope-safety), [Tools Catalogue](/docs/tools-catalogue), [Day-114 release notes](/docs/release-notes/day-114).
+
+### Links
+
+- GitHub: [vantageos-agency/vantage-peers](https://github.com/vantageos-agency/vantage-peers)
+- npm: [vantage-peers-mcp@2.13.1](https://www.npmjs.com/package/vantage-peers-mcp)
+- PR #978: [github.com/vantageos-agency/vantage-peers/pull/978](https://github.com/vantageos-agency/vantage-peers/pull/978)
+- PR #980: [github.com/vantageos-agency/vantage-peers/pull/980](https://github.com/vantageos-agency/vantage-peers/pull/980)
+
+---
+
 ## v2.12.0 — 2026-06-06 (current)
 
 ### Security

@@ -1,0 +1,223 @@
+---
+title: Sécurité d'enveloppe
+description: Anti-patterns de débordement pour les outils list_* de VantagePeers — fields=lite, plafond limit 200, anti-patterns à éviter, et pourquoi chaque outil list_* adopte par défaut une forme d'enveloppe sûre.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
+
+# Sécurité d'enveloppe
+
+Le serveur MCP VantagePeers applique un ensemble cohérent de protections sur chaque réponse `list_*` pour éviter que les payloads de réponse ne dépassent le budget de contexte de l'agent appelant. Cette page documente les protections, le système de projection `fields=lite|full`, le plafond strict de 200 lignes, et les anti-patterns ayant causé des incidents en production.
+
+## Les trois protections
+
+Chaque outil `list_*` de VantagePeers applique trois couches de protection :
+
+1. **Plafond strict de lignes (200) :** L'argument `limit` est validé comme `z.number().int().min(1).max(200).optional()`. Toute valeur supérieure à 200 est rejetée au niveau MCP avant d'atteindre Convex. La valeur par défaut quand aucun `limit` n'est fourni est de 20 lignes.
+
+2. **Projection `fields=lite` :** Tous les outils `list_*` acceptent `fields: "lite" | "full"`. La projection `lite` retourne au maximum 6 champs par ligne, gardant les pages compactes même pour les documents avec un grand contenu texte (ex. mémoires avec un long `content`, briefings avec de longs tableaux `decisions`).
+
+3. **Limite douce de 50 Ko (`enforceEnvelopeCap`) :** Après projection des lignes, le serveur mesure la taille JSON sérialisée de l'enveloppe. Si le résultat dépasse 50 000 octets, le serveur divise le nombre de lignes de moitié et mesure à nouveau, en répétant jusqu'à ce que le payload soit dans les limites. Ce garde-fou existe en plus du plafond de lignes — il protège contre les lignes schéma complet avec du texte embarqué volumineux.
+
+## `fields=lite` vs `fields=full`
+
+| Valeur | Champs retournés | Taille typique par ligne |
+|---|---|---|
+| `"lite"` | `_id`, `_creationTime`, plus 2 à 4 champs d'affichage | ~200–400 octets |
+| `"full"` | Tous les champs du schéma incluant le contenu texte complet | ~2 000–20 000 octets |
+
+La valeur par défaut est `"full"`. Pour toute boucle traitant plus d'une page, toujours passer `fields: "lite"`.
+
+Exemple de projection lite pour `list_tasks` :
+
+```json
+{
+  "_id": "k17abc...",
+  "_creationTime": 1751020800000,
+  "title": "Corriger la pagination list_memories",
+  "status": "done",
+  "assignedTo": "sigma",
+  "priority": "urgent"
+}
+```
+
+La même tâche en mode `full` inclut `description` (potentiellement des centaines de caractères), `completionNote`, `blockers`, `dependsOn`, `missionId`, `orgId`, `createdBy`, `updatedAt`, et tous les autres champs du schéma.
+
+## Comportement du plafonnement de limite
+
+La fonction `clampLimit` dans `mcp-server/src/paging.ts` applique ces règles dans l'ordre :
+
+1. Si `limit` est indéfini, retourner `DEFAULT_LIMIT` (20 pour la plupart des outils).
+2. Si `limit < 1`, retourner 1.
+3. Si `limit > MAX_LIMIT` (200), retourner 200.
+4. Sinon retourner `limit` inchangé.
+
+Cela signifie qu'un appelant ne peut pas accidentellement demander un résultat non borné en passant une `limit` très grande. Le plafond de 200 lignes est appliqué quel que soit ce que l'appelant envoie.
+
+## Anti-patterns
+
+Les motifs suivants ont causé des incidents en production vérifiés. Chacun est interdit dans toutes les implémentations de serveur MCP VantageOS.
+
+<Accordions>
+
+<Accordion title="Anti-pattern 1 — Lire .page au lieu de .value depuis Convex paginate() (classe d'incident Day-114 HIGH)">
+
+**Cause racine de la classe d'incident Day-114.** L'assistant `paginate()` de Convex retourne :
+
+```typescript
+{
+  value:          T[];
+  continueCursor: string | null;
+  isDone:         boolean;
+}
+```
+
+Le champ s'appelle `value`, pas `page`. Lire `result?.page` depuis cette forme retourne `undefined`, causant la production de `items: []` par le gestionnaire MCP à chaque appel — supprimant silencieusement toutes les données.
+
+Cela a affecté `list_memories` et `list_episodes` de v2.5.0 à v2.13.0. Les deux outils ont été corrigés dans la PR #978 (squash `0db28d5`).
+
+```typescript
+// INTERDIT — .page n'existe pas ; items: [] à chaque appel
+const rawList = Array.isArray((memories as any)?.page)
+  ? (memories as any).page
+  : [];
+
+// CORRECT — lire .value depuis { value, continueCursor, isDone }
+const rawList = Array.isArray((memories as any)?.value)
+  ? (memories as any).value
+  : [];
+```
+
+Les appelants utilisant vantage-peers-mcp en dessous de la version 2.13.1 recevaient `items: []` de `list_memories` et `list_episodes` à chaque invocation. La mise à niveau vers `>=2.13.1` est requise.
+
+</Accordion>
+
+<Accordion title="Anti-pattern 2 — Limite non bornée (sans plafond max())">
+
+Accepter n'importe quelle valeur de `limit` sans plafond maximal permet aux appelants de demander 10 000+ lignes en une seule réponse. Cela dépasse les budgets de contexte et peut faire planter les limites de taille de réponse Railway/Convex.
+
+```typescript
+// INTERDIT
+const limit = args.limit ?? 1000; // par défaut non borné
+
+// CORRECT
+import { clampLimit } from "./paging.js";
+const requestedLimit = clampLimit(args.limit); // toujours [1, 200]
+```
+
+</Accordion>
+
+<Accordion title="Anti-pattern 3 — Plafonnement silencieux sans nextCursor">
+
+Plafonner à 200 lignes mais ne pas retourner `nextCursor` laisse les appelants avec un ensemble de résultats tronqué sans moyen de paginer au-delà du plafond.
+
+```typescript
+// INTERDIT — l'appelant est bloqué à 200 lignes pour toujours
+const rows = await fetchRows(200);
+return { items: rows }; // pas de nextCursor
+
+// CORRECT — détecter hasMore, émettre nextCursor
+const requestedLimit = clampLimit(args.limit);
+const rows = await fetchRows(requestedLimit + 1);
+const hasMore = rows.length > requestedLimit;
+const page = hasMore ? rows.slice(0, requestedLimit) : rows;
+const nextCursor = hasMore
+  ? encodeCursor({ createdBefore: page[page.length - 1]._creationTime })
+  : undefined;
+return { items: page, ...(nextCursor !== undefined ? { nextCursor } : {}) };
+```
+
+</Accordion>
+
+<Accordion title="Anti-pattern 4 — Retourner un tableau plat au lieu de l'enveloppe">
+
+Retourner `items` comme un tableau nu (pas enveloppé dans `{ items, nextCursor }`) brise la chaîne de pagination car les appelants ne peuvent pas détecter s'il y a d'autres pages.
+
+```typescript
+// INTERDIT — tableau plat ; l'appelant ne peut pas paginer
+return { content: [{ type: "text", text: JSON.stringify(rows) }] };
+
+// CORRECT — toujours l'enveloppe { items, nextCursor? }
+const envelope = { items: projected, ...(nextCursor ? { nextCursor } : {}) };
+return { content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }] };
+```
+
+</Accordion>
+
+<Accordion title="Anti-pattern 5 — Exposer le continueCursor brut de Convex">
+
+Retourner la chaîne `continueCursor` brute de Convex comme `nextCursor` dans l'enveloppe expose un format interne qui peut changer selon les versions de Convex.
+
+```typescript
+// INTERDIT — expose le format interne de Convex
+const envelope = { items: filteredList, nextCursor: result.continueCursor };
+
+// CORRECT — toujours passer par encodeCursor
+const nextCursor =
+  !result.isDone && result.continueCursor !== null
+    ? encodeCursor({ backendCursor: result.continueCursor })
+    : undefined;
+const envelope = { items: filteredList, ...(nextCursor ? { nextCursor } : {}) };
+```
+
+`encodeCursor` produit un jeton base64url opaque. Les appelants passent ce jeton comme argument `cursor` lors du prochain appel. Le côté décodage (`decodeCursor`) se trouve dans le même fichier `paging.ts`.
+
+</Accordion>
+
+<Accordion title="Anti-pattern 6 — Tests vérifiant uniquement la forme de l'enveloppe sans données réelles (anti-pattern de test Day-114)">
+
+Un test qui affirme `result.items !== undefined` passe même quand `items: []`. C'était la cause racine de la revendication erronée "19/19 couverts" de Day-114 — tous les 19 tests passaient tandis que `list_memories` et `list_episodes` retournaient silencieusement des tableaux vides.
+
+```typescript
+// INTERDIT — passe même quand items: []
+expect(parsed).toHaveProperty("items");
+expect(Array.isArray(parsed.items)).toBe(true);
+
+// CORRECT — semer N lignes, affirmer items.length === N
+const N = 5;
+mockConvex.mockResolvedValueOnce({ value: makeItems(N), continueCursor: null, isDone: true });
+const result = await callTool("list_memories", { namespace: "orchestrator/sigma" });
+const parsed = JSON.parse(result.content[0].text);
+expect(parsed.items).toHaveLength(N); // aurait détecté le bug .page de Day-114
+```
+
+Chaque suite de tests d'outil `list_*` doit inclure au moins une assertion "insérer N, affirmer `items.length === N`".
+
+</Accordion>
+
+</Accordions>
+
+## Pourquoi chaque outil list_* adopte par défaut une forme d'enveloppe sûre
+
+L'objectif de conception est qu'un appelant ne passant aucun argument reçoive quand même une réponse sûre. La combinaison par défaut `limit: 20` et `fields: "full"` produit au maximum ~400 Ko pour les outils les plus riches en documents, bien dans le budget de contexte sûr pour tous les clients supportés (Claude.ai, Claude Code, ChatGPT, Codex).
+
+Pour les boucles de parcours en production — balayage de toutes les tâches d'une BU, export d'un namespace complet, etc. — toujours surcharger avec `limit: 200` et `fields: "lite"` pour maximiser le débit sans risque.
+
+## Référence des exports paging.ts
+
+L'utilitaire partagé `mcp-server/src/paging.ts` centralise toute la logique de pagination. Ses exports clés :
+
+| Export | Type | Description |
+|---|---|---|
+| `pagingArgsSchema` | `z.ZodObject` | Schéma Zod partagé : `{ limit, cursor, fields }` |
+| `DEFAULT_LIMIT` | `50` | Valeur de repli de `clampLimit` quand `undefined` est fourni |
+| `MAX_LIMIT` | `200` | Plafond strict appliqué par `clampLimit` |
+| `ENVELOPE_TARGET_BYTES` | `50 000` | Limite douce en octets pour `enforceEnvelopeCap` |
+| `clampLimit` | fonction | Plafonne `limit` à `[1, MAX_LIMIT]`, par défaut `DEFAULT_LIMIT` |
+| `encodeCursor` | fonction | `CursorPayload → chaîne base64url` |
+| `decodeCursor` | fonction | `chaîne base64url → CursorPayload | null` |
+| `enforceEnvelopeCap` | fonction | Divise les lignes de moitié jusqu'à rester sous `ENVELOPE_TARGET_BYTES` |
+
+<Callout type="warn">
+L'export `DEFAULT_LIMIT` de `clampLimit` est 50. Les outils individuels surchargent cela à 20 via `DEFAULT_PAGING.limit = 20` dans `applyPagingDefaults`. Quand aucune limite n'est fournie à un outil liste spécifique, la valeur par défaut de l'outil de 20 s'applique — pas la constante `DEFAULT_LIMIT`.
+</Callout>
+
+## Références croisées
+
+- [Pagination par curseur](/docs/pagination) — contrat d'enveloppe, motif de boucle, matrice de couverture
+- README du dépôt principal : [vantageos-agency/vantage-peers](https://github.com/vantageos-agency/vantage-peers/blob/main/README.md)
+- npm du serveur MCP : [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- Doctrine MCP Tools Standard : runbook VantageRegistry `kd750j7z7tqre6hxqmfsa8s9ed89erng`
+- PR de correction Day-114 : [#978](https://github.com/vantageos-agency/vantage-peers/pull/978)
+- PR de doctrine : [#980](https://github.com/vantageos-agency/vantage-peers/pull/980)
