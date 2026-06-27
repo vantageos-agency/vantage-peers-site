@@ -1,0 +1,29 @@
+name: Check tool counts
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check-tool-counts:
+    name: scripts/check-tool-counts.mjs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Assert tools-catalogue.mdx + .fr.mdx Summary integers
+        # Day-101 root-fix for fix-pattern m974527p6jbbb5kzj3jt2z636n89fddv.
+        # Canonical script lives in vantageos-agency/vantage-peers
+        # (scripts/check-tool-counts.mjs, shipped in PR #986). This repo
+        # vendors a byte-equivalent copy under scripts/ — the two MUST stay
+        # in sync. Stdlib-only Node 20 — no npm install needed.
+        run: |
+          node scripts/check-tool-counts.mjs \
+            --target=content/docs/tools-catalogue.mdx \
+            --target-fr=content/docs/tools-catalogue.fr.mdx
