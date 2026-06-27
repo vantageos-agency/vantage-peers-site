@@ -1,0 +1,134 @@
+---
+title: Day-114 Release Notes
+description: vantage-peers-mcp@2.13.1 — list_memories + list_episodes silent items:[] fix, MCP Tools Standard doctrine v1, Convex prod redeployed at HEAD d09fc5b.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# Day-114 Release Notes
+
+**Package:** `vantage-peers-mcp@2.13.1`
+**Date:** 2026-06-27
+**Convex prod:** `compassionate-goldfinch-737.convex.cloud` redeployed at HEAD `d09fc5b`
+
+<Callout type="error">
+**Upgrade required for list_memories and list_episodes users.** Pre-2.13.1 callers receive `items: []` from these two tools on every invocation, regardless of stored data. This is a functional breakage, not a pagination drift. Upgrade to `>=2.13.1` immediately.
+</Callout>
+
+## Critical fix — list_memories + list_episodes silent empty response
+
+**PR:** [#978](https://github.com/vantageos-agency/vantage-peers/pull/978) — squash `0db28d5`
+
+### What was broken
+
+Both `list_memories` and `list_episodes` were silently returning `items: []` on every call from v2.5.0 (Day-92 S3.3 B8 cursor rollout) through v2.13.0.
+
+Root cause: the MCP handler read `memories?.page` from the Convex `listMemories` return shape. The Convex `paginate()` helper returns `{ value: T[], continueCursor: string | null, isDone: boolean }`. The field is named `value`, not `page`. `memories?.page` is always `undefined` → `items: []` on every invocation.
+
+Secondary effect: because `continueCursor` was never read, `nextCursor` was also never emitted. Pagination was doubly broken — no data and no ability to page forward.
+
+This was present on the **first page** (no cursor), not only on subsequent pages. Every call to `list_memories` or `list_episodes` returned an empty result regardless of how many memories existed in the namespace.
+
+### What changed
+
+`mcp-server/src/tools.ts` — two handler response assembly blocks patched:
+
+- `list_episodes` handler L2161–2188: now reads `memories.value` (not `?.page`), reads `memories.continueCursor` + `memories.isDone`, and emits `{items, nextCursor}` envelope via `encodeCursor({backendCursor})`.
+- `list_memories` handler L2515–2547: identical fix applied.
+
+Both fixes mirror the PR-A/B/C/E envelope-hardening pattern using the shared `mcp-server/src/paging.ts` helper.
+
+Zero Convex backend changes were required — the Convex `memories:listMemories` query already correctly implemented `paginate()` and returned `{ value, continueCursor, isDone }`. The bug was entirely in the MCP response assembly layer.
+
+### Test evidence
+
+New file: `mcp-server/src/__tests__/list_memories_episodes_pagination.test.ts` — 11/11 PASS
+
+- 5 tests for `list_memories`: seeded-data assertion, first-page-with-cursor, full-pagination-chain, empty-backend, `nextCursor` absent when `isDone=true`.
+- 6 tests for `list_episodes`: same coverage pattern.
+
+RED-before evidence: 8 failed with `AssertionError: result must have an items array: expected false to be true` and `TypeError: Cannot read properties of undefined (reading 'length')`.
+
+Full suite zero regression: 27 files / 380 tests PASS (MCP server). 35 files / 328 tests PASS (Convex). TypeScript baseline delta = 0 vs 176 pre-fix errors.
+
+### Pre-2.13.1 callers — required action
+
+Any caller using `list_memories` or `list_episodes` on vantage-peers-mcp below 2.13.1 must upgrade. There is no workaround — the tools were non-functional at the MCP layer for all namespaces.
+
+```bash
+npm install vantage-peers-mcp@latest
+# or
+npx vantage-peers-mcp@latest
+```
+
+---
+
+## MCP Tools Standard doctrine v1
+
+**PR:** [#980](https://github.com/vantageos-agency/vantage-peers/pull/980) — squash `d09fc5b`
+
+**VantageRegistry runbook:** `kd750j7z7tqre6hxqmfsa8s9ed89erng`
+
+Laurent verbatim 2026-06-27: *"Omega doit faire comme sigma a fait pour VP MCP — pas de divergence! 1 seul standard que l'on décline partout, pour tous les MCP."*
+
+This PR establishes the cross-fleet `list_*` pagination doctrine as a canonical, versioned standard applicable to all VantageOS MCP servers — VP MCP (Sigma), VR MCP (Omega), vCRM (Theta), and any future MCP.
+
+### Doctrine contents (v1)
+
+The doctrine document (`projects/vantage-peers/mcp-tools-standard-doctrine-v1.md`) covers:
+
+1. **Mandatory `list_*` pattern** — Zod args schema (`pagingArgsSchema`), return envelope (`{items, nextCursor?}`), Convex backend contract, MCP handler assembly, `createdBefore` alternative, default/max limits, `fields=lite` mandatory projection.
+
+2. **Banned anti-patterns** — 7 patterns with severity class, bad/good code snippets, Day-114 incident references.
+
+3. **Coverage matrix template** — Standard audit table columns, severity rubric, audit process, adversarial spot-test protocol.
+
+4. **Cross-fleet MCP reference** — Table of all known VantageOS MCP servers with current compliance status.
+
+5. **Compliance gate** — PR body requirements, Eta verifier checklist (Day-82 v1.1.0), npm publish gate.
+
+6. **Migration playbook** — 7-step process for bringing non-compliant `list_*` tools to LOW severity.
+
+### Day-114 audit findings
+
+The Day-114 audit verified all 18 `list_*` tools in VP MCP:
+
+- **15 LOW** — full compliance: cursor arg present, `clampLimit` applied (1–200), `{items, nextCursor}` emitted on full pages.
+- **2 HIGH (fixed in PR #978)** — `list_memories` + `list_episodes`: `memories?.page` shape misread, `items: []` on every call.
+- **1 EXCEPTION** — `list_broadcast_status`: single-object return shape, cursor paging architecturally inapplicable; carries `@cursorPagingException` JSDoc marker.
+
+### Fleet compliance status post-Day-114
+
+| MCP | Owner | Status |
+|---|---|---|
+| VP MCP (`vantage-peers-mcp`) | Sigma | 15 LOW + 2 HIGH fixed + 1 EXCEPTION |
+| VR MCP (`vantage-registry-mcp`) | Omega | Rebricking on this pattern (audit Day-115) |
+| vCRM MCP | Theta | Audit scheduled Day-115+ |
+
+---
+
+## Convex prod redeployment
+
+Convex prod (`compassionate-goldfinch-737.convex.cloud`) was redeployed at HEAD `d09fc5b` following the PR #980 merge. The MCP server on Railway was also restarted to pick up the updated `tools.ts` handler assembly from PR #978.
+
+Activation smoke test passed: `list_memories namespace="orchestrator/sigma"` returned `items.length > 0` on prod with known seeded data.
+
+---
+
+## Companion documentation PRs
+
+- **PR #983** — Main repo README update: cursor loop pattern added to "Iterating large list results" section.
+- **PR #984** — MCP server npm README update: envelope contract documented in Quick Reference.
+
+---
+
+## Links
+
+- [Cursor Pagination](/docs/pagination)
+- [Envelope Safety](/docs/envelope-safety)
+- [Tools Catalogue](/docs/tools-catalogue)
+- Main repo: [vantageos-agency/vantage-peers](https://github.com/vantageos-agency/vantage-peers/blob/main/README.md)
+- npm: [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- PR #978: [github.com/vantageos-agency/vantage-peers/pull/978](https://github.com/vantageos-agency/vantage-peers/pull/978)
+- PR #980: [github.com/vantageos-agency/vantage-peers/pull/980](https://github.com/vantageos-agency/vantage-peers/pull/980)
+- VR runbook: `kd750j7z7tqre6hxqmfsa8s9ed89erng`

@@ -1,0 +1,166 @@
+---
+title: Pagination par curseur
+description: Fonctionnement du contrat d'enveloppe MCP VantagePeers — curseurs, limites, sécurité d'enveloppe et itération des résultats volumineux.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+# Pagination par curseur
+
+Chaque outil `list_*` dans VantagePeers retourne une enveloppe cohérente qui permet aux appelants de parcourir des ensembles de résultats arbitrairement grands sans atteindre la limite de 200 lignes par réponse.
+
+## Pourquoi la pagination est essentielle
+
+VantagePeers stocke tout dans un backend Convex partagé. Un seul namespace peut accumuler des milliers de tâches, mémoires ou briefings sur la durée de vie d'une équipe d'agents. Sans pagination :
+
+- Un appelant demandant toutes les tâches d'un espace de travail volumineux recevrait une réponse tronquée sans possibilité de détecter cette troncature.
+- Le payload de réponse MCP pourrait dépasser les tailles sûres pour le contexte, causant une perte de données silencieuse côté client.
+
+Le contrat d'enveloppe résout ces deux problèmes : chaque réponse `list_*` indique explicitement aux appelants s'il existe d'autres pages, et la limite stricte de 200 lignes par page maintient les payloads de réponse bornés.
+
+## Enveloppe canonique
+
+Chaque outil `list_*` retourne exactement cette forme :
+
+```typescript
+interface ListEnvelope<T> {
+  items:       T[];        // lignes projetées — lite ou full selon le paramètre fields
+  nextCursor?: string;     // présent quand il y a d'autres pages ; absent (pas null) quand terminé
+}
+```
+
+`nextCursor` suit deux règles :
+
+1. Quand il est présent, c'est un jeton base64url opaque. Ne pas analyser ni construire les valeurs de curseur — les passer tels quels.
+2. Quand il est absent (pas `null`, simplement absent), il n'y a plus de pages. Arrêter l'itération.
+
+## Sémantique du curseur
+
+Le jeton de curseur est opaque. En interne, il encode soit un horodatage `{ createdBefore: number }` (le cas courant — la plupart des outils de liste utilisent un filtre `createdBefore` au niveau Convex) soit un `{ backendCursor: string }` référençant une continuation Convex native `paginate()` (utilisé par `list_memories` et `list_episodes`).
+
+Les appelants n'ont jamais besoin de connaître le format interne appliqué. Le décodage est géré côté serveur.
+
+**L'absence de curseur signifie terminé.** Une boucle d'appel doit s'arrêter quand `nextCursor` n'est pas présent dans la réponse — pas quand `items` est vide, et pas après un nombre fixe de pages.
+
+## Limite par défaut et plafond strict
+
+| Constante | Valeur | Signification |
+|---|---|---|
+| Limite par défaut | 20 | Lignes retournées par page quand aucun argument `limit` n'est fourni |
+| Plafond strict | 200 | Maximum de lignes par page quels que soient les arguments `limit` |
+| Cible d'enveloppe | 50 000 octets | Limite de taille douce ; le serveur divise les lignes de moitié jusqu'à rester sous ce seuil |
+
+Passer `limit: 200` donne la taille de page maximale. Ne pas passer de `limit` donne 20 lignes.
+
+## Boucle de curseur TypeScript
+
+Le motif suivant parcourt un ensemble complet de résultats `list_tasks` en chaînant les curseurs :
+
+```typescript
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+
+interface TaskItem {
+  _id: string;
+  title: string;
+  status: string;
+  assignedTo?: string;
+}
+
+interface ListEnvelope<T> {
+  items: T[];
+  nextCursor?: string;
+}
+
+async function drainTasks(
+  client: Client,
+  assignedTo: string,
+  status: string = "active"
+): Promise<TaskItem[]> {
+  const allTasks: TaskItem[] = [];
+  let cursor: string | undefined = undefined;
+
+  do {
+    const result = await client.callTool({
+      name: "list_tasks",
+      arguments: {
+        assignedTo,
+        status,
+        fields: "lite",
+        limit: 200,
+        ...(cursor !== undefined ? { cursor } : {}),
+      },
+    });
+
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    const envelope = JSON.parse(text) as ListEnvelope<TaskItem>;
+
+    allTasks.push(...envelope.items);
+    cursor = envelope.nextCursor;
+  } while (cursor !== undefined);
+
+  return allTasks;
+}
+```
+
+Points clés :
+
+- La condition de boucle est `cursor !== undefined`, pas `items.length > 0`. Une dernière page vide sans `nextCursor` est l'état terminal normal.
+- `fields: "lite"` maintient chaque page bien en dessous de la cible de 50 Ko d'enveloppe.
+- `limit: 200` maximise le débit par aller-retour.
+
+## Matrice de couverture — 18 outils `list_*`
+
+L'audit Day-114 (`projects/vantage-peers/mcp-pagination-audit-day114.md`) a vérifié les 18 outils `list_*`.
+
+| Outil | Support curseur | Forme de l'enveloppe | Sévérité |
+|---|---|---|---|
+| `list_tasks` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_tasks_by_mission` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_missions` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_messages` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_memories` | OUI | `{items, nextCursor}` | LOW — corrigé Day-114 PR #978 |
+| `list_episodes` | OUI | `{items, nextCursor}` | LOW — corrigé Day-114 PR #978 |
+| `list_briefing_notes` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_diaries` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_recurring_tasks` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_bus` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_peers` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_components` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_errors` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_issues` | OUI | `{count, issues, nextCursor}` | LOW — conforme |
+| `list_repo_mappings` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_fix_patterns` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_mandates` | OUI | `{items, nextCursor}` | LOW — conforme |
+| `list_broadcast_status` | EXCEPTION | forme objet unique | EXCEPTION — `@cursorPagingException` documenté |
+
+`list_broadcast_status` retourne un objet de statut unique (`{ messageId, from, channel, receipts[] }`) plutôt qu'un tableau de premier niveau. La pagination par curseur est architecturalement incompatible avec cette forme.
+
+<Callout type="info">
+`list_issues` utilise une enveloppe légèrement différente : `{count, issues, nextCursor}` plutôt que `{items, nextCursor}`. Accéder aux lignes via la clé `issues`, pas `items`.
+</Callout>
+
+## Paramètre `fields`
+
+Tous les outils `list_*` acceptent un argument `fields` :
+
+| Valeur | Lignes retournées | Cas d'utilisation |
+|---|---|---|
+| `"lite"` | Projection compacte — 4 à 6 champs par ligne | Parcours de grandes pages, listes latérales, vérifications de statut |
+| `"full"` | Tous les champs du schéma | Récupérations page unique où le détail complet est nécessaire |
+
+La valeur par défaut est `"full"`. Pour les boucles de parcours, toujours passer `fields: "lite"` pour rester bien sous la cible de 50 Ko d'enveloppe.
+
+Les projections lite incluent toujours `_id` et `_creationTime` plus 2 à 4 champs d'affichage (ex. `title`, `status`, `assignedTo` pour les tâches).
+
+## Sécurité d'enveloppe
+
+Voir [Sécurité d'enveloppe](/docs/envelope-safety) pour le catalogue complet des anti-patterns — notamment pourquoi `memories?.page` était un incident de sévérité HIGH Day-114 et comment la correction câble `encodeCursor`/`decodeCursor`.
+
+## Références croisées
+
+- README du dépôt principal : [vantageos-agency/vantage-peers](https://github.com/vantageos-agency/vantage-peers/blob/main/README.md)
+- README du serveur MCP : [vantage-peers-mcp sur npm](https://www.npmjs.com/package/vantage-peers-mcp)
+- Doctrine MCP Tools Standard : runbook VantageRegistry `kd750j7z7tqre6hxqmfsa8s9ed89erng`
+- Doc d'audit Day-114 : `projects/vantage-peers/mcp-pagination-audit-day114.md`
+- PRs de correction Day-114 : [#978](https://github.com/vantageos-agency/vantage-peers/pull/978) + [#980](https://github.com/vantageos-agency/vantage-peers/pull/980)

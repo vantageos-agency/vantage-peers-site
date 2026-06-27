@@ -1,0 +1,166 @@
+---
+title: Cursor Pagination
+description: How the VantagePeers MCP envelope contract works — cursors, limits, envelope safety, and iterating large list results.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
+
+# Cursor Pagination
+
+Every `list_*` tool in VantagePeers returns a consistent envelope that lets callers drain arbitrarily large result sets without hitting the 200-row response cap.
+
+## Why pagination matters
+
+VantagePeers stores everything in a shared Convex backend. A single namespace can accumulate thousands of tasks, memories, or briefing notes over the lifetime of an agent team. Without pagination:
+
+- A caller requesting all tasks in a large workspace would receive a truncated response with no way to detect the truncation.
+- The MCP response payload could exceed safe in-context sizes, causing silent data loss at the client.
+
+The envelope contract solves both problems: every `list_*` response tells callers explicitly whether there are more pages, and the hard cap of 200 rows per page keeps response payloads bounded.
+
+## Canonical envelope
+
+Every `list_*` tool returns exactly this shape:
+
+```typescript
+interface ListEnvelope<T> {
+  items:       T[];        // projected rows — lite or full depending on fields param
+  nextCursor?: string;     // present when there are more pages; absent (not null) when done
+}
+```
+
+`nextCursor` follows two rules:
+
+1. When present, it is an opaque base64url token. Do not parse or construct cursor values — pass them through unmodified.
+2. When absent (not `null`, just missing), there are no more pages. Stop iterating.
+
+## Cursor semantics
+
+The cursor token is opaque. Internally it encodes either a `{ createdBefore: number }` timestamp (the common case — most list tools use a `createdBefore` filter at the Convex layer) or a `{ backendCursor: string }` referencing a Convex-native `paginate()` continuation (used by `list_memories` and `list_episodes`).
+
+Callers never need to know which internal format applies. The decoding is handled server-side.
+
+**Absent cursor means done.** A caller loop must stop when `nextCursor` is not present in the response — not when `items` is empty, and not after a fixed number of pages.
+
+## Default limit and hard cap
+
+| Constant | Value | Meaning |
+|---|---|---|
+| Default limit | 20 | Rows returned per page when no `limit` argument is given |
+| Hard cap | 200 | Maximum rows per page regardless of the `limit` argument |
+| Envelope target | 50 000 bytes | Soft size cap; server halves rows until under this threshold |
+
+Passing `limit: 200` gives the maximum page size. Passing no `limit` gives 20 rows.
+
+## TypeScript cursor loop
+
+The following pattern drains a complete `list_tasks` result set using cursor chaining:
+
+```typescript
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+
+interface TaskItem {
+  _id: string;
+  title: string;
+  status: string;
+  assignedTo?: string;
+}
+
+interface ListEnvelope<T> {
+  items: T[];
+  nextCursor?: string;
+}
+
+async function drainTasks(
+  client: Client,
+  assignedTo: string,
+  status: string = "active"
+): Promise<TaskItem[]> {
+  const allTasks: TaskItem[] = [];
+  let cursor: string | undefined = undefined;
+
+  do {
+    const result = await client.callTool({
+      name: "list_tasks",
+      arguments: {
+        assignedTo,
+        status,
+        fields: "lite",
+        limit: 200,
+        ...(cursor !== undefined ? { cursor } : {}),
+      },
+    });
+
+    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    const envelope = JSON.parse(text) as ListEnvelope<TaskItem>;
+
+    allTasks.push(...envelope.items);
+    cursor = envelope.nextCursor;
+  } while (cursor !== undefined);
+
+  return allTasks;
+}
+```
+
+Key points:
+
+- The loop condition is `cursor !== undefined`, not `items.length > 0`. An empty last page with no `nextCursor` is the normal terminal state.
+- `fields: "lite"` keeps each page well under the 50 KB envelope target.
+- `limit: 200` maximizes throughput per round-trip.
+
+## Coverage matrix — 18 `list_*` tools
+
+Day-114 audit (`projects/vantage-peers/mcp-pagination-audit-day114.md`) verified all 18 `list_*` tools.
+
+| Tool | Cursor support | Envelope shape | Severity |
+|---|---|---|---|
+| `list_tasks` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_tasks_by_mission` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_missions` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_messages` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_memories` | YES | `{items, nextCursor}` | LOW — fixed Day-114 PR #978 |
+| `list_episodes` | YES | `{items, nextCursor}` | LOW — fixed Day-114 PR #978 |
+| `list_briefing_notes` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_diaries` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_recurring_tasks` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_bus` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_peers` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_components` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_errors` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_issues` | YES | `{count, issues, nextCursor}` | LOW — compliant |
+| `list_repo_mappings` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_fix_patterns` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_mandates` | YES | `{items, nextCursor}` | LOW — compliant |
+| `list_broadcast_status` | EXCEPTION | single-object shape | EXCEPTION — documented `@cursorPagingException` |
+
+`list_broadcast_status` returns a single status object (`{ messageId, from, channel, receipts[] }`) rather than a top-level array. Cursor paging is architecturally incompatible with this shape.
+
+<Callout type="info">
+`list_issues` uses a slightly different envelope: `{count, issues, nextCursor}` rather than `{items, nextCursor}`. Access rows via the `issues` key, not `items`.
+</Callout>
+
+## `fields` parameter
+
+All `list_*` tools accept a `fields` argument:
+
+| Value | Rows returned | Use case |
+|---|---|---|
+| `"lite"` | Compact projection — 4 to 6 fields per row | Large page drains, sidebar lists, status checks |
+| `"full"` | All schema fields | Single-page fetches where full detail is needed |
+
+Default is `"full"`. For drain loops, always pass `fields: "lite"` to stay well within the 50 KB envelope target.
+
+Lite projections always include `_id` and `_creationTime` plus 2 to 4 display fields (e.g. `title`, `status`, `assignedTo` for tasks).
+
+## Envelope safety
+
+See [Envelope Safety](/docs/envelope-safety) for the complete anti-pattern catalogue — including why `memories?.page` was a Day-114 severity-HIGH incident and how the fix wires through `encodeCursor`/`decodeCursor`.
+
+## Cross-references
+
+- Main repo README: [vantageos-agency/vantage-peers](https://github.com/vantageos-agency/vantage-peers/blob/main/README.md)
+- MCP server README: [vantage-peers-mcp on npm](https://www.npmjs.com/package/vantage-peers-mcp)
+- MCP Tools Standard doctrine: VantageRegistry runbook `kd750j7z7tqre6hxqmfsa8s9ed89erng`
+- Day-114 audit doc: `projects/vantage-peers/mcp-pagination-audit-day114.md`
+- Day-114 fix PRs: [#978](https://github.com/vantageos-agency/vantage-peers/pull/978) + [#980](https://github.com/vantageos-agency/vantage-peers/pull/980)

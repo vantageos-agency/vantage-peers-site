@@ -5,6 +5,26 @@ description: Historique des versions de vantage-peers-mcp.
 
 # Journal des modifications
 
+## v2.13.1 — 2026-06-27
+
+### Corrigé
+
+- **CRITIQUE — `list_memories` + `list_episodes` retournaient silencieusement `items: []` à chaque appel** — L'audit Day-114 a trouvé les deux gestionnaires lisant `memories?.page` depuis la forme de retour Convex `listMemories` `{value, continueCursor, isDone}`. `.page` est indéfini → résultats vides à chaque invocation quelle que soit la donnée stockée. Corrigé dans la PR [#978](https://github.com/vantageos-agency/vantage-peers/pull/978) (squash `0db28d5`). Les appelants pré-2.13.1 DOIVENT mettre à niveau. Voir les [notes de version Day-114](/docs/release-notes/day-114).
+
+### Ajouté
+
+- **Doctrine MCP Tools Standard v1** — doctrine de pagination `list_*` cross-fleet canonicalisée comme standard versionné. PR [#980](https://github.com/vantageos-agency/vantage-peers/pull/980) (squash `d09fc5b`). Runbook VantageRegistry `kd750j7z7tqre6hxqmfsa8s9ed89erng`. Couvre : schéma Zod obligatoire, enveloppe de retour, 7 anti-patterns bannis, modèle de matrice de couverture, tableau de conformité fleet, playbook de migration.
+- **Documentation Day-114** — [Pagination par curseur](/docs/pagination), [Sécurité d'enveloppe](/docs/envelope-safety), [Catalogue des outils](/docs/tools-catalogue), [Notes de version Day-114](/docs/release-notes/day-114).
+
+### Liens
+
+- GitHub : [vantageos-agency/vantage-peers](https://github.com/vantageos-agency/vantage-peers)
+- npm : [vantage-peers-mcp@2.13.1](https://www.npmjs.com/package/vantage-peers-mcp)
+- PR #978 : [github.com/vantageos-agency/vantage-peers/pull/978](https://github.com/vantageos-agency/vantage-peers/pull/978)
+- PR #980 : [github.com/vantageos-agency/vantage-peers/pull/980](https://github.com/vantageos-agency/vantage-peers/pull/980)
+
+---
+
 ## v2.4.1 — 2026-05-30
 
 ### Corrigé

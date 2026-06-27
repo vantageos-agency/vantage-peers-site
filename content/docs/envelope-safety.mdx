@@ -1,0 +1,223 @@
+---
+title: Envelope Safety
+description: Anti-overflow patterns for VantagePeers list_* tools — fields=lite, limit clamp 200, anti-patterns to avoid, and why each list_* tool defaults to an envelope-safe shape.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion'
+
+# Envelope Safety
+
+The VantagePeers MCP server enforces a consistent set of protections on every `list_*` response to prevent response payloads from overflowing the in-context budget of the calling agent. This page documents the protections, the `fields=lite|full` projection system, the 200-row hard cap, and the anti-patterns that caused production incidents.
+
+## The three protections
+
+Every `list_*` tool in VantagePeers enforces three layers of protection:
+
+1. **Hard row cap (200):** The `limit` argument is validated as `z.number().int().min(1).max(200).optional()`. Any value above 200 is rejected at the MCP layer before reaching Convex. The default when no `limit` is given is 20 rows.
+
+2. **`fields=lite` projection:** All `list_*` tools accept `fields: "lite" | "full"`. The `lite` projection returns at most 6 fields per row, keeping page sizes small even for documents with large text content (e.g. memories with long `content`, briefing notes with long `decisions` arrays).
+
+3. **50 KB soft cap (`enforceEnvelopeCap`):** After row projection, the server measures the serialized JSON size of the envelope. If the result exceeds 50 000 bytes, the server halves the row count and re-measures, repeating until the payload fits. This guard exists in addition to the row cap — it protects against full-schema rows with large embedded text.
+
+## `fields=lite` vs `fields=full`
+
+| Value | Fields returned | Typical size per row |
+|---|---|---|
+| `"lite"` | `_id`, `_creationTime`, plus 2 to 4 display fields | ~200–400 bytes |
+| `"full"` | All schema fields including full text content | ~2 000–20 000 bytes |
+
+Default is `"full"`. For any loop that processes more than one page, always pass `fields: "lite"`.
+
+Example lite projection for `list_tasks`:
+
+```json
+{
+  "_id": "k17abc...",
+  "_creationTime": 1751020800000,
+  "title": "Fix list_memories pagination",
+  "status": "done",
+  "assignedTo": "sigma",
+  "priority": "urgent"
+}
+```
+
+The same task in `full` mode includes `description` (potentially hundreds of characters), `completionNote`, `blockers`, `dependsOn`, `missionId`, `orgId`, `createdBy`, `updatedAt`, and all other schema fields.
+
+## Limit clamp behaviour
+
+The `clampLimit` function in `mcp-server/src/paging.ts` applies these rules in order:
+
+1. If `limit` is undefined, return `DEFAULT_LIMIT` (20 for most tools).
+2. If `limit < 1`, return 1.
+3. If `limit > MAX_LIMIT` (200), return 200.
+4. Otherwise return `limit` unchanged.
+
+This means a caller cannot accidentally request an unbounded result by passing a very large `limit`. The 200-row ceiling is enforced regardless of what the caller sends.
+
+## Anti-patterns
+
+The following patterns caused verified production incidents. Each is forbidden in all VantageOS MCP server implementations.
+
+<Accordions>
+
+<Accordion title="Anti-pattern 1 — Reading .page instead of .value from Convex paginate() (Day-114 HIGH)">
+
+**Root cause of the Day-114 incident class.** The Convex `paginate()` helper returns:
+
+```typescript
+{
+  value:          T[];
+  continueCursor: string | null;
+  isDone:         boolean;
+}
+```
+
+The field is named `value`, not `page`. Reading `result?.page` from this shape returns `undefined`, causing the MCP handler to produce `items: []` on every call — silently dropping all data.
+
+This affected `list_memories` and `list_episodes` from v2.5.0 through v2.13.0. Both tools were fixed in PR #978 (squash `0db28d5`).
+
+```typescript
+// FORBIDDEN — .page does not exist; items: [] on every call
+const rawList = Array.isArray((memories as any)?.page)
+  ? (memories as any).page
+  : [];
+
+// CORRECT — read .value from { value, continueCursor, isDone }
+const rawList = Array.isArray((memories as any)?.value)
+  ? (memories as any).value
+  : [];
+```
+
+Callers on vantage-peers-mcp below 2.13.1 received `items: []` from `list_memories` and `list_episodes` on every invocation. Upgrade to `>=2.13.1` is required.
+
+</Accordion>
+
+<Accordion title="Anti-pattern 2 — Unbounded limit (no max() cap)">
+
+Accepting any `limit` value without a max cap allows callers to request 10 000+ rows in a single response. This overflows in-context budgets and can crash Railway/Convex response size limits.
+
+```typescript
+// FORBIDDEN
+const limit = args.limit ?? 1000; // unbounded default
+
+// CORRECT
+import { clampLimit } from "./paging.js";
+const requestedLimit = clampLimit(args.limit); // always [1, 200]
+```
+
+</Accordion>
+
+<Accordion title="Anti-pattern 3 — Silent clamping without nextCursor">
+
+Clamping to 200 rows but not returning `nextCursor` leaves callers with a truncated result set and no way to paginate past the cap.
+
+```typescript
+// FORBIDDEN — caller is stuck at 200 rows forever
+const rows = await fetchRows(200);
+return { items: rows }; // no nextCursor
+
+// CORRECT — detect hasMore, emit nextCursor
+const requestedLimit = clampLimit(args.limit);
+const rows = await fetchRows(requestedLimit + 1);
+const hasMore = rows.length > requestedLimit;
+const page = hasMore ? rows.slice(0, requestedLimit) : rows;
+const nextCursor = hasMore
+  ? encodeCursor({ createdBefore: page[page.length - 1]._creationTime })
+  : undefined;
+return { items: page, ...(nextCursor !== undefined ? { nextCursor } : {}) };
+```
+
+</Accordion>
+
+<Accordion title="Anti-pattern 4 — Returning a flat array instead of the envelope">
+
+Returning `items` as a bare array (not wrapped in `{ items, nextCursor }`) breaks the pagination chain because callers cannot detect whether there are more pages.
+
+```typescript
+// FORBIDDEN — flat array; caller cannot paginate
+return { content: [{ type: "text", text: JSON.stringify(rows) }] };
+
+// CORRECT — always the { items, nextCursor? } envelope
+const envelope = { items: projected, ...(nextCursor ? { nextCursor } : {}) };
+return { content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }] };
+```
+
+</Accordion>
+
+<Accordion title="Anti-pattern 5 — Leaking raw Convex continueCursor">
+
+Returning the raw Convex `continueCursor` string as the `nextCursor` in the envelope exposes an internal format that may change across Convex versions.
+
+```typescript
+// FORBIDDEN — leaks Convex internal format
+const envelope = { items: filteredList, nextCursor: result.continueCursor };
+
+// CORRECT — always wrap through encodeCursor
+const nextCursor =
+  !result.isDone && result.continueCursor !== null
+    ? encodeCursor({ backendCursor: result.continueCursor })
+    : undefined;
+const envelope = { items: filteredList, ...(nextCursor ? { nextCursor } : {}) };
+```
+
+`encodeCursor` produces an opaque base64url token. Callers pass this token back as the `cursor` argument on the next call. The decode side (`decodeCursor`) lives in the same `paging.ts` file.
+
+</Accordion>
+
+<Accordion title="Anti-pattern 6 — Wrapper-shape tests that never check actual data (Day-114 test anti-pattern)">
+
+A test that asserts `result.items !== undefined` passes even when `items: []`. This was the root cause of the Day-114 "19/19 covered" misclaim — all 19 tests passed while `list_memories` and `list_episodes` silently returned empty arrays.
+
+```typescript
+// FORBIDDEN — passes even when items: []
+expect(parsed).toHaveProperty("items");
+expect(Array.isArray(parsed.items)).toBe(true);
+
+// CORRECT — seed N rows, assert items.length === N
+const N = 5;
+mockConvex.mockResolvedValueOnce({ value: makeItems(N), continueCursor: null, isDone: true });
+const result = await callTool("list_memories", { namespace: "orchestrator/sigma" });
+const parsed = JSON.parse(result.content[0].text);
+expect(parsed.items).toHaveLength(N); // would have caught the Day-114 .page bug
+```
+
+Every `list_*` tool test suite must include at least one "insert N, assert `items.length === N`" assertion.
+
+</Accordion>
+
+</Accordions>
+
+## Why each list_* tool defaults to envelope-safe shape
+
+The design goal is that a caller who passes no arguments at all still receives a safe response. The default `limit: 20` and `fields: "full"` combination produces at most ~400 KB for the most document-heavy tools, well within safe in-context budget for all supported clients (Claude.ai, Claude Code, ChatGPT, Codex).
+
+For production drain loops — sweeping all tasks for a BU, exporting a full namespace, etc. — always override to `limit: 200` and `fields: "lite"` to maximize throughput without risk.
+
+## `paging.ts` exports reference
+
+The shared `mcp-server/src/paging.ts` utility centralizes all paging logic. Its key exports:
+
+| Export | Type | Description |
+|---|---|---|
+| `pagingArgsSchema` | `z.ZodObject` | Shared Zod schema: `{ limit, cursor, fields }` |
+| `DEFAULT_LIMIT` | `50` | `clampLimit` fallback when `undefined` given |
+| `MAX_LIMIT` | `200` | Hard ceiling enforced by `clampLimit` |
+| `ENVELOPE_TARGET_BYTES` | `50 000` | Soft byte cap for `enforceEnvelopeCap` |
+| `clampLimit` | function | Clamps `limit` to `[1, MAX_LIMIT]`, defaults to `DEFAULT_LIMIT` |
+| `encodeCursor` | function | `CursorPayload → base64url string` |
+| `decodeCursor` | function | `base64url string → CursorPayload | null` |
+| `enforceEnvelopeCap` | function | Halves rows until under `ENVELOPE_TARGET_BYTES` |
+
+<Callout type="warn">
+The `DEFAULT_LIMIT` export from `clampLimit` is 50. Individual tools override this to 20 via `DEFAULT_PAGING.limit = 20` in `applyPagingDefaults`. When no limit is given to a specific list tool, the per-tool default of 20 applies — not the `DEFAULT_LIMIT` constant.
+</Callout>
+
+## Cross-references
+
+- [Cursor Pagination](/docs/pagination) — envelope contract, loop pattern, coverage matrix
+- Main repo README: [vantageos-agency/vantage-peers](https://github.com/vantageos-agency/vantage-peers/blob/main/README.md)
+- MCP server npm: [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- MCP Tools Standard doctrine: VantageRegistry runbook `kd750j7z7tqre6hxqmfsa8s9ed89erng`
+- Day-114 fix PR: [#978](https://github.com/vantageos-agency/vantage-peers/pull/978)
+- Doctrine PR: [#980](https://github.com/vantageos-agency/vantage-peers/pull/980)

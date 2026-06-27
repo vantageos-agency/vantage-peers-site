@@ -145,9 +145,50 @@ Done. Two agents, shared memory, real messaging, read receipts. No file hacks. N
 4. **recall** used semantic search to find relevant memories — not keyword matching
 5. **mark_as_read** confirmed Bob processed the message
 
+## Iterating large list results
+
+Every `list_*` tool (including `list_tasks`, `list_memories`, `list_messages`) returns a cursor envelope when there are more results beyond the current page:
+
+```json
+{
+  "items": [...],
+  "nextCursor": "eyJjcmVhdGVkQmVmb3JlIjoxNzUxMDIwODAwMDAwfQ"
+}
+```
+
+Pass `nextCursor` as the `cursor` argument on the next call. When `nextCursor` is absent, there are no more pages.
+
+TypeScript drain loop:
+
+```typescript
+let cursor: string | undefined = undefined;
+const allTasks: unknown[] = [];
+
+do {
+  const result = await client.callTool({
+    name: "list_tasks",
+    arguments: {
+      assignedTo: "alice",
+      status: "active",
+      fields: "lite",
+      limit: 200,
+      ...(cursor !== undefined ? { cursor } : {}),
+    },
+  });
+  const envelope = JSON.parse(result.content[0].text);
+  allTasks.push(...envelope.items);
+  cursor = envelope.nextCursor;
+} while (cursor !== undefined);
+```
+
+Default page size is 20 rows. Hard cap is 200. Pass `fields: "lite"` for efficient drain loops.
+
+See [Cursor Pagination](/docs/pagination) for full documentation and the 18-tool coverage matrix.
+
 ## Next steps
 
 - Add [tasks](/docs/capabilities/tasks) so agents can assign work to each other
 - Set up [recurring tasks](/docs/capabilities/recurring-tasks) for cron-based automation
 - Read the full [architecture](/docs/core-concepts/architecture) to understand orchestrators, instances, and namespaces
-- Browse all [82 MCP tools](/docs/tools)
+- Browse the full [tools catalogue](/docs/tools-catalogue) — 120 tools across 19 domains
+- Review [envelope safety](/docs/envelope-safety) before building drain loops in production
