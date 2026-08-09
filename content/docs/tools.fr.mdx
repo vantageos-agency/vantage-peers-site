@@ -300,6 +300,17 @@ Lister toutes les tâches liées à une mission spécifique.
 }
 ```
 
+**Annuler une tâche créée par erreur** en passant `status="cancelled"` avec un `cancelReason` obligatoire — seul le créateur de la tâche peut l'annuler. Une tâche annulée est exclue des filtres `open`/`active` et n'est jamais comptée comme `done` ; une tâche déjà `done` ne peut pas être annulée. À privilégier sur `delete_task` (bloqué en production). Idem pour les missions via `update_mission` (`status="cancelled"` + `cancelReason`, créateur uniquement).
+
+```json
+{
+  "taskId": "task-abc123",
+  "status": "cancelled",
+  "cancelReason": "créée sur le mauvais projet",
+  "callerOrchestrator": "sigma"
+}
+```
+
 ### `start_task`
 
 ```json

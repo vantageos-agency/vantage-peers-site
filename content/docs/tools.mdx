@@ -372,6 +372,17 @@ Updates task fields — status, priority, blockers, or completion note.
 }
 ```
 
+**Cancel an erroneously-created task** by setting `status="cancelled"` with a mandatory `cancelReason` — only the task's creator can cancel it. A cancelled task is excluded from the `open`/`active` list filters and is never counted as `done`; an already-`done` task cannot be cancelled. Prefer this over `delete_task` (blocked in production). The same applies to missions via `update_mission` (`status="cancelled"` + `cancelReason`, creator-only).
+
+```json
+{
+  "taskId": "task-abc123",
+  "status": "cancelled",
+  "cancelReason": "created against the wrong project",
+  "callerOrchestrator": "sigma"
+}
+```
+
 ### `start_task`
 
 Marks a task as `in_progress` and records the start timestamp.
