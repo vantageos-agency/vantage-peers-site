@@ -1,30 +1,30 @@
 ---
 title: Tools Reference
-description: All 114 MCP tools across 15 capability categories in VantagePeers.
+description: All 100 MCP tools across 15 capability categories in VantagePeers.
 ---
 
 # Tools Reference
 
-VantagePeers exposes 114 MCP tools organized into 15 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
+VantagePeers exposes 100 MCP tools organized into 15 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
 
 ## Tool Categories
 
 | Category | Tool Count | Description |
 |----------|-----------|-------------|
-| [Memory + Episodes](#memory--episode-tools) | 14 | Typed memories, episodic learning, semantic and keyword search |
+| [Memory + Episodes](#memory--episode-tools) | 12 | Typed memories, episodic learning, semantic and keyword search |
 | [Messaging](#messaging-tools) | 8 | Send messages across machines with read receipts |
-| [Tasks](#task-tools) | 13 | Create and manage tasks with full lifecycle tracking |
+| [Tasks](#task-tools) | 12 | Create and manage tasks with full lifecycle tracking |
 | [Missions + Templates](#mission--template-tools) | 8 | Group tasks into missions; instantiate templates |
-| [Profiles + Session](#profile-and-session-tools) | 6 | Agent identity, session state, and identity resolution |
-| [Diary + Briefing Notes](#diary--briefing-note-tools) | 9 | Daily journals, briefing notes, and keyword search |
-| [Components](#component-tools) | 7 | Component backup and inventory |
+| [Profiles + Session](#profile-and-session-tools) | 5 | Agent identity, session state, and identity resolution |
+| [Diary + Briefing Notes](#diary--briefing-note-tools) | 8 | Daily journals, briefing notes, and keyword search |
+| [Components](#component-tools) | 6 | Component backup and inventory |
 | [Recurring Tasks](#recurring-task-tools) | 7 | Cron-based automation |
-| [Mandates](#mandate-tools) | 8 | Cross-agent service requests with budgets |
+| [Mandates](#mandate-tools) | 7 | Cross-agent service requests with budgets |
 | [Business Units](#business-unit-tools) | 5 | BU strategy, pricing, and KPIs |
-| [GitHub Issues + Repos](#github-issue--repo-tools) | 13 | Issue tracking with webhook sync and repo mappings |
-| [Fix Patterns](#fix-pattern-tools) | 9 | Bug fix knowledge base with semantic search |
+| [GitHub Issues + Repos](#github-issue--repo-tools) | 11 | Issue tracking with webhook sync and repo mappings |
+| [Fix Patterns](#fix-pattern-tools) | 6 | Bug fix knowledge base with semantic search |
 | [Error Monitoring](#error-monitoring-tools) | 2 | Proactive deployment error detection |
-| [Deployments](#deployment-tools) | 4 | Register and manage monitored deployments |
+| [Deployments](#deployment-tools) | 2 | Register and manage monitored deployments |
 | [Utility](#utility-tools) | 1 | Payload validation |
 
 ---
@@ -80,9 +80,9 @@ Soft-delete a memory so it stops appearing in recall results.
 }
 ```
 
-### `search_memories_by_semantic`
+### `recall`
 
-Semantic search over memories in a namespace. Uses vector similarity + optional keyword filters. Alias: `recall`.
+Semantic search over memories in a namespace. Uses vector similarity + optional keyword filters.
 
 ```json
 {
@@ -94,13 +94,9 @@ Semantic search over memories in a namespace. Uses vector similarity + optional 
 
 Returns an array of matching memories ranked by relevance.
 
-### `recall`
+### `text_search`
 
-Alias of `search_memories_by_semantic`. Prefer the canonical name for new code.
-
-### `search_memories_by_keyword`
-
-BM25 full-text keyword search over memories. Alias: `text_search`.
+BM25 full-text keyword search over memories.
 
 ```json
 {
@@ -109,10 +105,6 @@ BM25 full-text keyword search over memories. Alias: `text_search`.
   "limit": 10
 }
 ```
-
-### `text_search`
-
-Alias of `search_memories_by_keyword`. Prefer the canonical name for new code.
 
 ### `hybrid_search`
 
@@ -417,7 +409,7 @@ Sets a task to `blocked` status with a reason.
 
 ### `add_task_dependency`
 
-Links two tasks so one cannot start before the other completes. Alias: `create_task_dependency`.
+Links two tasks so one cannot start before the other completes.
 
 ```json
 {
@@ -459,10 +451,6 @@ List all tasks linked to a specific mission. Accepts the same `status`, `fields`
   "fields": "lite"
 }
 ```
-
-### `create_task_dependency`
-
-Alias of `add_task_dependency`. Prefer the canonical name for new code.
 
 ---
 
@@ -612,7 +600,7 @@ Returns all known agent instances and their current status, newest first. Suppor
 
 ### `set_summary`
 
-Updates the current working summary for an orchestrator instance. Alias: `update_summary`.
+Updates the current working summary for an orchestrator instance.
 
 ```json
 {
@@ -621,10 +609,6 @@ Updates the current working summary for an orchestrator instance. Alias: `update
   "summary": "Migrating HeroSection to lit-ui"
 }
 ```
-
-### `update_summary`
-
-Alias of `set_summary`. Prefer the canonical name for new code.
 
 ### `whoami`
 
@@ -642,7 +626,7 @@ Returns: `{ "orchestratorId": "alice", "orgSlug": "vantageos" }`.
 
 ### `write_diary`
 
-Writes a diary entry for a given date. Overwrites any existing entry for that date. Alias: `create_diary`.
+Writes a diary entry for a given date. Overwrites any existing entry for that date.
 
 ```json
 {
@@ -652,10 +636,6 @@ Writes a diary entry for a given date. Overwrites any existing entry for that da
   "highlights": ["Nav migrated to lit-ui", "Hero responsive layout fixed"]
 }
 ```
-
-### `create_diary`
-
-Alias of `write_diary`. Prefer the canonical name for new code.
 
 ### `get_diary`
 
@@ -806,9 +786,9 @@ Removes a component from the registry.
 }
 ```
 
-### `search_components_by_keyword`
+### `search_components`
 
-BM25 / substring keyword search over components by name or team with optional type filter. Alias: `search_components`.
+BM25 / substring keyword search over components by name or team with optional type filter.
 
 ```json
 {
@@ -816,10 +796,6 @@ BM25 / substring keyword search over components by name or team with optional ty
   "type": "agent"
 }
 ```
-
-### `search_components`
-
-Alias of `search_components_by_keyword`. Prefer the canonical name for new code.
 
 ---
 
@@ -914,7 +890,6 @@ Cross-agent service requests with budget tracking. See [Mandates](/docs/capabili
 | `update_mandate` | Update mandate fields |
 | `settle_mandate` | Record actual cost, close mandate |
 | `validate_mandate_spending` | Check if transaction is within limits |
-| `check_mandate_spending` | Alias of `validate_mandate_spending` |
 | `list_mandates` | List mandates with filters |
 | `get_mandate` | Fetch a single mandate by Convex document ID |
 
@@ -948,10 +923,8 @@ Issue tracking with webhook sync and auto-linking. See [GitHub Issues](/docs/inf
 | `issue_stats` | Get issue count stats |
 | `link_issue_to_pattern` | Link an issue to a fix pattern |
 | `add_repo_mapping` | Map a GitHub repo to an orchestrator |
-| `register_repo_mapping` | Alias of `add_repo_mapping` |
 | `list_repo_mappings` | List all repo mappings |
 | `remove_repo_mapping` | Remove a repo mapping |
-| `delete_repo_mapping` | Alias of `remove_repo_mapping` |
 | `get_repo_mapping` | Fetch a single repo mapping by slug (owner/name) |
 
 ---
@@ -965,11 +938,8 @@ Bug fix knowledge base with semantic search. See [Fix Patterns KB](/docs/capabil
 | `create_fix_pattern` | Create a fix pattern documenting a bug, root cause, and fix |
 | `get_fix_pattern` | Fetch a single fix pattern by Convex document ID |
 | `add_fix_attempt` | Document a fix attempt (worked/failed) with reasoning |
-| `create_fix_attempt` | Alias of `add_fix_attempt` |
 | `validate_fix` | Set the validated fix on a pattern |
-| `check_fix` | Alias of `validate_fix` |
-| `search_fix_patterns_by_semantic` | Semantic search over patterns by symptom |
-| `search_fix_patterns` | Alias of `search_fix_patterns_by_semantic` |
+| `search_fix_patterns` | Semantic search over patterns by symptom |
 | `list_fix_patterns` | List patterns by project with cursor paging |
 
 ---
@@ -992,9 +962,7 @@ Register Convex deployments for proactive error monitoring.
 | Tool | Description |
 |------|-------------|
 | `add_deployment` | Register a deployment for monitoring |
-| `register_deployment` | Alias of `add_deployment` |
 | `remove_deployment` | Deactivate a monitored deployment |
-| `delete_deployment` | Alias of `remove_deployment` |
 
 ---
 
