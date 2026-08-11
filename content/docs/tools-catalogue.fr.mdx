@@ -23,10 +23,8 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | `get_memory` | Récupérer une seule mémoire par ID de document | N |
 | `list_memories` | Lister les mémoires dans un namespace filtrées par type ; limite par défaut 20, plafond 200 | O — corrigé Day-114 PR #978 |
 | `soft_delete_memory` | Suppression douce d'une mémoire pour qu'elle n'apparaisse plus dans les résultats recall | N |
-| `search_memories_by_semantic` | Recherche vectorielle sémantique sur les mémoires dans un namespace (fusion RRF) | N |
-| `recall` | Alias de `search_memories_by_semantic` | N |
-| `search_memories_by_keyword` | Recherche plein texte BM25 sur les mémoires | N |
-| `text_search` | Alias de `search_memories_by_keyword` | N |
+| `recall` | Recherche vectorielle sémantique sur les mémoires dans un namespace (fusion RRF) | N |
+| `text_search` | Recherche plein texte BM25 sur les mémoires | N |
 | `hybrid_search` | Recherche hybride combinée vecteur + BM25 utilisant la fusion RRF | N |
 
 ## Épisodes
@@ -65,7 +63,6 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | `complete_task` | Marquer une tâche comme `done` avec une note de complétion obligatoire | N |
 | `block_task` | Mettre une tâche en statut `blocked` avec une raison | N |
 | `add_task_dependency` | Lier deux tâches pour qu'une ne puisse pas démarrer avant que l'autre soit complète | N |
-| `create_task_dependency` | Alias de `add_task_dependency` | N |
 | `checkout_task` | Revendiquer atomiquement une tâche (sûr pour les conflits multi-instances) | N |
 | `delete_task` | Supprimer définitivement une tâche (créateur ou système uniquement ; bloqué en production — **annuler** une tâche erronée via `status="cancelled"` à la place) | N |
 | `list_tasks_by_mission` | Lister toutes les tâches liées à une mission spécifique ; mêmes params `status`, `fields`, `createdBy`, `cursor` que `list_tasks` ; limite par défaut 20, plafond 200 | O |
@@ -93,7 +90,6 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | `update_profile` | Créer ou mettre à jour un profil d'orchestrateur (mises à jour partielles supportées) | N |
 | `list_peers` | Retourner toutes les instances d'agents connues et leur statut actuel, les plus récentes en premier ; limite par défaut 20, plafond 200 | O |
 | `set_summary` | Mettre à jour le résumé de travail actuel pour une instance d'orchestrateur | N |
-| `update_summary` | Alias de `set_summary` | N |
 | `whoami` | Retourner l'identité de l'orchestrateur intégrée dans le scope OAuth du bearer actuel | N |
 
 ## Journal
@@ -101,7 +97,6 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | Outil | Objectif | Curseur/Limite |
 |---|---|---|
 | `write_diary` | Écrire une entrée de journal pour une date donnée, écrasant toute entrée existante | N |
-| `create_diary` | Alias de `write_diary` | N |
 | `get_diary` | Récupérer une entrée de journal spécifique par orchestrateur et date | N |
 | `list_diaries` | Lister les entrées de journal pour un orchestrateur, plage de dates optionnelle ; limite par défaut 20, plafond 200 | O |
 
@@ -124,8 +119,7 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | `list_components` | Lister tous les composants enregistrés filtrés par type ; limite par défaut 20, plafond 200 | O |
 | `update_component` | Mettre à jour le contenu ou la version d'un composant | N |
 | `delete_component` | Supprimer un composant du registre | N |
-| `search_components_by_keyword` | Recherche BM25 par sous-chaîne sur les composants par nom ou équipe avec filtre de type optionnel | N |
-| `search_components` | Alias de `search_components_by_keyword` | N |
+| `search_components` | Recherche BM25 par sous-chaîne sur les composants par nom ou équipe avec filtre de type optionnel | N |
 
 ## Tâches récurrentes
 
@@ -148,7 +142,6 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | `update_mandate` | Mettre à jour les champs d'un mandat | N |
 | `settle_mandate` | Enregistrer le coût réel et fermer un mandat | N |
 | `validate_mandate_spending` | Vérifier si une transaction est dans les limites du mandat | N |
-| `check_mandate_spending` | Alias de `validate_mandate_spending` | N |
 | `list_mandates` | Lister les mandats avec filtres ; limite par défaut 20, plafond 200 | O |
 | `get_mandate` | Récupérer un seul mandat par ID de document Convex | N |
 
@@ -179,10 +172,8 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | Outil | Objectif | Curseur/Limite |
 |---|---|---|
 | `add_repo_mapping` | Mapper un slug de dépôt GitHub à un orchestrateur | N |
-| `register_repo_mapping` | Alias de `add_repo_mapping` | N |
 | `list_repo_mappings` | Lister tous les mappings de dépôts ; `fields=lite|full`, `cursor` ; limite par défaut 20, plafond 200 | O |
 | `remove_repo_mapping` | Supprimer un mapping de dépôt | N |
-| `delete_repo_mapping` | Alias de `remove_repo_mapping` | N |
 | `get_repo_mapping` | Récupérer un seul mapping de dépôt par slug (propriétaire/nom) | N |
 
 ## Fix Patterns
@@ -192,11 +183,8 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | `create_fix_pattern` | Créer un fix pattern documentant un bug, sa cause racine et sa correction | N |
 | `get_fix_pattern` | Récupérer un seul fix pattern par ID de document Convex | N |
 | `add_fix_attempt` | Documenter une tentative de correction (réussie/échouée) avec raisonnement | N |
-| `create_fix_attempt` | Alias de `add_fix_attempt` | N |
 | `validate_fix` | Définir la correction validée sur un pattern | N |
-| `check_fix` | Alias de `validate_fix` | N |
-| `search_fix_patterns_by_semantic` | Recherche sémantique sur les fix patterns par symptôme | N |
-| `search_fix_patterns` | Alias de `search_fix_patterns_by_semantic` | N |
+| `search_fix_patterns` | Recherche sémantique sur les fix patterns par symptôme | N |
 | `list_fix_patterns` | Lister les fix patterns par projet ; limite par défaut 20, plafond 200 | O |
 
 ## Déploiements
@@ -204,9 +192,7 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | Outil | Objectif | Curseur/Limite |
 |---|---|---|
 | `add_deployment` | Enregistrer un déploiement Convex pour la surveillance proactive des erreurs | N |
-| `register_deployment` | Alias de `add_deployment` | N |
 | `remove_deployment` | Désactiver un déploiement surveillé | N |
-| `delete_deployment` | Alias de `remove_deployment` | N |
 
 ## Monitoring d'erreurs
 
@@ -233,28 +219,28 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 
 | Domaine | Nombre d'outils |
 |---|---|
-| Mémoire | 9 |
+| Mémoire | 7 |
 | Épisodes | 5 |
 | Messagerie | 8 |
-| Tâches | 15 |
+| Tâches | 14 |
 | Missions | 8 |
-| Profils | 6 |
-| Journal | 4 |
+| Profils | 5 |
+| Journal | 3 |
 | Briefings | 5 |
-| Composants | 7 |
+| Composants | 6 |
 | Tâches récurrentes | 7 |
-| Mandats | 8 |
+| Mandats | 7 |
 | Unités commerciales | 5 |
 | Issues GitHub | 7 |
-| Mappings de dépôts | 6 |
-| Fix Patterns | 9 |
-| Déploiements | 4 |
+| Mappings de dépôts | 4 |
+| Fix Patterns | 6 |
+| Déploiements | 2 |
 | Monitoring d'erreurs | 2 |
 | Bundles OKF | 3 |
 | Improvisation | 1 |
-| **Total** | **119** |
+| **Total** | **105** |
 
-Note : inclut tous les noms canoniques et les alias documentés (ex. `recall`, `text_search`, `create_diary`, `create_task_dependency`). La surface d'outils enregistrés depuis `vantage-peers-mcp@2.13.1` est de 120 entrées incluant les alias.
+Note : 14 alias en doublon ont été retirés de la surface enregistrée (PR #1169) ; chaque outil ci-dessous est un nom canonique, sans alias.
 
 ## Références croisées
 

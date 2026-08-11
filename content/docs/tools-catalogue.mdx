@@ -23,10 +23,8 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | `get_memory` | Fetch a single memory by document ID | N |
 | `list_memories` | List memories in a namespace filtered by type; default limit 20, cap 200 | Y — fixed Day-114 PR #978 |
 | `soft_delete_memory` | Soft-delete a memory so it stops appearing in recall results | N |
-| `search_memories_by_semantic` | Semantic vector search over memories in a namespace (RRF fusion) | N |
-| `recall` | Alias of `search_memories_by_semantic` | N |
-| `search_memories_by_keyword` | BM25 full-text keyword search over memories | N |
-| `text_search` | Alias of `search_memories_by_keyword` | N |
+| `recall` | Semantic vector search over memories in a namespace (RRF fusion) | N |
+| `text_search` | BM25 full-text keyword search over memories | N |
 | `hybrid_search` | Combined vector + BM25 hybrid search using RRF fusion | N |
 
 ## Episodes
@@ -65,7 +63,6 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | `complete_task` | Mark a task as `done` with a mandatory completion note | N |
 | `block_task` | Set a task to `blocked` status with a reason | N |
 | `add_task_dependency` | Link two tasks so one cannot start before the other completes | N |
-| `create_task_dependency` | Alias of `add_task_dependency` | N |
 | `checkout_task` | Atomically claim a task (conflict-safe for multi-instance) | N |
 | `delete_task` | Permanently delete a task (creator or system only; blocked in production — **cancel** an erroneous task via `status="cancelled"` instead) | N |
 | `list_tasks_by_mission` | List all tasks linked to a specific mission; same `status`, `fields`, `createdBy`, `cursor` params as `list_tasks`; default limit 20, cap 200 | Y |
@@ -93,7 +90,6 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | `update_profile` | Create or update an orchestrator profile (partial updates supported) | N |
 | `list_peers` | Return all known agent instances and their current status, newest first; default limit 20, cap 200 | Y |
 | `set_summary` | Update the current working summary for an orchestrator instance | N |
-| `update_summary` | Alias of `set_summary` | N |
 | `whoami` | Return the orchestrator identity baked into the current bearer OAuth scope | N |
 
 ## Diary
@@ -101,7 +97,6 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | Tool | Purpose | Cursor/Limit |
 |---|---|---|
 | `write_diary` | Write a diary entry for a given date, overwriting any existing entry | N |
-| `create_diary` | Alias of `write_diary` | N |
 | `get_diary` | Fetch a specific diary entry by orchestrator and date | N |
 | `list_diaries` | List diary entries for an orchestrator, optional date range; default limit 20, cap 200 | Y |
 
@@ -124,8 +119,7 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | `list_components` | List all registered components filtered by type; default limit 20, cap 200 | Y |
 | `update_component` | Update a component content or version | N |
 | `delete_component` | Remove a component from the registry | N |
-| `search_components_by_keyword` | BM25 substring keyword search over components by name or team with optional type filter | N |
-| `search_components` | Alias of `search_components_by_keyword` | N |
+| `search_components` | BM25 substring keyword search over components by name or team with optional type filter | N |
 
 ## Recurring Tasks
 
@@ -148,7 +142,6 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | `update_mandate` | Update mandate fields | N |
 | `settle_mandate` | Record actual cost and close a mandate | N |
 | `validate_mandate_spending` | Check if a transaction is within mandate limits | N |
-| `check_mandate_spending` | Alias of `validate_mandate_spending` | N |
 | `list_mandates` | List mandates with filters; default limit 20, cap 200 | Y |
 | `get_mandate` | Fetch a single mandate by Convex document ID | N |
 
@@ -179,10 +172,8 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | Tool | Purpose | Cursor/Limit |
 |---|---|---|
 | `add_repo_mapping` | Map a GitHub repo slug to an orchestrator | N |
-| `register_repo_mapping` | Alias of `add_repo_mapping` | N |
 | `list_repo_mappings` | List all repo mappings; `fields=lite|full`, `cursor`; default limit 20, cap 200 | Y |
 | `remove_repo_mapping` | Remove a repo mapping | N |
-| `delete_repo_mapping` | Alias of `remove_repo_mapping` | N |
 | `get_repo_mapping` | Fetch a single repo mapping by slug (owner/name) | N |
 
 ## Fix Patterns
@@ -192,11 +183,8 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | `create_fix_pattern` | Create a fix pattern documenting a bug, root cause, and fix | N |
 | `get_fix_pattern` | Fetch a single fix pattern by Convex document ID | N |
 | `add_fix_attempt` | Document a fix attempt (worked/failed) with reasoning | N |
-| `create_fix_attempt` | Alias of `add_fix_attempt` | N |
 | `validate_fix` | Set the validated fix on a pattern | N |
-| `check_fix` | Alias of `validate_fix` | N |
-| `search_fix_patterns_by_semantic` | Semantic search over fix patterns by symptom | N |
-| `search_fix_patterns` | Alias of `search_fix_patterns_by_semantic` | N |
+| `search_fix_patterns` | Semantic search over fix patterns by symptom | N |
 | `list_fix_patterns` | List fix patterns by project; default limit 20, cap 200 | Y |
 
 ## Deployments
@@ -204,9 +192,7 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | Tool | Purpose | Cursor/Limit |
 |---|---|---|
 | `add_deployment` | Register a Convex deployment for proactive error monitoring | N |
-| `register_deployment` | Alias of `add_deployment` | N |
 | `remove_deployment` | Deactivate a monitored deployment | N |
-| `delete_deployment` | Alias of `remove_deployment` | N |
 
 ## Error Monitoring
 
@@ -233,28 +219,28 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 
 | Domain | Tool count |
 |---|---|
-| Memory | 9 |
+| Memory | 7 |
 | Episodes | 5 |
 | Messaging | 8 |
-| Tasks | 15 |
+| Tasks | 14 |
 | Missions | 8 |
-| Profiles | 6 |
-| Diary | 4 |
+| Profiles | 5 |
+| Diary | 3 |
 | Briefing Notes | 5 |
-| Components | 7 |
+| Components | 6 |
 | Recurring Tasks | 7 |
-| Mandates | 8 |
+| Mandates | 7 |
 | Business Units | 5 |
 | GitHub Issues | 7 |
-| Repo Mappings | 6 |
-| Fix Patterns | 9 |
-| Deployments | 4 |
+| Repo Mappings | 4 |
+| Fix Patterns | 6 |
+| Deployments | 2 |
 | Error Monitoring | 2 |
 | OKF Bundle | 3 |
 | Improvisation | 1 |
-| **Total** | **119** |
+| **Total** | **105** |
 
-Note: includes all canonical names and documented aliases (e.g. `recall`, `text_search`, `create_diary`, `create_task_dependency`). The registered tool surface as of `vantage-peers-mcp@2.13.1` is 120 entries including aliases.
+Note: 14 duplicate aliases were removed from the registered surface (PR #1169); every tool below is a canonical name with no alias.
 
 ## Cross-references
 
