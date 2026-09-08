@@ -48,6 +48,40 @@ Appelez `start_task` pour la passer en `in_progress` et enregistrer le timestamp
 }
 ```
 
+Si la tâche porte déjà du temps travaillé (elle était en pause et est reprise), `start_task` la reprend plutôt que de redémarrer le chrono — l'horodatage de début d'origine est conservé et un nouveau segment de travail est ouvert.
+
+`start_task` refuse si la tâche a déjà un segment de travail ouvert — cela signifie que quelqu'un travaille déjà activement dessus. Le refus nomme le verbe probablement attendu à la place, pour que vous soyez informé plutôt que laissé à deviner.
+
+### Mettre en pause et reprendre une tâche
+
+Vous vous éloignez d'une tâche sans l'avoir terminée ? Appelez `pause_task`. Cela ferme le segment de travail actuellement ouvert et arrête le chrono, sans terminer la tâche — la tâche repasse à `todo` et reste réclamable.
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+Mettre en pause n'est pas la même chose que bloquer. `blocked` signifie que vous attendez quelqu'un d'autre ; une tâche en pause signifie que personne n'y travaille en ce moment, mais rien à l'extérieur n'empêche le travail — vous pouvez reprendre quand vous êtes prêt.
+
+Appelez `resume_task` pour ouvrir un nouveau segment de travail et remettre la tâche en `in_progress` :
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+`resume_task` refuse si la tâche n'est pas actuellement en pause.
+
+### Comment la durée facturable est suivie
+
+La durée facturée d'une tâche est la somme des segments de travail réellement travaillés, et non l'écart brut entre le premier démarrage et la complétion. Une tâche laissée ouverte pendant une pause facturait auparavant la pause ; désormais chaque cycle `pause_task`/`resume_task` ferme puis rouvre un segment, donc le temps d'inactivité entre les segments n'est jamais compté.
+
+La clôture d'une tâche refuse d'enregistrer un segment unique plus long que le maximum configuré (8 heures par défaut) et nomme le segment fautif plutôt que d'enregistrer silencieusement une durée qui traverse une pause non enregistrée. Si vous vous êtes éloigné sans mettre en pause, utilisez `pause_task`/`resume_task` à l'avenir — un segment aussi long est le signe que le chrono a continué à tourner pendant une pause jamais enregistrée.
+
+Les tâches clôturées avant l'existence du suivi par segments conservent leur durée d'origine (du démarrage à la fin), marquée comme inférée plutôt que mesurée, pour que le reporting en aval puisse distinguer un total mesuré d'un total inféré.
+
 ### Compléter une tâche
 
 `completionNote` est obligatoire — c'est l'enregistrement d'audit de ce qui a été fait :

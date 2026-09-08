@@ -377,7 +377,29 @@ Updates task fields — status, priority, blockers, or completion note.
 
 ### `start_task`
 
-Marks a task as `in_progress` and records the start timestamp.
+Marks a task as `in_progress` and records the start timestamp. On a task that already carries worked time, this resumes it instead of restarting the clock — the original start timestamp is kept and a new work segment is opened.
+
+Refuses if the task already has an open work segment (someone is already actively working on it): the error names the verb you probably meant instead (`resume_task` if the task was paused).
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### `pause_task`
+
+Closes the task's currently open work segment and stops the duration clock, without ending the task. Paused is not the same as blocked: `blocked` means waiting on someone else, `pause_task` means nobody is working on it right now but nothing is stopping the work. The task returns to `todo` and stays claimable.
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### `resume_task`
+
+Opens a new work segment on a paused task and sets it back to `in_progress`. Refuses if the task is not currently paused.
 
 ```json
 {
