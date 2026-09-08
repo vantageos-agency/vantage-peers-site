@@ -325,7 +325,7 @@ Refuse si la tâche a déjà un segment de travail ouvert (quelqu'un travaille d
 
 ### `pause_task`
 
-Ferme le segment de travail actuellement ouvert de la tâche et arrête le chrono, sans terminer la tâche. Pause n'est pas la même chose que bloqué : `blocked` signifie en attente de quelqu'un d'autre, `pause_task` signifie que personne n'y travaille en ce moment mais que rien n'empêche le travail. La tâche repasse à `todo` et reste réclamable.
+Ferme le segment de travail actuellement ouvert de la tâche et arrête le chrono, sans terminer la tâche. Pause n'est pas la même chose que bloqué : `blocked` signifie en attente de quelqu'un d'autre, `pause_task` signifie que personne n'y travaille en ce moment mais que rien n'empêche le travail. La tâche repasse à `todo`, et son propriétaire la reprend avec `resume_task` ; `checkout_task` refuse une tâche en pause plutôt que de laisser quelqu'un d'autre s'en emparer.
 
 ```json
 {

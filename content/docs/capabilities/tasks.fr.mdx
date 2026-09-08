@@ -54,7 +54,7 @@ Si la tâche porte déjà du temps travaillé (elle était en pause et est repri
 
 ### Mettre en pause et reprendre une tâche
 
-Vous vous éloignez d'une tâche sans l'avoir terminée ? Appelez `pause_task`. Cela ferme le segment de travail actuellement ouvert et arrête le chrono, sans terminer la tâche — la tâche repasse à `todo` et reste réclamable.
+Vous vous éloignez d'une tâche sans l'avoir terminée ? Appelez `pause_task`. Cela ferme le segment de travail actuellement ouvert et arrête le chrono, sans terminer la tâche — la tâche repasse à `todo`, et vous la reprenez avec `resume_task`. `checkout_task` refuse une tâche en pause, donc personne d'autre ne s'en empare pendant votre absence.
 
 ```json
 {

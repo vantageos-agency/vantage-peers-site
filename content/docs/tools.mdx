@@ -389,7 +389,7 @@ Refuses if the task already has an open work segment (someone is already activel
 
 ### `pause_task`
 
-Closes the task's currently open work segment and stops the duration clock, without ending the task. Paused is not the same as blocked: `blocked` means waiting on someone else, `pause_task` means nobody is working on it right now but nothing is stopping the work. The task returns to `todo` and stays claimable.
+Closes the task's currently open work segment and stops the duration clock, without ending the task. Paused is not the same as blocked: `blocked` means waiting on someone else, `pause_task` means nobody is working on it right now but nothing is stopping the work. The task returns to `todo`, and its owner picks it back up with `resume_task`; `checkout_task` refuses a paused task rather than letting someone else claim it.
 
 ```json
 {

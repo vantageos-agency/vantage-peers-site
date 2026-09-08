@@ -54,7 +54,7 @@ If the task already carries worked time (it was paused and is being picked back 
 
 ### Pausing and Resuming a Task
 
-Stepping away from a task without finishing it? Call `pause_task`. It closes the currently open work segment and stops the duration clock, without ending the task — the task returns to `todo` and stays claimable.
+Stepping away from a task without finishing it? Call `pause_task`. It closes the currently open work segment and stops the duration clock, without ending the task — the task returns to `todo`, and you pick it back up with `resume_task`. `checkout_task` refuses a paused task, so nobody else claims it while you are away.
 
 ```json
 {
