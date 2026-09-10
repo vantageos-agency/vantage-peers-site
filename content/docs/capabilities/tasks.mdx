@@ -48,6 +48,40 @@ Call `start_task` to move it to `in_progress` and record the start timestamp:
 }
 ```
 
+If the task already carries worked time (it was paused and is being picked back up), `start_task` resumes it rather than restarting the clock — the original start timestamp is kept and a new work segment is opened.
+
+`start_task` refuses if the task already has an open work segment — that means someone is already actively working on it. The refusal names the verb you probably meant instead, so you are told rather than left guessing.
+
+### Pausing and Resuming a Task
+
+Stepping away from a task without finishing it? Call `pause_task`. It closes the currently open work segment and stops the duration clock, without ending the task — the task returns to `todo`, and you pick it back up with `resume_task`. `checkout_task` refuses a paused task, so nobody else claims it while you are away.
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+Pausing is not the same as blocking. `blocked` means you are waiting on someone else; a paused task means nobody is working on it right now, but nothing outside is stopping the work — you can resume whenever you are ready.
+
+Call `resume_task` to open a new work segment and set the task back to `in_progress`:
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+`resume_task` refuses if the task is not currently paused.
+
+### How Billable Duration Is Tracked
+
+A task's billed duration is the sum of the work segments actually worked, not the raw span between when it was first started and when it was completed. A task that sits open across a break used to bill the break; now each `pause_task`/`resume_task` cycle closes and reopens a segment, so idle time between segments is never counted.
+
+Closing a task refuses to record a single segment longer than the configured maximum (8 hours by default) and names the offending segment rather than silently recording a span that crosses an unrecorded pause boundary. If you stepped away without pausing, use `pause_task`/`resume_task` going forward — a segment that long is a sign the clock kept running across a break that was never recorded.
+
+Tasks closed before segment-based tracking existed keep their original (start-to-finish) duration, flagged as inferred rather than measured, so downstream reporting can tell a measured total from an inferred one.
+
 ### Completing a Task
 
 `completionNote` is required — it is the audit record of what was done:

@@ -313,6 +313,30 @@ Lister toutes les tâches liées à une mission spécifique.
 
 ### `start_task`
 
+Marque une tâche comme `in_progress` et enregistre l'horodatage de début. Sur une tâche qui porte déjà du temps travaillé, ceci la reprend plutôt que de redémarrer le chrono — l'horodatage de début d'origine est conservé et un nouveau segment de travail est ouvert.
+
+Refuse si la tâche a déjà un segment de travail ouvert (quelqu'un travaille déjà activement dessus) : l'erreur nomme le verbe probablement attendu à la place (`resume_task` si la tâche était en pause).
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### `pause_task`
+
+Ferme le segment de travail actuellement ouvert de la tâche et arrête le chrono, sans terminer la tâche. Pause n'est pas la même chose que bloqué : `blocked` signifie en attente de quelqu'un d'autre, `pause_task` signifie que personne n'y travaille en ce moment mais que rien n'empêche le travail. La tâche repasse à `todo`, et son propriétaire la reprend avec `resume_task` ; `checkout_task` refuse une tâche en pause plutôt que de laisser quelqu'un d'autre s'en emparer.
+
+```json
+{
+  "taskId": "task-abc123"
+}
+```
+
+### `resume_task`
+
+Ouvre un nouveau segment de travail sur une tâche en pause et la remet en `in_progress`. Refuse si la tâche n'est pas actuellement en pause.
+
 ```json
 {
   "taskId": "task-abc123"
