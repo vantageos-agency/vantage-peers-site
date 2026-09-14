@@ -109,9 +109,9 @@ Key points:
 - `fields: "lite"` keeps each page well under the 50 KB envelope target.
 - `limit: 200` maximizes throughput per round-trip.
 
-## Coverage matrix — 18 `list_*` tools
+## Coverage matrix — 17 `list_*` tools
 
-Day-114 audit (`projects/vantage-peers/mcp-pagination-audit-day114.md`) verified all 18 `list_*` tools.
+Day-114 audit (`projects/vantage-peers/mcp-pagination-audit-day114.md`) verified all `list_*` tools then in the surface, 18 at the time; one has since been removed together with the component registry and is no longer part of the served surface — see the [changelog](/docs/changelog).
 
 | Tool | Cursor support | Envelope shape | Severity |
 |---|---|---|---|
@@ -126,7 +126,6 @@ Day-114 audit (`projects/vantage-peers/mcp-pagination-audit-day114.md`) verified
 | `list_recurring_tasks` | YES | `{items, nextCursor}` | LOW — compliant |
 | `list_bus` | YES | `{items, nextCursor}` | LOW — compliant |
 | `list_peers` | YES | `{items, nextCursor}` | LOW — compliant |
-| `list_components` | YES | `{items, nextCursor}` | LOW — compliant |
 | `list_errors` | YES | `{items, nextCursor}` | LOW — compliant |
 | `list_issues` | YES | `{count, issues, nextCursor}` | LOW — compliant |
 | `list_repo_mappings` | YES | `{items, nextCursor}` | LOW — compliant |

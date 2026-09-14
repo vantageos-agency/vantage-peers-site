@@ -1,11 +1,11 @@
 ---
 title: Tools Reference
-description: All 100 MCP tools across 15 capability categories in VantagePeers.
+description: All 107 MCP tools across 14 capability categories in VantagePeers.
 ---
 
 # Tools Reference
 
-VantagePeers exposes 100 MCP tools organized into 15 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
+VantagePeers exposes 107 MCP tools organized into 14 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
 
 ## Tool Categories
 
@@ -17,7 +17,6 @@ VantagePeers exposes 100 MCP tools organized into 15 capability categories. Ever
 | [Missions + Templates](#mission--template-tools) | 8 | Group tasks into missions; instantiate templates |
 | [Profiles + Session](#profile-and-session-tools) | 5 | Agent identity, session state, and identity resolution |
 | [Diary + Briefing Notes](#diary--briefing-note-tools) | 8 | Daily journals, briefing notes, and keyword search |
-| [Components](#component-tools) | 6 | Component backup and inventory |
 | [Recurring Tasks](#recurring-task-tools) | 7 | Cron-based automation |
 | [Mandates](#mandate-tools) | 7 | Cross-agent service requests with budgets |
 | [Business Units](#business-unit-tools) | 5 | BU strategy, pricing, and KPIs |
@@ -740,82 +739,6 @@ BM25 full-text keyword search over briefing note content, ranked by relevance.
 {
   "query": "lit-ui migration decision",
   "limit": 10
-}
-```
-
----
-
-## Component Tools
-
-The component registry stores your agent team's capability inventory — agents, skills, hooks, and plugins.
-
-### `register_component`
-
-Registers a component with full content backup.
-
-```json
-{
-  "name": "dev-frontend",
-  "type": "agent",
-  "content": "...full agent file content...",
-  "version": "1.2.0",
-  "createdBy": "carol"
-}
-```
-
-Type values: `agent`, `skill`, `hook`, `plugin`.
-
-### `get_component`
-
-Retrieves a component by name and type.
-
-```json
-{
-  "name": "dev-frontend",
-  "type": "agent"
-}
-```
-
-### `list_components`
-
-Lists all registered components, optionally filtered by type. Supports `cursor` paging.
-
-```json
-{
-  "type": "agent"
-}
-```
-
-### `update_component`
-
-Updates a component's content or version.
-
-```json
-{
-  "componentId": "component-abc123",
-  "content": "...updated content...",
-  "version": "1.3.0"
-}
-```
-
-### `delete_component`
-
-Removes a component from the registry.
-
-```json
-{
-  "componentId": "component-abc123"
-}
-```
-
-### `search_components`
-
-BM25 / substring keyword search over components by name or team with optional type filter.
-
-```json
-{
-  "query": "lit-ui frontend",
-  "type": "agent"
 }
 ```
 

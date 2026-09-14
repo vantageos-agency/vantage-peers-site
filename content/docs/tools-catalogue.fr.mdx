@@ -112,17 +112,6 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | `list_briefing_notes` | Lister les briefings filtrés par sujet ; `fields=lite|full`, `cursor` ; limite par défaut 20, plafond 200 | O |
 | `search_briefing_notes_by_keyword` | Recherche plein texte BM25 sur le contenu des briefings | N |
 
-## Composants
-
-| Outil | Objectif | Curseur/Limite |
-|---|---|---|
-| `register_component` | Enregistrer un composant (agent, skill, hook, plugin) avec sauvegarde complète du contenu | N |
-| `get_component` | Récupérer un composant par nom et type | N |
-| `list_components` | Lister tous les composants enregistrés filtrés par type ; limite par défaut 20, plafond 200 | O |
-| `update_component` | Mettre à jour le contenu ou la version d'un composant | N |
-| `delete_component` | Supprimer un composant du registre | N |
-| `search_components` | Recherche BM25 par sous-chaîne sur les composants par nom ou équipe avec filtre de type optionnel | N |
-
 ## Tâches récurrentes
 
 | Outil | Objectif | Curseur/Limite |

@@ -109,9 +109,9 @@ Points clés :
 - `fields: "lite"` maintient chaque page bien en dessous de la cible de 50 Ko d'enveloppe.
 - `limit: 200` maximise le débit par aller-retour.
 
-## Matrice de couverture — 18 outils `list_*`
+## Matrice de couverture — 17 outils `list_*`
 
-L'audit Day-114 (`projects/vantage-peers/mcp-pagination-audit-day114.md`) a vérifié les 18 outils `list_*`.
+L'audit Day-114 (`projects/vantage-peers/mcp-pagination-audit-day114.md`) a vérifié les outils `list_*` alors dans la surface, 18 à l'époque ; l'un d'eux a depuis été retiré avec le registre de composants et ne fait plus partie de la surface exposée — voir le [changelog](/docs/changelog).
 
 | Outil | Support curseur | Forme de l'enveloppe | Sévérité |
 |---|---|---|---|
@@ -126,7 +126,6 @@ L'audit Day-114 (`projects/vantage-peers/mcp-pagination-audit-day114.md`) a vér
 | `list_recurring_tasks` | OUI | `{items, nextCursor}` | LOW — conforme |
 | `list_bus` | OUI | `{items, nextCursor}` | LOW — conforme |
 | `list_peers` | OUI | `{items, nextCursor}` | LOW — conforme |
-| `list_components` | OUI | `{items, nextCursor}` | LOW — conforme |
 | `list_errors` | OUI | `{items, nextCursor}` | LOW — conforme |
 | `list_issues` | OUI | `{count, issues, nextCursor}` | LOW — conforme |
 | `list_repo_mappings` | OUI | `{items, nextCursor}` | LOW — conforme |

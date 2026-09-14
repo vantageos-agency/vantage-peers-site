@@ -112,17 +112,6 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | `list_briefing_notes` | List briefings filtered by topic; `fields=lite|full`, `cursor`; default limit 20, cap 200 | Y |
 | `search_briefing_notes_by_keyword` | BM25 full-text keyword search over briefing note content | N |
 
-## Components
-
-| Tool | Purpose | Cursor/Limit |
-|---|---|---|
-| `register_component` | Register a component (agent, skill, hook, plugin) with full content backup | N |
-| `get_component` | Retrieve a component by name and type | N |
-| `list_components` | List all registered components filtered by type; default limit 20, cap 200 | Y |
-| `update_component` | Update a component content or version | N |
-| `delete_component` | Remove a component from the registry | N |
-| `search_components` | BM25 substring keyword search over components by name or team with optional type filter | N |
-
 ## Recurring Tasks
 
 | Tool | Purpose | Cursor/Limit |
