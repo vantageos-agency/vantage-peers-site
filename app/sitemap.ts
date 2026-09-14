@@ -19,7 +19,6 @@ const EN_DOCS_WITH_FR: string[] = [
 	"capabilities/fix-patterns",
 	"capabilities/recurring-tasks",
 	"infrastructure/business-units",
-	"infrastructure/components",
 	"infrastructure/error-monitoring",
 	"infrastructure/external-tracking",
 	"infrastructure/issue-resolution",
