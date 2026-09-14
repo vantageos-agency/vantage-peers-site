@@ -27,7 +27,7 @@ npm install
 ```
 
 Le dépôt contient :
-- `convex/` — toutes les définitions de schéma, requêtes, mutations et actions (20 tables)
+- `convex/` — toutes les définitions de schéma, requêtes, mutations et actions (41 tables)
 - `mcp-server/` — le serveur MCP qui se place devant Convex (transport HTTP ou stdio)
 - `convex/schema.ts` — schéma canonique, source de vérité pour toutes les définitions de tables
 
@@ -62,7 +62,7 @@ L'option `--once` déploie le schéma et les fonctions puis quitte immédiatemen
 Vous devriez voir une sortie similaire à :
 
 ```
-✓ Deployed schema (20 tables)
+✓ Deployed schema (41 tables)
 ✓ Pushed 47 functions
 Deployment URL: https://cheerful-penguin-123.convex.cloud
 ```
@@ -100,7 +100,7 @@ Ouvrez [dashboard.convex.dev](https://dashboard.convex.dev), sélectionnez votre
 npx convex deploy
 ```
 
-C'est la commande de déploiement en production. Elle compile TypeScript, valide le schéma, et pousse les 20 tables et fonctions vers votre déploiement Convex.
+C'est la commande de déploiement en production. Elle compile TypeScript, valide le schéma, et pousse les 41 tables et fonctions vers votre déploiement Convex.
 
 > **Note pour les déploiements en flotte :** Dans le workflow de flotte interne VantagePeers, les déploiements en production nécessitent un verrou `PI_AUTHORIZED_TASK_ID` appliqué par un hook pre-commit. Les clients en auto-hébergement ne sont pas soumis à ce verrou — `npx convex deploy` s'exécute directement sans étape d'approbation supplémentaire.
 
