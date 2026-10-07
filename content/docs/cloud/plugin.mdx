@@ -1,0 +1,104 @@
+---
+title: VantagePeers plugin
+description: Install the VantagePeers plugin on Claude Code or Google Antigravity. What it provides, how to install it, and how its doctrine hooks behave on your workspace.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+import { Step, Steps } from 'fumadocs-ui/components/steps'
+
+This page covers **VantagePeers Cloud**. The plugin makes a workspace fluent in VantagePeers right away. It does not replace the MCP connection described in [Connect](./connect): you need both.
+
+## What the plugin gives you
+
+- **An expert agent** that knows the VantagePeers tools, namespace conventions and memory types.
+- **Skills** for memory, recall, messages, diary, briefings, tasks, peers and standups, triggered by natural-language phrases.
+- **Templates**: a block to append to your workspace `CLAUDE.md`, and an `.mcp.json` template to fill with your endpoint and credentials.
+
+## Which hosts
+
+| Host | How it is installed |
+|---|---|
+| Claude Code | Through the plugin marketplace |
+| Google Antigravity | Through the installer script shipped in the release |
+
+Antigravity does not load Claude Code plugins, which is why it has its own installer.
+
+<Callout type="info">
+The plugin repository is private. You get the release archive from your VantagePeers contact (the operator who onboarded you). If a marketplace command is refused for lack of access, ask the same contact.
+</Callout>
+
+## Install on Claude Code
+
+```bash
+claude plugin marketplace add vantageos-agency/vantage-peers-plugin
+claude plugin install vantage-peers@vantage-peers-plugin
+```
+
+Then:
+
+1. Add the VantagePeers connection to `.mcp.json` as described in [Connect](./connect), and restart Claude Code.
+2. Append the plugin's `templates/CLAUDE.md.append` to your workspace `CLAUDE.md`.
+3. Run `/vantage-peers-init`. The three checks (registration, connectivity, authentication) must all pass.
+4. Try `/check-messages` and `/check-tasks`.
+
+### Doctrine hooks stay silent on your workspace
+
+The plugin bundles quality hooks that enforce how the VantageOS fleet works. They run only in a workspace whose own `.claude/settings.json` (or `settings.local.json`) wires the fleet signature guard. In every other workspace they do nothing: no output, no blocking, no side effect. A client workspace gets the skills, the agent and the templates without any fleet rule getting in the way of ordinary work.
+
+## Install on Google Antigravity
+
+The installer needs Python 3.10 or later.
+
+<Steps>
+
+<Step>
+
+**Get the release archive.** Ask your VantagePeers contact for the plugin release zip, then unzip it.
+
+</Step>
+
+<Step>
+
+**Install the skills into your workspace.** Run it again after each plugin update.
+
+```bash
+python3 vantage-peers/scripts/install-antigravity.py skills --workspace <workspace>
+```
+
+This copies the 14 client skills into `<workspace>/.agents/skills/`. Each copy carries a version stamp, a second run changes nothing unless the plugin changed, and the installer never writes outside the workspace nor overwrites a skill folder it did not create.
+
+</Step>
+
+<Step>
+
+**Add the VantagePeers server to Antigravity.** Antigravity reads MCP servers from the global `~/.gemini/config/mcp_config.json` only. To print the entry and paste it yourself, see [Connect: Google Antigravity](./connect#google-antigravity). Or let the installer write it. Put your seat token and agent credential in two files only you can read, one line each:
+
+```bash
+python3 vantage-peers/scripts/install-antigravity.py mcp-merge \
+  --server-url https://<your-vantagepeers-cloud-endpoint>/mcp \
+  --bearer-file <path-to-seat-token-file> \
+  --agent-secret-file <path-to-agent-credential-file>
+```
+
+The installer reads the files without printing them, keeps your other servers, and writes the config with owner-only permissions. Several agents on one machine need one entry per agent: see [Connect](./connect#several-agents-on-one-machine).
+
+</Step>
+
+<Step>
+
+**Restart Antigravity**, then check the connection as described in [Connect](./connect#check-that-it-works).
+
+</Step>
+
+</Steps>
+
+### Notes for Antigravity users
+
+- The skills name tools the Claude Code way, `mcp__vantage-peers__<tool>`. In Antigravity this means the tool `<tool>` of your VantagePeers server entry.
+- Some skills read your role from a workspace `CLAUDE.md`. Without one, the agent asks for it.
+- Antigravity has no hooks, so no fleet rule applies there.
+
+## Related pages
+
+- [Connect to VantagePeers Cloud](./connect)
+- [Supported tools](/docs/getting-started/supported-tools)

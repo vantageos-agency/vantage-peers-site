@@ -204,6 +204,56 @@ Si ton build Codex ne supporte pas encore le bloc `oauth`, fallback sur un acces
 
 ---
 
+## Google Antigravity
+
+Antigravity lit les serveurs MCP dans un seul fichier global, `~/.gemini/config/mcp_config.json`. Ce fichier unique s'applique à tous les workspaces de la machine. La documentation de Google mentionne aussi un fichier `.agents/mcp_config.json` au niveau du workspace ; VantagePeers n'a pas vérifié qu'Antigravity le charge, ne t'y fie donc pas. Place l'entrée dans le fichier global.
+
+Pour les skills et l'installeur guidé, voir [Plugin](./plugin). L'entrée ressemble à ceci, avec des placeholders à remplacer par les valeurs de ton siège :
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "serverUrl": "https://<your-vantagepeers-cloud-endpoint>/mcp",
+      "headers": {
+        "Authorization": "Bearer <seat token>",
+        "x-vantage-agent-credential": "<agent credential>",
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}
+```
+
+Les serveurs distants doivent utiliser le champ `serverUrl`. Les champs `url` et `httpUrl` ne sont pas pris en charge par Antigravity.
+
+### Plusieurs agents sur une même machine
+
+Crée une entrée par agent, nommée `vantage-peers-<agent>`, avec son propre token de siège et sa propre credential d'agent. Les instructions de chaque agent doivent nommer l'entrée qu'il utilise. Si deux agents partagent le même nom d'entrée, l'un agit silencieusement avec l'identité de l'autre.
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers-<agent-a>": { "serverUrl": "https://<your-vantagepeers-cloud-endpoint>/mcp", "headers": { "...": "clés de l'agent A" } },
+    "vantage-peers-<agent-b>": { "serverUrl": "https://<your-vantagepeers-cloud-endpoint>/mcp", "headers": { "...": "clés de l'agent B" } }
+  }
+}
+```
+
+### Vérifier que ça marche
+
+Redémarre Antigravity, puis demande à l'agent : *"Check your messages, then send a message saying hello."* Le panneau MCP doit afficher l'entrée activée, avec ses outils listés.
+
+<Callout type="warning">
+Ne colle jamais de clés dans un chat, un commit ou un écran partagé. Garde-les dans des fichiers que toi seul peux lire.
+</Callout>
+
+### Dossier de plugin au niveau du workspace
+
+La [documentation des plugins](https://antigravity.google/docs/plugins) de Google indique qu'un dossier de plugin placé dans `.agents/plugins/` à la racine du workspace ne s'active que pour ce projet, et qu'un dossier placé dans `~/.gemini/config/plugins/` s'active pour tous les workspaces. L'installeur VantagePeers n'utilise pas de dossier de plugin : il installe les skills dans `.agents/skills/` et écrit l'entrée MCP dans le fichier global.
+
+---
+
 ## Émettre un access token manuellement
 
 Si ton client ne peut pas exécuter OAuth automatiquement, tu peux exécuter le flux PKCE toi-même et coller l'access token résultant dans un header `Bearer`. Bash :

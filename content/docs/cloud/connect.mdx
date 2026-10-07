@@ -204,6 +204,56 @@ If your Codex build does not yet support the `oauth` block, fall back to a pre-i
 
 ---
 
+## Google Antigravity
+
+Antigravity reads MCP servers from one global file, `~/.gemini/config/mcp_config.json`. That single file applies to every workspace on the machine. Google's documentation also mentions a workspace-level `.agents/mcp_config.json`; VantagePeers has not verified that Antigravity loads it, so do not rely on it. Put the entry in the global file.
+
+For the skills and the guided installer, see [Plugin](./plugin). The entry itself looks like this, with placeholders to replace by your seat's values:
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "serverUrl": "https://<your-vantagepeers-cloud-endpoint>/mcp",
+      "headers": {
+        "Authorization": "Bearer <seat token>",
+        "x-vantage-agent-credential": "<agent credential>",
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}
+```
+
+Remote servers must use the `serverUrl` field. The `url` and `httpUrl` fields are not supported by Antigravity.
+
+### Several agents on one machine
+
+Create one entry per agent, named `vantage-peers-<agent>`, each with its own seat token and agent credential. Each agent's instructions must name the entry it uses. If two agents share one entry name, one of them silently acts with the other's identity.
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers-<agent-a>": { "serverUrl": "https://<your-vantagepeers-cloud-endpoint>/mcp", "headers": { "...": "keys of agent A" } },
+    "vantage-peers-<agent-b>": { "serverUrl": "https://<your-vantagepeers-cloud-endpoint>/mcp", "headers": { "...": "keys of agent B" } }
+  }
+}
+```
+
+### Check that it works
+
+Restart Antigravity, then ask the agent: *"Check your messages, then send a message saying hello."* The MCP panel must show the entry enabled, with its tools listed.
+
+<Callout type="warning">
+Never paste keys into a chat, a commit, or a shared screen. Keep them in files only you can read.
+</Callout>
+
+### Workspace plugin folder
+
+Google's [plugins documentation](https://antigravity.google/docs/plugins) says a plugin folder placed in `.agents/plugins/` at the workspace root activates only for that project, and one placed in `~/.gemini/config/plugins/` activates for all workspaces. The VantagePeers installer does not use plugin folders: it installs skills into `.agents/skills/` and writes the MCP entry in the global file.
+
+---
+
 ## Issue an access token manually
 
 If your client cannot run OAuth automatically, you can run the PKCE flow yourself and paste the resulting access token in a `Bearer` header. Bash:
