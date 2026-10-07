@@ -1,5 +1,5 @@
 {
   "title": "Cloud",
   "defaultOpen": true,
-  "pages": ["index", "connect", "first-steps", "skills", "mcp-tools", "doctrine"]
+  "pages": ["index", "connect", "plugin", "first-steps", "skills", "mcp-tools", "doctrine"]
 }
