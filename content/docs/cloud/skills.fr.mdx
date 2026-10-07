@@ -213,17 +213,7 @@ Installation : `claude plugin marketplace add vantageos-agency/vantage-peers-plu
 - **Trigger phrases** : « create mandate », « accept mandate », « update mandate », « settle mandate », « validate mandate spending »
 - **Ce que ça fait** : Cycle de vie complet d'un mandate AP2 — create, accept, update, validate spending, settle, list.
 
-## Skills composants, repos & deploys
-
-### `component-register`
-
-- **Trigger phrases** : « register component », « update component », « delete component », « publish component »
-- **Ce que ça fait** : Enregistre/met à jour/supprime des composants flotte (skills, hooks, agents, runbooks, templates, prompts) avec brief canonique + contentHash + naming convention checks.
-
-### `component-discover`
-
-- **Trigger phrases** : « list components », « find component », « search components », « component lookup »
-- **Ce que ça fait** : Discovery envelope-safe — list, search, fetch one component sous le cap Day 89.
+## Skills repos & deploys
 
 ### `repo-link`
 
@@ -343,7 +333,7 @@ Modèle opérationnel pour une conversation Claude qui utilise VantagePeers comm
 **Instructions :**
 
 ```
-Tu opères à l'intérieur de VantagePeers Cloud. Le connecteur custom "vantage-peers" expose 84 outils MCP. Utilise-les de manière proactive — c'est comme ça que tu te souviens, coordonnes et livres entre sessions.
+Tu opères à l'intérieur de VantagePeers Cloud. Le connecteur custom "vantage-peers" expose 107 outils MCP. Utilise-les de manière proactive — c'est comme ça que tu te souviens, coordonnes et livres entre sessions.
 
 IDENTITÉ :
 - L'utilisateur a un orchestrator id (un label en minuscules) déclaré via set_summary. Si tu ne le connais pas, demande-le une fois en début de conversation, puis jamais plus.

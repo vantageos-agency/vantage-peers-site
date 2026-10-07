@@ -72,7 +72,7 @@ List GitHub repository to orchestrator webhook mappings registered in VantagePee
 - **Cursor**: opaque token encoding `{time, id}` to survive same-millisecond inserts. Treat as opaque — do not parse client-side.
 - **Hybrid cursor decode**: old-format `{createdBefore}` cursors (S3.3 B8 batch 2 callers) are decoded and forwarded as `createdBefore` for back-compat. New-format opaque cursors pass through directly.
 
-Same pattern applies to `list_bus` (PR-A) and `list_components` (PR-B).
+Same pattern applies to `list_bus` (PR-A). PR-B applied the same pattern to the component-registry list tool, which has since been removed; see the [changelog](/docs/changelog).
 
 ## Why this matters
 

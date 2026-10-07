@@ -1,9 +1,8 @@
 {
   "title": "MCP Tools",
-  "description": "Reference for individual MCP tools (list_bus, list_components, etc.)",
+  "description": "Reference for individual MCP tools (list_bus, list_repo_mappings, etc.)",
   "pages": [
     "list-bus",
-    "list-components",
     "list-repo-mappings",
     "list-tasks",
     "bulk-complete-tasks",

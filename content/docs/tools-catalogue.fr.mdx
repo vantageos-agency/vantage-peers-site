@@ -112,17 +112,6 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | `list_briefing_notes` | Lister les briefings filtrés par sujet ; `fields=lite|full`, `cursor` ; limite par défaut 20, plafond 200 | O |
 | `search_briefing_notes_by_keyword` | Recherche plein texte BM25 sur le contenu des briefings | N |
 
-## Composants
-
-| Outil | Objectif | Curseur/Limite |
-|---|---|---|
-| `register_component` | Enregistrer un composant (agent, skill, hook, plugin) avec sauvegarde complète du contenu | N |
-| `get_component` | Récupérer un composant par nom et type | N |
-| `list_components` | Lister tous les composants enregistrés filtrés par type ; limite par défaut 20, plafond 200 | O |
-| `update_component` | Mettre à jour le contenu ou la version d'un composant | N |
-| `delete_component` | Supprimer un composant du registre | N |
-| `search_components` | Recherche BM25 par sous-chaîne sur les composants par nom ou équipe avec filtre de type optionnel | N |
-
 ## Tâches récurrentes
 
 | Outil | Objectif | Curseur/Limite |
@@ -229,7 +218,6 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | Profils | 5 |
 | Journal | 3 |
 | Briefings | 5 |
-| Composants | 6 |
 | Tâches récurrentes | 7 |
 | Mandats | 7 |
 | Unités commerciales | 5 |
@@ -240,7 +228,9 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | Monitoring d'erreurs | 2 |
 | Bundles OKF | 3 |
 | Improvisation | 1 |
-| **Total** | **107** |
+| **Total** | **101** |
+
+Ce catalogue documente 101 des 107 outils servis par le serveur MCP. Six outils servis ne sont pas encore documentés ici : `billing_summary_by_project`, `fail_task`, `generate_upload_url`, `soft_delete_document`, `soft_delete_mission_template`, `store_document_chunked`.
 
 Note : 14 alias en doublon ont été retirés de la surface enregistrée (PR #1169) ; chaque outil ci-dessous est un nom canonique, sans alias.
 

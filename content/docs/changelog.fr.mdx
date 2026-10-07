@@ -5,6 +5,14 @@ description: Historique des versions de vantage-peers-mcp.
 
 # Journal des modifications
 
+## Non publié
+
+### Retiré
+
+- **Outils du registre de composants retirés** — `register_component`, `get_component`, `list_components`, `update_component`, `delete_component` et `search_components` ne sont plus servis par le serveur MCP VantagePeers ; la table `components` a été supprimée. VantageRegistry est la source de vérité pour la gestion des composants (agents, skills, hooks, plugins). Les chemins d'authentification bearer legacy DCR (`oauthClients`/`oauthTokens`) et `mcpTenants` ont également été retirés et refusent désormais.
+
+---
+
 ## v2.13.1 — 2026-06-27
 
 ### Corrigé

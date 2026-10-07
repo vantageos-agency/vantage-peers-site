@@ -27,7 +27,7 @@ npm install
 ```
 
 The repository contains:
-- `convex/` — all schema definitions, queries, mutations, and actions (20 tables)
+- `convex/` — all schema definitions, queries, mutations, and actions (41 tables)
 - `mcp-server/` — the MCP server that sits in front of Convex (HTTP or stdio transport)
 - `convex/schema.ts` — canonical schema, the source of truth for all table definitions
 
@@ -62,7 +62,7 @@ The `--once` flag deploys the schema and functions then exits immediately (no wa
 You will see output similar to:
 
 ```
-✓ Deployed schema (20 tables)
+✓ Deployed schema (41 tables)
 ✓ Pushed 47 functions
 Deployment URL: https://cheerful-penguin-123.convex.cloud
 ```
@@ -100,7 +100,7 @@ Only set these if you are enabling the Clerk JWT credential issuance flow (`POST
 npx convex deploy
 ```
 
-This is the production deploy command. It compiles TypeScript, validates the schema, and pushes all 20 tables and functions to your Convex deployment.
+This is the production deploy command. It compiles TypeScript, validates the schema, and pushes all 41 tables and functions to your Convex deployment.
 
 > **Note for fleet deployments:** In the VantagePeers internal fleet workflow, production deploys require a `PI_AUTHORIZED_TASK_ID` gate enforced by a pre-commit hook. Self-hosting clients are not subject to this gate — `npx convex deploy` runs directly without any additional approval step.
 

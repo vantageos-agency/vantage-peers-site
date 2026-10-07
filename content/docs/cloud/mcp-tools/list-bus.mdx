@@ -81,7 +81,7 @@ Returns the full BU record (name, description, purpose, businessModel, targetCus
 - **fields=lite**: projects to 5 stable keys (`_id`, `_creationTime`, `name`, `status`, `orchestratorId`). Payload stays under 25KB even for 100 BUs.
 - **Cursor**: opaque token encoding `{creationTime, id}` to survive same-millisecond inserts. Treat as opaque — do not parse client-side.
 
-Same pattern applies to `list_components` (PR-B) and `list_repo_mappings` (PR-C).
+Same pattern applies to `list_repo_mappings` (PR-C). PR-B applied the same pattern to the component-registry list tool, which has since been removed; see the [changelog](/docs/changelog).
 
 ## Why this matters
 
