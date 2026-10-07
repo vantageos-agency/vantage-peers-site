@@ -206,7 +206,7 @@ Si ton build Codex ne supporte pas encore le bloc `oauth`, fallback sur un acces
 
 ## Google Antigravity
 
-Antigravity lit les serveurs MCP dans un seul fichier global, `~/.gemini/config/mcp_config.json`. Ce fichier unique s'applique à tous les workspaces de la machine. La documentation de Google mentionne aussi un fichier `.agents/mcp_config.json` au niveau du workspace ; VantagePeers n'a pas vérifié qu'Antigravity le charge, ne t'y fie donc pas. Place l'entrée dans le fichier global.
+Antigravity lit les serveurs MCP dans un seul fichier global, `~/.gemini/config/mcp_config.json`. Ce fichier unique s'applique à tous les workspaces de la machine. La [page MCP](https://antigravity.google/docs/mcp) de Google indique (en anglais) que le fichier de configuration "is located globally at `~/.gemini/config/mcp_config.json` (or locally in your workspace under `.agents/mcp_config.json`)". Google ne documente ni la fusion des deux fichiers ni lequel l'emporte, et VantagePeers n'a pas vérifié que l'IDE charge le fichier de workspace : place l'entrée dans le fichier global.
 
 Pour les skills et l'installeur guidé, voir [Plugin](./plugin). L'entrée ressemble à ceci, avec des placeholders à remplacer par les valeurs de ton siège :
 
@@ -247,6 +247,16 @@ Redémarre Antigravity, puis demande à l'agent : *"Check your messages, then se
 <Callout type="warning">
 Ne colle jamais de clés dans un chat, un commit ou un écran partagé. Garde-les dans des fichiers que toi seul peux lire.
 </Callout>
+
+### Autres fichiers de réglages : `settings.json`
+
+Un `~/.gemini/settings.json` (utilisateur) et un `.gemini/settings.json` de projet existent, mais ils relèvent de Gemini CLI, pas d'Antigravity.
+
+- La [référence de configuration de Gemini CLI](https://geminicli.com/docs/reference/configuration/) de Google indique que le fichier utilisateur `~/.gemini/settings.json` "Applies to all Gemini CLI sessions for the current user" et que le fichier de projet `.gemini/settings.json` "Applies only when running Gemini CLI from that specific project" et "Project settings override user settings and system defaults". Gemini CLI lit `mcpServers` dans ces fichiers ([page MCP de Gemini CLI](https://geminicli.com/docs/tools/mcp-server/)).
+- Sur cette même page MCP, pour un serveur fourni par une extension, les valeurs locales de `settings.json` l'emportent sur les valeurs par défaut de l'extension. C'est la règle "le local prime sur les extensions" : elle concerne les extensions de Gemini CLI, pas Antigravity.
+- La [page de migration d'Antigravity CLI](https://antigravity.google/docs/cli/gcli-migration) de Google indique : "Legacy Gemini config: Servers were declared inline within `~/.gemini/settings.json`" et que les serveurs d'Antigravity CLI "are defined inside a standalone `mcp_config.json` profile".
+
+Non vérifié par VantagePeers : si l'IDE Antigravity lit un bloc `mcpServers` depuis `~/.gemini/settings.json` ou depuis un `.gemini/settings.json` de projet. Aucune page Google Antigravity trouvée ne l'affirme, et la page de migration dit le contraire pour la CLI. Ce guide n'utilise donc pas `settings.json`, et un fichier de projet n'est pas proposé pour donner à chaque workspace sa propre entrée. Garde une entrée par agent dans le fichier global, comme ci-dessus.
 
 ### Dossier de plugin au niveau du workspace
 
