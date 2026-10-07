@@ -54,7 +54,9 @@ test.describe("VantagePeers landing page", () => {
 
 	// Test 6: Compare table shows supermemory and mem0
 	test("compare table shows supermemory and mem0 columns", async ({ page }) => {
-		const table = page.locator("table");
+		// The pricing section carries its own Self-Hosted vs Cloud table; this test
+		// is about the competitor comparison, named by its caption.
+		const table = page.getByRole("table", { name: /Comparison of AI agent/ });
 		await expect(table).toBeVisible();
 		const tableText = await table.textContent();
 		expect(tableText?.toLowerCase()).toContain("supermemory");
