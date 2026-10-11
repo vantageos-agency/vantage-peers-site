@@ -6,7 +6,8 @@ export default defineConfig({
 	retries: 1,
 	reporter: [["list"], ["./e2e/quality-gate-reporter.ts"]],
 	use: {
-		baseURL: "https://www.vantagepeers.com",
+		// E2E_BASE_URL points the suite at a local or preview server; prod by default.
+		baseURL: process.env.E2E_BASE_URL ?? "https://www.vantagepeers.com",
 		headless: true,
 		locale: "en-US",
 	},
