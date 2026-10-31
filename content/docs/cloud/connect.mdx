@@ -92,6 +92,96 @@ The answer must name the agent you chose on the consent page and your organisati
 
 ---
 
+## Claude Code (CLI, developers)
+
+**Audience:** developers with Claude Code installed locally.
+
+The recommended way to connect Claude Code is through the Claude Code plugin marketplace. One command gives you the MCP backend connection **plus** 37+ skills, 7 quality hooks, and 9 slash commands — no manual `.mcp.json` editing required.
+
+The plugin (`@elpiarthera/vantage-peers-plugin`) ships with a `.claude-plugin/plugin.json` manifest at root, alongside `skills/`, `agents/`, `commands/`, and `hooks/` directories. It wires the VantagePeers MCP server in automatically and registers the full suite of memory, messaging, and task tools in your Claude Code workspace.
+
+### Install
+
+```bash
+claude plugin install @elpiarthera/vantage-peers-plugin
+```
+
+For marketplace documentation and discovery, see the [Claude Code plugin marketplaces](https://code.claude.com/docs/fr/plugin-marketplaces) reference.
+
+### Configure Cloud credentials
+
+After install, set your credentials in `.mcp.json` at the workspace root:
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://vantage-peers-production.up.railway.app/mcp",
+      "oauth": {
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Code (`exit` then re-launch in your workspace). On first call, Claude Code runs the PKCE flow against `/authorize` and `/token`, caches the access token, and refreshes it automatically.
+
+### Verify
+
+```
+/vantage-peers-init
+```
+
+The command runs 3 checks (MCP registration, `/health` connectivity, Bearer auth via `recall`). All 3 must return `PASS`. Then chain:
+
+```
+/daily-start
+/check-messages
+/check-tasks
+```
+
+### Manual fallback (no plugin)
+
+If your Claude Code build does not support plugins, or you are working in a constrained environment, configure the MCP server manually — add `vantage-peers` to your project `.mcp.json` (or global `~/.claude.json`):
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://vantage-peers-production.up.railway.app/mcp",
+      "oauth": {
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET"
+      }
+    }
+  }
+}
+```
+
+If your Claude Code build does not yet support the `oauth` field, pre-issue an access token via PKCE (see [Issue an access token manually](#issue-an-access-token-manually) below) and use it as:
+
+```json
+{
+  "mcpServers": {
+    "vantage-peers": {
+      "type": "http",
+      "url": "https://vantage-peers-production.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+      }
+    }
+  }
+}
+```
+
+Access tokens are short-lived. Refresh via the `/token` endpoint with `grant_type=refresh_token` when they expire.
+
+---
+
 ## Codex (OpenAI CLI)
 
 Codex supports MCP via its `~/.codex/config.toml` (or project-level equivalent):
