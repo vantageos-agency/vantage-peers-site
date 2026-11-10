@@ -36,8 +36,8 @@ const content: LegalDocumentContent = {
 		{
 			heading: "Who is responsible for your data",
 			paragraphs: [
-				"VantagePeers Cloud is published by Perello Consulting / ElPi Corp, represented by Laurent Perello. Contact: laurent@perello.fr.",
-				"Registered address and company registration number: [TO VERIFY: postal address and registration number; the Legal Notice currently states the registration is in progress].",
+				"VantagePeers Cloud is published by VANTAGE FORGE SARLAU (société à responsabilité limitée à associé unique), capital 10 000 MAD; registered office Oasis Offices Latitudes, Route de l'Oasis, Bureau 304, Maarif, Casablanca, Morocco; RC 749415, Tribunal de commerce de Casablanca; ICE 004026362000006; IF 73376411; TP 34754054; managing director Laurent Perello.",
+				"Contact: laurent@perello.fr.",
 			],
 		},
 		{

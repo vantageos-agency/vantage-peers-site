@@ -30,7 +30,7 @@ const content: LegalDocumentContent = {
 	lastUpdated:
 		"Draft, November 2026 [TO VERIFY: publication date once reviewed]",
 	intro:
-		"These terms govern your use of VantagePeers Cloud, the hosted multi-tenant service published by Perello Consulting / ElPi Corp. They do not apply to self-hosted VantagePeers, which is distributed under its own licence.",
+		"These terms govern your use of VantagePeers Cloud, the hosted multi-tenant service published by VANTAGE FORGE SARLAU. They do not apply to self-hosted VantagePeers, which is distributed under its own licence.",
 	sections: [
 		{
 			heading: "The service",
@@ -103,13 +103,14 @@ const content: LegalDocumentContent = {
 		{
 			heading: "Governing law",
 			paragraphs: [
-				"[TO VERIFY: governing law and competent courts for the service; the website's Legal Notice states French law and the courts of France for the website].",
+				"These terms are governed by the laws of Morocco; the courts of Casablanca have jurisdiction. [TO VERIFY: operator to confirm]",
 			],
 		},
 		{
 			heading: "Contact",
 			paragraphs: [
-				"Perello Consulting / ElPi Corp, laurent@perello.fr. [TO VERIFY: postal address]. For help with the service, see the Support page.",
+				"VANTAGE FORGE SARLAU (société à responsabilité limitée à associé unique), capital 10 000 MAD; registered office Oasis Offices Latitudes, Route de l'Oasis, Bureau 304, Maarif, Casablanca, Morocco; RC 749415, Tribunal de commerce de Casablanca; ICE 004026362000006; IF 73376411; TP 34754054; managing director Laurent Perello.",
+				"Contact: laurent@perello.fr. For help with the service, see the Support page.",
 			],
 		},
 	],

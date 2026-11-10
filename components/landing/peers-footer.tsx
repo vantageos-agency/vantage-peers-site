@@ -8,8 +8,8 @@ const content = {
 	en: {
 		tagline: "Open-source agent memory coordination. FSL License.",
 		founderNote:
-			"Built by Laurent Perello (Perello Consulting / ElPi Corp), who runs a fleet of 12+ Claude Code orchestrators in production every day.",
-		copyright: "Perello Consulting / ElPi Corp. All rights reserved.",
+			"Built by Laurent Perello (VANTAGE FORGE SARLAU), who runs a fleet of 12+ Claude Code orchestrators in production every day.",
+		copyright: "VANTAGE FORGE SARLAU. All rights reserved.",
 		links: [
 			{ label: "Features", href: "#features" },
 			{ label: "How It Works", href: "#how-it-works" },
@@ -29,8 +29,8 @@ const content = {
 	fr: {
 		tagline: "Coordination de mémoire d’agents open-source. Licence FSL.",
 		founderNote:
-			"Construit par Laurent Perello (Perello Consulting / ElPi Corp), qui opère une flotte de 12+ orchestrateurs Claude Code en production chaque jour.",
-		copyright: "Perello Consulting / ElPi Corp. Tous droits réservés.",
+			"Construit par Laurent Perello (VANTAGE FORGE SARLAU), qui opère une flotte de 12+ orchestrateurs Claude Code en production chaque jour.",
+		copyright: "VANTAGE FORGE SARLAU. Tous droits réservés.",
 		links: [
 			{ label: "Fonctionnalités", href: "#features" },
 			{ label: "Comment ça marche", href: "#how-it-works" },

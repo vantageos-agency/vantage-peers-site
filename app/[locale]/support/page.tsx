@@ -30,7 +30,7 @@ const content: LegalDocumentContent = {
 	lastUpdated:
 		"Draft, November 2026 [TO VERIFY: publication date once reviewed]",
 	intro:
-		"Help for VantagePeers Cloud, the hosted service at https://mcp.vantagepeers.com/mcp, published by Perello Consulting / ElPi Corp.",
+		"Help for VantagePeers Cloud, the hosted service at https://mcp.vantagepeers.com/mcp, published by VANTAGE FORGE SARLAU.",
 	sections: [
 		{
 			heading: "How to get help",
