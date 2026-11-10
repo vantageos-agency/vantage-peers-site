@@ -47,8 +47,8 @@ const content: LegalDocumentContent = {
 				"Content you and your agents write. Through the MCP tools you, the people in your organisation and the AI agents you connect can store: memories (including episodes), messages and their read receipts, tasks, missions, recurring tasks, briefing notes, diary entries, agent profiles, mandates, fix patterns, issues, debate rooms, and documents you upload for ingestion into your knowledge base. Each item records which person or agent wrote it and when.",
 				"Connection data. When your AI client connects, it registers an OAuth client with us (a client identifier, its display name and redirect addresses; its secret is stored only as a SHA-256 hash). Access and refresh tokens are stored only as hashes, together with the rights they carry and their expiry. Changes to an organisation's access rights are recorded in an audit log.",
 				"Usage data. For each organisation, each caller and each tool, we keep a counter of calls and the time of the first and last call.",
-				"Server logs. [TO VERIFY: whether the MCP server and the database record request or response content in their logs, and for how long those logs are kept].",
-				"Website. This website uses Plausible Analytics to count visits. Signing in uses a Clerk session cookie. [TO VERIFY: confirm that Plausible is configured without cookies and without personal data, and list any other cookie set by the site].",
+				"Server logs. The MCP server writes log lines at startup and when an operation fails. A failure line records the tool, the namespace or channel, the author name, the size of the content and the error, not the content itself. Logs of the MCP server are kept by Railway for 7 days. The database keeps only a short history of recent function logs.",
+				"Website. This website counts visits with Plausible Analytics, which sets no cookie and does not store IP addresses. The only cookie this website sets is NEXT_LOCALE, which remembers your language. Signing in to VantagePeers Cloud happens on Clerk's pages, which set Clerk's own session cookies.",
 			],
 		},
 		{
@@ -67,13 +67,13 @@ const content: LegalDocumentContent = {
 				"We use the following providers to run VantagePeers Cloud. Each receives only what its role requires.",
 			],
 			items: [
-				"Convex: the database, file storage and server functions. It stores all the data listed above. [TO VERIFY: data region of the production deployment].",
-				"Railway: hosts the MCP server at mcp.vantagepeers.com. Every tool request and response passes through it. [TO VERIFY: Railway region and log retention].",
-				"Clerk: sign-in, sessions and organisation membership. It holds your account details. [TO VERIFY: Clerk data region].",
-				"Embeddings provider: the text of memories and of ingested document chunks is sent to an OpenAI-compatible embeddings endpoint (model text-embedding-3-small) to compute the vectors used for search. Depending on configuration this is the Vercel AI Gateway, which forwards to the model provider, or the OpenAI API directly. [TO VERIFY: which path production uses, and that provider's retention of submitted text].",
-				"Vercel: hosts this website. [TO VERIFY: whether Vercel also serves the DNS for vantagepeers.com].",
-				"Plausible: visit statistics for this website.",
-				"[TO VERIFY: data processing agreements in place with each provider, and the safeguards for transfers outside the European Union].",
+				"Convex: the database, file storage and server functions. It stores all the data listed above. Convex runs on Amazon Web Services, encrypts data at rest with 256-bit AES and in transit with TLS, and is SOC 2 Type 2 compliant. [TO VERIFY: data region of the production deployment, shown only in the Convex dashboard].",
+				"Railway: hosts the MCP server at mcp.vantagepeers.com, in its Amsterdam (Netherlands) region. Every tool request and response passes through it; it stores none of your content, only the server logs described above.",
+				"Clerk (Clerk, Inc., United States): sign-in, sessions and organisation membership. It holds your account details, primarily in Google Cloud and Cloudflare data centres.",
+				"OpenAI, reached directly or through Vercel AI Gateway: the text of memories and of ingested document chunks is sent to OpenAI's text-embedding-3-small model to compute the vectors used for search. OpenAI states that data sent to its API is not used to train its models, and keeps abuse-monitoring logs for up to 30 days. Vercel AI Gateway states that it does not retain prompts or outputs. [TO VERIFY: which of the two paths production uses; it is decided by the embeddings key set on the Convex production deployment, readable only in the Convex dashboard].",
+				"Vercel: hosts this website and serves the DNS of vantagepeers.com.",
+				"Plausible: visit statistics for this website, processed and stored in the European Union.",
+				"Transfers outside the European Union: Clerk relies on the EU-U.S. Data Privacy Framework, with the EU Standard Contractual Clauses as fallback; Vercel relies on the EU Standard Contractual Clauses. The data processing agreements of Clerk, Vercel and Plausible form part of their terms. [TO VERIFY: data processing agreements signed with Railway (signature required) and Convex and OpenAI, and their transfer safeguards].",
 			],
 		},
 		{
@@ -87,7 +87,7 @@ const content: LegalDocumentContent = {
 			items: [
 				"Each organisation's data is isolated: a connection is resolved to its verified organisation and cannot read or write another organisation's data.",
 				"Client secrets and tokens are stored as SHA-256 hashes, never in clear.",
-				"Connections to the service use HTTPS. [TO VERIFY: encryption at rest for the database and file storage].",
+				"Connections to the service use HTTPS. The database and file storage are encrypted at rest by Convex.",
 			],
 		},
 		{
@@ -97,7 +97,7 @@ const content: LegalDocumentContent = {
 				"Short-lived records are purged automatically every hour after they expire: sign-in codes, webhook delivery records and upload tickets.",
 				"An access token issued through the standard sign-in lasts one hour and a refresh token 30 days; an access token issued to a provisioned agent seat lasts 7 days.",
 				"After your organisation's subscription ends: [TO VERIFY: retention period after termination, and when data is deleted].",
-				"Backups: [TO VERIFY: whether backups exist and how long they are kept].",
+				"Backups: [TO VERIFY: whether automatic backups are enabled on the production deployment, shown only in the Convex dashboard; Convex keeps daily backups 7 days and weekly backups 14 days].",
 			],
 		},
 		{
