@@ -1,145 +1,145 @@
-import { setRequestLocale } from 'next-intl/server';
-import type { Metadata } from 'next';
+import { setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
+import {
+	LegalDocument,
+	type LegalDocumentContent,
+} from "@/components/legal/legal-document";
 
 type Props = {
-  params: Promise<{ locale: string }>;
+	params: Promise<{ locale: string }>;
 };
 
+const BASE_URL = "https://www.vantagepeers.com";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
-  return {
-    title: locale === 'fr'
-      ? 'Politique de confidentialit\u00e9 \u2014 VantageOS Team'
-      : 'Privacy Policy \u2014 VantageOS Team',
-    description: locale === 'fr'
-      ? 'Politique de confidentialit\u00e9 et protection des donn\u00e9es personnelles de VantageOS Team.'
-      : 'Privacy policy and personal data protection for VantageOS Team.',
-    alternates: {
-      canonical: `https://vantageos-team.vercel.app/${locale}/privacy`,
-      languages: { en: '/en/privacy', fr: '/fr/privacy' },
-    },
-  };
+	const { locale } = await params;
+	return {
+		title: "Privacy Policy — VantagePeers Cloud",
+		description:
+			"How VantagePeers Cloud collects, uses, stores, shares, retains and deletes data.",
+		alternates: {
+			canonical: `${BASE_URL}${locale === "fr" ? "/fr" : ""}/privacy`,
+			languages: { en: "/privacy", fr: "/fr/privacy" },
+		},
+	};
 }
 
-const content = {
-  en: {
-    title: 'Privacy Policy',
-    lastUpdated: 'Last updated: March 2026',
-    sections: [
-      {
-        heading: 'Data Controller',
-        body: 'Perello Consulting / ElPi Corp, represented by Laurent Perello. Contact: laurent@perello.fr.',
-      },
-      {
-        heading: 'Data We Collect',
-        body: 'We only process data you explicitly share with us through email, Telegram, or file sharing. This may include: your name, email address, business documents, and task instructions. We do not use cookies for tracking. We do not collect data passively.',
-      },
-      {
-        heading: 'How We Use Your Data',
-        body: 'Your data is used exclusively to deliver the VantageOS Team service: processing your tasks, building your dedicated knowledge base, and improving the quality of results over time. We never sell, rent, or share your data with third parties for marketing purposes.',
-      },
-      {
-        heading: 'AI Processing',
-        body: 'Tasks are processed using AI models (primarily Anthropic Claude, Google APIs). Your data is never used to train AI models. It is only used within your dedicated workspace to serve you.',
-      },
-      {
-        heading: 'Data Storage and Security',
-        body: 'Data is stored on encrypted servers in Europe (Google Cloud) and processed via Anthropic APIs (US-based, SOC 2 Type II certified). All communications are encrypted in transit (TLS). No undeclared third-party storage is used.',
-      },
-      {
-        heading: 'Data Retention',
-        body: 'Your data is retained for the duration of your subscription. Upon cancellation, your knowledge base and deliverables are exported to you. All data on our side is deleted within 30 days of cancellation.',
-      },
-      {
-        heading: 'Your Rights (GDPR)',
-        body: 'Under the General Data Protection Regulation (GDPR), you have the right to: access your personal data, rectify inaccurate data, request erasure of your data, restrict processing, data portability, and object to processing. To exercise any of these rights, contact laurent@perello.fr.',
-      },
-      {
-        heading: 'Data Processing Agreement',
-        body: 'A Data Processing Agreement (DPA) is available on request for all plans. Contact laurent@perello.fr to request one.',
-      },
-      {
-        heading: 'Changes to This Policy',
-        body: 'We may update this privacy policy from time to time. The date at the top of this page indicates the last revision. Continued use of the service after changes constitutes acceptance of the updated policy.',
-      },
-    ],
-  },
-  fr: {
-    title: 'Politique de confidentialit\u00e9',
-    lastUpdated: 'Derni\u00e8re mise \u00e0 jour\u00a0: mars 2026',
-    sections: [
-      {
-        heading: 'Responsable du traitement',
-        body: 'Perello Consulting / ElPi Corp, repr\u00e9sent\u00e9 par Laurent Perello. Contact\u00a0: laurent@perello.fr.',
-      },
-      {
-        heading: 'Donn\u00e9es collect\u00e9es',
-        body: 'Nous ne traitons que les donn\u00e9es que vous partagez explicitement avec nous par email, Telegram ou partage de fichiers. Cela peut inclure\u00a0: votre nom, adresse email, documents professionnels et instructions de t\u00e2ches. Nous n\u2019utilisons pas de cookies de tra\u00e7age. Nous ne collectons aucune donn\u00e9e de mani\u00e8re passive.',
-      },
-      {
-        heading: 'Utilisation de vos donn\u00e9es',
-        body: 'Vos donn\u00e9es sont utilis\u00e9es exclusivement pour d\u00e9livrer le service VantageOS Team\u00a0: traitement de vos t\u00e2ches, construction de votre base de connaissances d\u00e9di\u00e9e, et am\u00e9lioration de la qualit\u00e9 des r\u00e9sultats au fil du temps. Nous ne vendons, ne louons et ne partageons jamais vos donn\u00e9es avec des tiers \u00e0 des fins marketing.',
-      },
-      {
-        heading: 'Traitement par IA',
-        body: 'Les t\u00e2ches sont trait\u00e9es par des mod\u00e8les d\u2019IA (principalement Anthropic Claude, APIs Google). Vos donn\u00e9es ne sont jamais utilis\u00e9es pour entra\u00eener des mod\u00e8les d\u2019IA. Elles servent uniquement au sein de votre espace d\u00e9di\u00e9.',
-      },
-      {
-        heading: 'Stockage et s\u00e9curit\u00e9',
-        body: 'Les donn\u00e9es sont stock\u00e9es sur des serveurs chiffr\u00e9s en Europe (Google Cloud) et trait\u00e9es via les APIs Anthropic (bas\u00e9es aux \u00c9tats-Unis, certifi\u00e9es SOC 2 Type II). Toutes les communications sont chiffr\u00e9es en transit (TLS). Aucun stockage tiers non d\u00e9clar\u00e9 n\u2019est utilis\u00e9.',
-      },
-      {
-        heading: 'Conservation des donn\u00e9es',
-        body: 'Vos donn\u00e9es sont conserv\u00e9es pendant la dur\u00e9e de votre abonnement. En cas de r\u00e9siliation, votre base de connaissances et vos livrables vous sont export\u00e9s. Toutes les donn\u00e9es de notre c\u00f4t\u00e9 sont supprim\u00e9es sous 30 jours.',
-      },
-      {
-        heading: 'Vos droits (RGPD)',
-        body: 'Conform\u00e9ment au R\u00e8glement G\u00e9n\u00e9ral sur la Protection des Donn\u00e9es (RGPD), vous disposez des droits suivants\u00a0: acc\u00e8s \u00e0 vos donn\u00e9es personnelles, rectification des donn\u00e9es inexactes, effacement de vos donn\u00e9es, limitation du traitement, portabilit\u00e9 des donn\u00e9es, et opposition au traitement. Pour exercer ces droits, contactez laurent@perello.fr.',
-      },
-      {
-        heading: 'Accord de traitement des donn\u00e9es',
-        body: 'Un accord de traitement des donn\u00e9es (DPA) est disponible sur demande pour toutes les formules. Contactez laurent@perello.fr pour en faire la demande.',
-      },
-      {
-        heading: 'Modifications de cette politique',
-        body: 'Nous pouvons mettre \u00e0 jour cette politique de confidentialit\u00e9. La date en haut de cette page indique la derni\u00e8re r\u00e9vision. L\u2019utilisation continue du service apr\u00e8s modification vaut acceptation de la politique mise \u00e0 jour.',
-      },
-    ],
-  },
+// DRAFT. English only for now; the French route renders the same text.
+// Every [TO VERIFY: ...] marker is an operator decision or an unread fact.
+const content: LegalDocumentContent = {
+	title: "Privacy Policy",
+	lastUpdated:
+		"Draft, November 2026 [TO VERIFY: publication date once reviewed]",
+	intro:
+		"This policy covers VantagePeers Cloud, the hosted multi-tenant service reached at https://mcp.vantagepeers.com/mcp from Claude, ChatGPT, Claude Code, Codex or any other client that speaks the Model Context Protocol (MCP), and this website. It does not cover a self-hosted VantagePeers deployment: if you run VantagePeers on your own infrastructure, the data stays on that infrastructure and you are its operator.",
+	sections: [
+		{
+			heading: "Who is responsible for your data",
+			paragraphs: [
+				"VantagePeers Cloud is published by Perello Consulting / ElPi Corp, represented by Laurent Perello. Contact: laurent@perello.fr.",
+				"Registered address and company registration number: [TO VERIFY: postal address and registration number; the Legal Notice currently states the registration is in progress].",
+			],
+		},
+		{
+			heading: "Data we collect",
+			paragraphs: [
+				"Account and organisation data. Sign-in is handled by Clerk. On our side we store your Clerk user identifier, the identifier and name of your organisation, and your role in it (admin or member). Your email address is stored by us only when an operator invites a specific person to a personal agent, so the invitation can be matched to that person's verified email when they join. Your name, email address and sign-in credentials are held by Clerk. [TO VERIFY: the exact profile fields collected by the Clerk instance (email, name, social sign-in providers)].",
+				"Content you and your agents write. Through the MCP tools you, the people in your organisation and the AI agents you connect can store: memories (including episodes), messages and their read receipts, tasks, missions, recurring tasks, briefing notes, diary entries, agent profiles, mandates, fix patterns, issues, debate rooms, and documents you upload for ingestion into your knowledge base. Each item records which person or agent wrote it and when.",
+				"Connection data. When your AI client connects, it registers an OAuth client with us (a client identifier, its display name and redirect addresses; its secret is stored only as a SHA-256 hash). Access and refresh tokens are stored only as hashes, together with the rights they carry and their expiry. Changes to an organisation's access rights are recorded in an audit log.",
+				"Usage data. For each organisation, each caller and each tool, we keep a counter of calls and the time of the first and last call.",
+				"Server logs. [TO VERIFY: whether the MCP server and the database record request or response content in their logs, and for how long those logs are kept].",
+				"Website. This website uses Plausible Analytics to count visits. Signing in uses a Clerk session cookie. [TO VERIFY: confirm that Plausible is configured without cookies and without personal data, and list any other cookie set by the site].",
+			],
+		},
+		{
+			heading: "How we use it",
+			items: [
+				"To provide the service: store your content, return it to the members and agents of your organisation, and search it by meaning and by keyword.",
+				"To authenticate each request and to enforce that a connection only reads and writes what its organisation and its rights allow.",
+				"To operate the service: usage counters per tool and per caller. [TO VERIFY: the purposes of the usage counters (quota, billing, support, product statistics)].",
+				"We do not sell or rent your data, and we do not share it with third parties for marketing purposes.",
+				"Your content is not used to train AI models. [TO VERIFY: confirm this commitment for VantagePeers Cloud and for the embeddings provider's own terms].",
+			],
+		},
+		{
+			heading: "Where it is stored and who processes it",
+			paragraphs: [
+				"We use the following providers to run VantagePeers Cloud. Each receives only what its role requires.",
+			],
+			items: [
+				"Convex: the database, file storage and server functions. It stores all the data listed above. [TO VERIFY: data region of the production deployment].",
+				"Railway: hosts the MCP server at mcp.vantagepeers.com. Every tool request and response passes through it. [TO VERIFY: Railway region and log retention].",
+				"Clerk: sign-in, sessions and organisation membership. It holds your account details. [TO VERIFY: Clerk data region].",
+				"Embeddings provider: the text of memories and of ingested document chunks is sent to an OpenAI-compatible embeddings endpoint (model text-embedding-3-small) to compute the vectors used for search. Depending on configuration this is the Vercel AI Gateway, which forwards to the model provider, or the OpenAI API directly. [TO VERIFY: which path production uses, and that provider's retention of submitted text].",
+				"Vercel: hosts this website. [TO VERIFY: whether Vercel also serves the DNS for vantagepeers.com].",
+				"Plausible: visit statistics for this website.",
+				"[TO VERIFY: data processing agreements in place with each provider, and the safeguards for transfers outside the European Union].",
+			],
+		},
+		{
+			heading: "Your AI client",
+			paragraphs: [
+				"The assistant you connect (for example Claude or ChatGPT) is operated by its own provider, not by us. What it sends to VantagePeers and what it does with the answers is governed by that provider's terms and privacy policy.",
+			],
+		},
+		{
+			heading: "Security",
+			items: [
+				"Each organisation's data is isolated: a connection is resolved to its verified organisation and cannot read or write another organisation's data.",
+				"Client secrets and tokens are stored as SHA-256 hashes, never in clear.",
+				"Connections to the service use HTTPS. [TO VERIFY: encryption at rest for the database and file storage].",
+			],
+		},
+		{
+			heading: "How long we keep it",
+			items: [
+				"Your content is kept until it is deleted by you or by your organisation. The service has no automatic expiry for memories, messages, tasks, missions or the other content listed above.",
+				"Short-lived records are purged automatically every hour after they expire: sign-in codes, webhook delivery records and upload tickets.",
+				"An access token issued through the standard sign-in lasts one hour and a refresh token 30 days; an access token issued to a provisioned agent seat lasts 7 days.",
+				"After your organisation's subscription ends: [TO VERIFY: retention period after termination, and when data is deleted].",
+				"Backups: [TO VERIFY: whether backups exist and how long they are kept].",
+			],
+		},
+		{
+			heading: "Deleting your data",
+			items: [
+				"The erase_row tool permanently deletes one row (and, for a memory, its search entry) in: memories, messages, missions, tasks, recurring tasks, briefing notes, diary entries, debate rooms, issues, business units and debate templates. Dependent rows (read receipts, turns, participants) are deleted with it. An organisation admin can erase any row of the organisation; the person or agent that wrote a row can erase it.",
+				"The erase_memory tool permanently removes a specific text, such as a leaked credential, from a memory and from its search entry, while keeping the rest of the memory.",
+				"For anything these tools do not cover (your account, your organisation, uploaded files, agent profiles, usage counters, connection records), write to laurent@perello.fr. [TO VERIFY: the deletion procedure and its time limit].",
+			],
+		},
+		{
+			heading: "Your rights",
+			paragraphs: [
+				"Under the General Data Protection Regulation (GDPR), you have the right to access your personal data, rectify it, request its erasure, restrict or object to its processing, and receive it in a portable form. The export_okf_bundle tool exports the memories, briefing notes and tasks of a namespace as a downloadable bundle. To exercise any right, contact laurent@perello.fr.",
+				"Legal basis for processing: [TO VERIFY: legal basis per purpose (contract, legitimate interest)]. You may lodge a complaint with a supervisory authority: [TO VERIFY: competent authority, for example the CNIL in France].",
+				"Minimum age: [TO VERIFY: minimum age to use the service].",
+			],
+		},
+		{
+			heading: "Changes to this policy",
+			paragraphs: [
+				"We may update this policy. The date at the top of this page indicates the last revision. [TO VERIFY: how users are notified of material changes].",
+			],
+		},
+		{
+			heading: "Contact",
+			paragraphs: [
+				"Privacy questions and requests: laurent@perello.fr. Other questions: see the Support page.",
+			],
+		},
+	],
 };
 
 export default async function PrivacyPage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-  const t = content[locale as keyof typeof content] || content.en;
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        <a
-          href={locale === 'fr' ? '/fr' : '/'}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 inline-block"
-        >
-          &larr; {locale === 'fr' ? 'Retour' : 'Back'}
-        </a>
-
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
-          {t.title}
-        </h1>
-        <p className="text-sm text-muted-foreground mb-12">{t.lastUpdated}</p>
-
-        <div className="space-y-8">
-          {t.sections.map((section) => (
-            <div key={section.heading}>
-              <h2 className="text-xl font-semibold mb-3">{section.heading}</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {section.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+	return (
+		<LegalDocument
+			content={content}
+			backHref={locale === "fr" ? "/fr" : "/"}
+			backLabel={locale === "fr" ? "Retour" : "Back"}
+		/>
+	);
 }
