@@ -1,51 +1,49 @@
 ---
 title: First steps after connecting
-description: A 5-step natural-language walkthrough to register your identity, write your first memory, and confirm VantagePeers Cloud is working.
+description: Five plain sentences to check that VantagePeers Cloud works for you — who you are, a first note, finding it again, a first task, and what else you can ask.
 ---
 
-Your MCP client is [connected](./connect). Now talk to the assistant in natural language — you do **not** type tool names like `set_summary` or JSON payloads. The assistant will pick the right VantagePeers tool for each request.
+{/* Source: measured on production 2026-11-10/11 with a person connection (claude.ai-style OAuth, agent chosen on the consent page): whoami returns the agent; a note written without naming a place lands in team/<organisation>; recall, text_search and hybrid_search find it; create, list, start and complete a task all succeed; tools/list serves 93 tools (MCP commit 04c7db60). Wording of the assistants' own replies is not measured. */}
 
-Replace `<your-name>` below with the lowercase label you want to use (one short word). VantagePeers will use that label to scope your memories, tasks and messages to you.
+Your assistant is [connected](./connect). From here you simply talk to it in your own words. You never type tool names or technical codes: the assistant picks the right VantagePeers action for each sentence.
 
-## 1. Tell the assistant who you are
+You do not need to choose a name or a folder. When you connected, the consent page asked which **agent** this assistant acts as. That agent is your identity in VantagePeers, and everything you save goes to your organisation's shared space unless you ask otherwise.
 
-In your conversation, say:
+## 1. Check who you are
 
-> *"Use VantagePeers. Register me as orchestrator `<your-name>` with the summary `getting started`."*
+Say:
 
-The assistant calls `set_summary`. You should get back a short confirmation containing your name. This is your identity — every memory and task you create from now on is attached to it.
+> *"Who am I on VantagePeers?"*
 
-## 2. Save your first memory
+The assistant answers with your agent's name and your organisation. If it says no agent is linked, disconnect and reconnect the assistant, and pick an agent on the consent page.
 
-> *"Save this in VantagePeers under the namespace `project/<your-name>-onboarding` as a reference memory: 'My first memory — connection confirmed.'"*
+## 2. Save a first note
 
-The assistant calls `store_memory`. You should get back a memory id (a short code starting with `m`). That row is now stored in your private tenant.
+> *"Remember in VantagePeers: our team meeting moves to Thursdays at 10."*
 
-## 3. Find it back
+The assistant confirms the note is saved. It is stored in your organisation's space, visible to the agents of your organisation and to no one else.
 
-> *"Use VantagePeers to recall anything about 'connection' in `project/<your-name>-onboarding`."*
+## 3. Find it again
 
-The assistant calls `recall`. You should see your sentence from step 2 in the results. If the result is empty, repeat step 2 — sometimes the request is auto-answered without running the tool; rephrasing as *"call the recall tool"* forces the call.
+> *"What did we decide about the team meeting?"*
+
+The assistant searches VantagePeers and gives you back the note from step 2. A new note is found straight away.
 
 ## 4. Create a first task
 
-> *"Use VantagePeers to create a task assigned to `<your-name>`: title 'Try VantagePeers tasks', priority medium."*
+> *"Create a task in VantagePeers for me: send the meeting agenda by Wednesday. Project: team meeting."*
 
-The assistant calls `create_task`. You get back a task id. You have now used the three core capabilities — memory write, memory read, task create.
+The assistant creates the task and tells you so. Then try *"Show my tasks"*, *"Start that task"* and *"Mark it done: agenda sent"*. A task always belongs to a project, so name one in your sentence.
 
-## 5. Browse what else you can do
+## 5. See what else you can ask
 
-> *"List the VantagePeers tools available to me."*
+> *"What can you do with VantagePeers?"*
 
-The assistant returns the list — 107 tools across memory, messaging, tasks, missions, diary, briefing notes, search, fix patterns, and more. Full reference: [Tools](/docs/tools).
+Besides notes and tasks, your agents can message each other, keep a diary of decisions, group tasks into missions, and record how a recurring problem was fixed. The full list is in the [tools reference](/docs/tools).
 
 ## If something does not work
 
-- The assistant answers without calling a tool → say *"Call the VantagePeers `<tool-name>` tool explicitly with these arguments: ..."*.
-- `401 Unauthorized` → your access token expired; the client refreshes it automatically, retry. If it persists, contact VantageOS.
-- `403 Forbidden` → you tried to write/read outside your tenant. Use `project/<your-name>-...` or `global` for your own data.
-- Nothing happens / spinner forever → check the [Connect troubleshooting](./connect#troubleshooting) section, then ping VantageOS via your onboarding channel.
-
-## What's next
-
-You are production-ready. From here, anything described in the [Tools reference](/docs/tools) is one natural-language request away — send messages to other agents, write a diary entry to capture decisions, create missions to group related tasks, log fix patterns when you solve a bug.
+- **The assistant answers without using VantagePeers.** Start your sentence with *"Use VantagePeers to…"*.
+- **It says you are not signed in, or the connection expired.** Reconnect the assistant (see [Connect](./connect)): sign in again and approve.
+- **It says an action is refused.** You asked for something outside your organisation, or that your role does not allow. Ask again without naming a place: your organisation's space is used by default.
+- **Nothing happens.** Check the [Connect troubleshooting](./connect#troubleshooting), then write to your VantageOS onboarding contact.

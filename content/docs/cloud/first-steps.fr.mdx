@@ -1,51 +1,49 @@
 ---
 title: Premiers pas après connexion
-description: Un parcours en 5 étapes en langage naturel pour enregistrer votre identité, écrire votre première mémoire et confirmer que VantagePeers Cloud fonctionne.
+description: Cinq phrases simples pour vérifier que VantagePeers Cloud fonctionne pour vous — qui vous êtes, une première note, la retrouver, une première tâche, et ce que vous pouvez demander d'autre.
 ---
 
-Votre client MCP est [connecté](./connect). Vous parlez maintenant à l'assistant en langage naturel — vous ne tapez **pas** de noms d'outils comme `set_summary` ni de JSON. L'assistant choisit le bon outil VantagePeers pour chaque demande.
+{/* Source : mesuré en production les 2026-11-10/11 avec une connexion personne (OAuth type claude.ai, agent choisi sur la page de consentement) : whoami renvoie l'agent ; une note écrite sans préciser d'emplacement arrive dans team/<organisation> ; recall, text_search et hybrid_search la retrouvent ; créer, lister, démarrer et terminer une tâche réussissent ; tools/list sert 93 outils (commit MCP 04c7db60). La formulation des réponses des assistants n'est pas mesurée. */}
 
-Remplacez `<votre-nom>` ci-dessous par le label en minuscules que vous voulez utiliser (un mot court). VantagePeers s'en sert pour scoper vos mémoires, tâches et messages à vous.
+Votre assistant est [connecté](./connect). À partir de maintenant, vous lui parlez simplement avec vos mots. Vous ne tapez jamais de nom d'outil ni de code technique : l'assistant choisit la bonne action VantagePeers pour chaque phrase.
 
-## 1. Dites à l'assistant qui vous êtes
+Vous n'avez ni nom ni dossier à choisir. Lors de la connexion, la page de consentement vous a demandé pour quel **agent** cet assistant agit. Cet agent est votre identité dans VantagePeers, et tout ce que vous enregistrez va dans l'espace partagé de votre organisation, sauf si vous demandez autre chose.
 
-Dans votre conversation, dites :
+## 1. Vérifiez qui vous êtes
 
-> *« Utilise VantagePeers. Enregistre-moi comme orchestrateur `<votre-nom>` avec le summary `démarrage`. »*
+Dites :
 
-L'assistant appelle `set_summary`. Vous devez obtenir une courte confirmation contenant votre nom. C'est votre identité — chaque mémoire et tâche que vous créerez ensuite y sera attachée.
+> *« Qui suis-je sur VantagePeers ? »*
 
-## 2. Sauvegardez votre première mémoire
+L'assistant répond avec le nom de votre agent et votre organisation. S'il indique qu'aucun agent n'est lié, déconnectez puis reconnectez l'assistant, et choisissez un agent sur la page de consentement.
 
-> *« Sauvegarde dans VantagePeers, dans le namespace `project/<votre-nom>-onboarding`, une mémoire de type reference : 'Ma première mémoire — connexion confirmée.' »*
+## 2. Enregistrez une première note
 
-L'assistant appelle `store_memory`. Vous obtenez en retour un memory id (un code court commençant par `m`). Cette ligne est maintenant dans votre tenant privé.
+> *« Retiens dans VantagePeers : notre réunion d'équipe passe au jeudi à 10 h. »*
+
+L'assistant confirme que la note est enregistrée. Elle est rangée dans l'espace de votre organisation, visible des agents de votre organisation et de personne d'autre.
 
 ## 3. Retrouvez-la
 
-> *« Utilise VantagePeers pour rappeler tout ce qui parle de 'connexion' dans `project/<votre-nom>-onboarding`. »*
+> *« Qu'avons-nous décidé pour la réunion d'équipe ? »*
 
-L'assistant appelle `recall`. Vous devez voir votre phrase de l'étape 2 dans les résultats. Si le résultat est vide, refaites l'étape 2 — parfois la requête est traitée sans outil ; reformuler par *« appelle l'outil recall »* force l'appel.
+L'assistant cherche dans VantagePeers et vous rend la note de l'étape 2. Une note toute neuve est retrouvée immédiatement.
 
 ## 4. Créez une première tâche
 
-> *« Utilise VantagePeers pour créer une tâche assignée à `<votre-nom>` : titre 'Tester les tâches VantagePeers', priorité medium. »*
+> *« Crée-moi une tâche dans VantagePeers : envoyer l'ordre du jour de la réunion avant mercredi. Projet : réunion d'équipe. »*
 
-L'assistant appelle `create_task`. Vous obtenez un task id. Vous avez utilisé les trois capacités principales — écriture mémoire, lecture mémoire, création de tâche.
+L'assistant crée la tâche et vous le dit. Essayez ensuite *« Montre mes tâches »*, *« Démarre cette tâche »* et *« Marque-la terminée : ordre du jour envoyé »*. Une tâche appartient toujours à un projet : nommez-le dans votre phrase.
 
-## 5. Découvrez le reste
+## 5. Voyez ce que vous pouvez demander d'autre
 
-> *« Liste les outils VantagePeers disponibles pour moi. »*
+> *« Que peux-tu faire avec VantagePeers ? »*
 
-L'assistant renvoie la liste — 107 outils pour mémoire, messagerie, tâches, missions, journal, notes de briefing, recherche, fix patterns, et plus. Référence complète : [Tools](/docs/tools).
+En plus des notes et des tâches, vos agents peuvent s'envoyer des messages, tenir un journal des décisions, regrouper des tâches en missions et garder la trace de la façon dont un problème récurrent a été résolu. La liste complète est dans la [référence des outils](/docs/tools).
 
-## Si ça ne marche pas
+## Si quelque chose ne fonctionne pas
 
-- L'assistant répond sans appeler d'outil → dites *« Appelle explicitement l'outil VantagePeers `<nom-outil>` avec ces arguments : ... »*.
-- `401 Unauthorized` → votre access token a expiré ; le client le rafraîchit automatiquement, réessayez. Si ça persiste, contactez VantageOS.
-- `403 Forbidden` → vous avez tenté d'écrire ou lire en dehors de votre tenant. Utilisez `project/<votre-nom>-...` ou `global` pour vos propres données.
-- Rien ne se passe / spinner infini → consultez la section [Dépannage de Connect](./connect#dépannage), puis pinguez VantageOS via votre canal d'onboarding.
-
-## La suite
-
-Vous êtes production-ready. À partir d'ici, tout ce qui est décrit dans la [référence des outils](/docs/tools) est à une phrase en langage naturel — envoyer un message à un autre agent, écrire une entrée de journal pour capturer une décision, créer une mission pour regrouper des tâches liées, logger un fix pattern quand vous résolvez un bug.
+- **L'assistant répond sans utiliser VantagePeers.** Commencez votre phrase par *« Utilise VantagePeers pour… »*.
+- **Il dit que vous n'êtes pas connecté, ou que la connexion a expiré.** Reconnectez l'assistant (voir [Connexion](./connect)) : connectez-vous de nouveau et approuvez.
+- **Il dit qu'une action est refusée.** Vous avez demandé quelque chose hors de votre organisation, ou que votre rôle ne permet pas. Redemandez sans préciser d'emplacement : l'espace de votre organisation est utilisé par défaut.
+- **Rien ne se passe.** Consultez le [dépannage de la connexion](./connect#dépannage), puis écrivez à votre contact d'accompagnement VantageOS.
