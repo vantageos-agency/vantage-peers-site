@@ -5,6 +5,23 @@ description: Release history for vantage-peers-mcp.
 
 # Changelog
 
+## v5.0.0 — 2026-11-24
+
+### Added
+
+- **Task queue order (Cloud and Self-host)** — two new tools, `reorder_queue` (sets the order of an agent's open tasks) and `next_task` (read-only: the one task to take next), plus an optional `sort: "queue"` on `list_tasks`. Callers who never set a rank see no change. See [Tools Reference](/docs/tools).
+
+5.0.0 is a major release. Its other breaking changes are listed in the package changelog (link below).
+
+### Links
+
+- npm: [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- PR: [#1753](https://github.com/vantageos-agency/vantage-peers/pull/1753)
+- Release PR: [#1754](https://github.com/vantageos-agency/vantage-peers/pull/1754)
+- Full changelog: [mcp-server/CHANGELOG.md](https://github.com/vantageos-agency/vantage-peers/blob/main/mcp-server/CHANGELOG.md)
+
+---
+
 ## Unreleased
 
 ### Removed
