@@ -3,6 +3,8 @@ title: Tools Reference
 description: All 107 MCP tools across 14 capability categories in VantagePeers.
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout'
+
 # Tools Reference
 
 VantagePeers exposes 107 MCP tools organized into 14 capability categories. Every tool accepts and returns JSON. All values are lowercase strings unless noted.
@@ -329,6 +331,7 @@ Lists tasks filtered by assignee and/or status.
 | `createdBy` | Filter to tasks created by a specific orchestrator (e.g. `"pi"`). |
 | `updatedSince` | Unix ms timestamp; filter to rows updated after this time. |
 | `cursor` | Opaque cursor for paging past the 200-row cap. |
+| `sort` | Optional. `"queue"` orders rows by the assignee's explicit queue: ranked tasks first by rank (1 = next), then unranked tasks by priority and age. The reply is one page with no `nextCursor`: name `assignedTo` and a `limit` large enough for the queue. Omit `sort` to keep the default newest-first order. Rows carry `queueRank` only when the task has one. |
 
 ```json
 {
@@ -339,6 +342,63 @@ Lists tasks filtered by assignee and/or status.
   "limit": 30
 }
 ```
+
+### `reorder_queue`
+
+Sets the order of an agent's open tasks. The listed tasks get ranks 1..N in the order given (1 = next); every other open task of that agent loses its rank.
+
+```json
+{
+  "assignedToAgentId": "r57bexrjnt2229qzchhj5bs3yh8j5ta1",
+  "taskIds": ["k178d3ns...", "k17bbbbb..."]
+}
+```
+
+| Param | Notes |
+|-------|-------|
+| `assignedToAgentId` | Required. The agent's `agentId` as `list_peers` returns it. A name never selects a queue. |
+| `taskIds` | Array of task IDs, first = next, max 100. |
+
+- **Full replacement.** An empty `taskIds` clears the whole queue.
+- **All or nothing.** Each task must be open (`todo`, `in_progress`, `review` or `blocked`), assigned to that agent, and listed once. One refused task changes nothing: there is no partial write.
+- **Idempotent.** Sending the same list again leaves the queue as it is.
+- **Returns** `{ ranked, cleared }`: how many tasks now hold a rank, and how many others lost theirs.
+- **Refusals**, each an error naming its cause: `QUEUE_TASK_NOT_ASSIGNED`, `QUEUE_TASK_NOT_OPEN`, `QUEUE_TASK_DUPLICATE`, `QUEUE_TOO_LONG`, `RBAC_DENIED`.
+
+**Who may reorder.** Three callers, always within the assignee's own organisation:
+
+1. the assignee itself;
+2. an agent listed as a queue coordinator of the assignee's organisation;
+3. an organisation admin (a signed-in person with the admin role in that organisation).
+
+Creating a task gives no right to reorder it by itself, and another organisation's admin is refused. The queue coordinator list is set by an organisation admin; there is no MCP tool for it.
+
+<Callout type="warn">
+Through the MCP tool today, only the assignee and a listed queue coordinator are admitted. An organisation admin's right is enforced by the backend, but the MCP path does not serve it yet (a fix is tracked).
+</Callout>
+
+### `next_task`
+
+Read-only. Returns the one task an agent should take next: among the agent's `todo` tasks the caller may see, the first in queue order (ranked tasks by rank, then unranked tasks by priority, then age) whose dependencies are all done.
+
+```json
+{
+  "assignedToAgentId": "r57bexrjnt2229qzchhj5bs3yh8j5ta1"
+}
+```
+
+| Param | Notes |
+|-------|-------|
+| `assignedToAgentId` | The agent's `agentId`. |
+| `assignedTo` | The agent's name. One of the two is required, otherwise `QUEUE_ASSIGNEE_REQUIRED`. |
+
+Output is `{ found, task?, message? }`. With `found: true`, `task` holds `_id`, `_creationTime`, `title`, `description?`, `status`, `priority`, `assignedTo`, `missionId?` and `queueRank?`. With `found: false`, a `message` says why: an empty answer is stated, never silent.
+
+`next_task` only reads. `start_task` is what takes the task.
+
+<Callout type="info">
+Order is a property of the queue, not of a dependency. `reorder_queue` sets order without dependencies: a task listed before a task it depends on is still not handed out by `next_task` until its dependencies are done. Keep dependencies for real prerequisites. The queue features are available on both Cloud and Self-host, and change nothing for a caller that never sets a rank.
+</Callout>
 
 ### `search_tasks_by_keyword`
 

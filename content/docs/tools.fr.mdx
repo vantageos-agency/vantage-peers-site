@@ -3,6 +3,8 @@ title: Référence des outils
 description: Les 107 outils MCP répartis en 14 catégories de capacités dans VantagePeers.
 ---
 
+import { Callout } from 'fumadocs-ui/components/callout'
+
 # Référence des outils
 
 VantagePeers expose 107 outils MCP organisés en 14 catégories de capacités. Chaque outil accepte et retourne du JSON. Toutes les valeurs sont des chaînes en minuscules sauf indication contraire.
@@ -268,6 +270,64 @@ Les tâches suivent le travail de la création à la complétion avec piste d'au
   "fields": "lite"
 }
 ```
+
+**`sort="queue"` — ordre de la file.** Ordonne les lignes selon la file explicite de l'assigné : les tâches classées d'abord par rang (1 = la prochaine), puis les tâches non classées par priorité et ancienneté. La réponse tient en une seule page, sans `nextCursor` : renseignez `assignedTo` et une `limit` assez grande pour la file. Sans `sort`, l'ordre par défaut (plus récent d'abord) reste inchangé. Les lignes portent `queueRank` uniquement quand la tâche en a un.
+
+### `reorder_queue`
+
+Définir l'ordre des tâches ouvertes d'un agent. Les tâches listées reçoivent les rangs 1..N dans l'ordre donné (1 = la prochaine) ; toute autre tâche ouverte de cet agent perd son rang.
+
+```json
+{
+  "assignedToAgentId": "r57bexrjnt2229qzchhj5bs3yh8j5ta1",
+  "taskIds": ["k178d3ns...", "k17bbbbb..."]
+}
+```
+
+- `assignedToAgentId` (obligatoire) : l'`agentId` de l'agent tel que `list_peers` le renvoie. Un nom ne sélectionne jamais une file.
+- `taskIds` : tableau d'identifiants de tâches, la première = la prochaine, 100 au maximum.
+
+**Remplacement complet.** Un `taskIds` vide efface toute la file.
+
+**Tout ou rien.** Chaque tâche doit être ouverte (`todo`, `in_progress`, `review` ou `blocked`), assignée à cet agent et listée une seule fois. Une tâche refusée n'entraîne aucun changement : pas d'écriture partielle.
+
+**Idempotent.** Renvoyer la même liste laisse la file inchangée.
+
+**Retour** : `{ ranked, cleared }`, soit le nombre de tâches qui portent désormais un rang et le nombre d'autres tâches qui ont perdu le leur.
+
+**Refus**, chacun sous forme d'erreur nommant sa cause : `QUEUE_TASK_NOT_ASSIGNED`, `QUEUE_TASK_NOT_OPEN`, `QUEUE_TASK_DUPLICATE`, `QUEUE_TOO_LONG`, `RBAC_DENIED`.
+
+**Qui peut réordonner.** Trois appelants, toujours au sein de l'organisation de l'assigné :
+
+1. l'assigné lui-même ;
+2. un agent inscrit comme coordinateur de file de l'organisation de l'assigné ;
+3. un administrateur de l'organisation (une personne connectée ayant le rôle d'administrateur dans cette organisation).
+
+Créer une tâche ne donne pas, à soi seul, le droit de la réordonner, et l'administrateur d'une autre organisation est refusé. La liste des coordinateurs de file est définie par un administrateur de l'organisation ; aucun outil MCP ne permet de la modifier.
+
+<Callout type="warn">
+Via l'outil MCP aujourd'hui, seuls l'assigné et un coordinateur de file inscrit sont admis. Le droit de l'administrateur de l'organisation est appliqué par le backend, mais le chemin MCP ne le prend pas encore en charge (une correction est suivie).
+</Callout>
+
+### `next_task`
+
+Lecture seule. Renvoie la seule tâche qu'un agent doit prendre ensuite : parmi les tâches `todo` de l'agent que l'appelant peut voir, la première dans l'ordre de la file (tâches classées par rang, puis non classées par priorité, puis ancienneté) dont toutes les dépendances sont terminées.
+
+```json
+{
+  "assignedToAgentId": "r57bexrjnt2229qzchhj5bs3yh8j5ta1"
+}
+```
+
+Paramètres : `assignedToAgentId` (l'`agentId` de l'agent) ou `assignedTo` (son nom). L'un des deux est obligatoire, sinon `QUEUE_ASSIGNEE_REQUIRED`.
+
+Le retour est `{ found, task?, message? }`. Avec `found: true`, `task` contient `_id`, `_creationTime`, `title`, `description?`, `status`, `priority`, `assignedTo`, `missionId?` et `queueRank?`. Avec `found: false`, un `message` en donne la raison : une réponse vide est annoncée, jamais silencieuse.
+
+`next_task` ne fait que lire. C'est `start_task` qui prend la tâche.
+
+<Callout type="info">
+L'ordre est une propriété de la file, pas une dépendance. `reorder_queue` fixe l'ordre sans dépendances : une tâche listée avant une tâche dont elle dépend n'est toujours pas remise par `next_task` tant que ses dépendances ne sont pas terminées. Réservez les dépendances aux vrais prérequis. L'ordre de file est disponible sur Cloud comme sur Self-host, et ne change rien pour un appelant qui ne définit jamais de rang.
+</Callout>
 
 ### `list_tasks_by_mission`
 

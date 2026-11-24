@@ -5,6 +5,23 @@ description: Historique des versions de vantage-peers-mcp.
 
 # Journal des modifications
 
+## v5.0.0 — 2026-11-24
+
+### Ajouté
+
+- **Ordre de la file de tâches (Cloud et Self-host)** — deux nouveaux outils, `reorder_queue` (définit l'ordre des tâches ouvertes d'un agent) et `next_task` (lecture seule : la seule tâche à prendre ensuite), ainsi qu'un paramètre optionnel `sort: "queue"` sur `list_tasks`. Aucun changement pour les appelants qui ne définissent jamais de rang. Voir la [Référence des outils](/docs/tools).
+
+La 5.0.0 est une version majeure. Ses autres changements incompatibles sont listés dans le journal des modifications du paquet (lien ci-dessous).
+
+### Liens
+
+- npm : [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- PR : [#1753](https://github.com/vantageos-agency/vantage-peers/pull/1753)
+- PR de release : [#1754](https://github.com/vantageos-agency/vantage-peers/pull/1754)
+- Journal complet : [mcp-server/CHANGELOG.md](https://github.com/vantageos-agency/vantage-peers/blob/main/mcp-server/CHANGELOG.md)
+
+---
+
 ## Non publié
 
 ### Retiré
