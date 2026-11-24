@@ -98,6 +98,32 @@ export default function sitemap(): MetadataRoute.Sitemap {
 				},
 			},
 		},
+		{
+			url: `${BASE_URL}/terms`,
+			lastModified: new Date(),
+			changeFrequency: "monthly",
+			priority: 0.3,
+			alternates: {
+				languages: {
+					en: `${BASE_URL}/terms`,
+					fr: `${BASE_URL}/fr/terms`,
+					"x-default": `${BASE_URL}/terms`,
+				},
+			},
+		},
+		{
+			url: `${BASE_URL}/fr/terms`,
+			lastModified: new Date(),
+			changeFrequency: "monthly",
+			priority: 0.3,
+			alternates: {
+				languages: {
+					en: `${BASE_URL}/terms`,
+					fr: `${BASE_URL}/fr/terms`,
+					"x-default": `${BASE_URL}/terms`,
+				},
+			},
+		},
 	];
 
 	// EN docs with FR counterparts — emit both EN and FR entries

@@ -18,6 +18,7 @@ const content = {
 		],
 		legalLinks: [
 			{ label: "Privacy Policy", href: "/privacy" },
+			{ label: "Terms", href: "/terms" },
 			{ label: "Legal Notice", href: "/legal" },
 		],
 		github: "GitHub",
@@ -37,6 +38,7 @@ const content = {
 		],
 		legalLinks: [
 			{ label: "Politique de confidentialité", href: "/fr/privacy" },
+			{ label: "Conditions", href: "/fr/terms" },
 			{ label: "Mentions légales", href: "/fr/legal" },
 		],
 		github: "GitHub",
