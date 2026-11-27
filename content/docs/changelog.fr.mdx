@@ -5,6 +5,33 @@ description: Historique des versions de vantage-peers-mcp.
 
 # Journal des modifications
 
+## v6.0.0 — 2026-11-27
+
+La 6.0.0 est une version majeure (Cloud et Self-host).
+
+### Modifié (incompatible)
+
+- **`create_recurring_task` exige `project`** — un planning sans `project`, ou avec un `project` vide ou composé d'espaces, est refusé. Chaque tâche générée par le planning porte ce projet, et la facturation regroupe les tâches terminées par projet ([#1800](https://github.com/vantageos-agency/vantage-peers/issues/1800)). Voir [Tâches récurrentes](/docs/capabilities/recurring-tasks).
+- **Self-host : `CLERK_DOMAIN` est requis pour l'émission du jeton de compte de service** — il n'a aucune valeur par défaut. Une valeur absente, vide ou composée d'espaces est refusée avant tout appel à Clerk, avec une erreur qui nomme `CLERK_DOMAIN` ([#1795](https://github.com/vantageos-agency/vantage-peers/issues/1795)). La vérification des JWT Clerk applique encore une valeur par défaut pour cette variable en 6.0.0. Voir [Variables d'environnement](/docs/self-host/env-vars).
+- **Les lectures `ui://` transmettent l'organisation vérifiée de l'appelant** — un bearer qui ne porte aucune organisation est refusé ([#1801](https://github.com/vantageos-agency/vantage-peers/issues/1801)).
+
+### Corrigé
+
+- **Pagination de `list_repo_mappings`** — les pages au-delà de la première se lisent en repassant le `nextCursor` retourné dans `cursor`. Une page qui contient une ligne hors périmètre est servie : sur cette ligne `orchestrator` est absent et `outOfScope.reason` en donne la raison ([#1805](https://github.com/vantageos-agency/vantage-peers/issues/1805)). Voir [list_repo_mappings](/docs/cloud/mcp-tools/list-repo-mappings) (page en anglais).
+- **Journal de démarrage** — le serveur journalise le port d'écoute, jamais le nom d'hôte ([#1797](https://github.com/vantageos-agency/vantage-peers/issues/1797)).
+
+### Notes de migration
+
+- Les appelants de `create_recurring_task` doivent passer `project`.
+- Self-host : définir `CLERK_DOMAIN` (l'origine de l'API Frontend de l'instance Clerk qui a émis `CLERK_SECRET_KEY`) avant la mise à niveau.
+
+### Liens
+
+- npm : [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- Journal complet : [mcp-server/CHANGELOG.md](https://github.com/vantageos-agency/vantage-peers/blob/main/mcp-server/CHANGELOG.md)
+
+---
+
 ## v5.0.0 — 2026-11-24
 
 ### Ajouté

@@ -31,6 +31,7 @@ These are set in the environment where the MCP server process runs (Railway serv
 | `CONVEX_URL_INTERNAL` | Yes (HTTP) | `https://slug.convex.cloud` | Convex URL for the internal VantagePeers deployment. Used by the HTTP MCP server (`server-http.js`) to resolve tenant routing and validate OAuth tokens. Must be set for the HTTP transport to function. |
 | `BEARER_SECRET_MASTER` | Yes | _(32-byte hex)_ | Must match the value set in the Convex dashboard. The HTTP MCP server checks incoming `Authorization: Bearer <token>` headers against this value as the admin fast-path. |
 | `PUBLIC_BASE_URL` | No | `https://vantage-peers-production.up.railway.app` | Public URL of the MCP server. Used in `WWW-Authenticate` headers (RFC 6750) to point OAuth clients at the discovery endpoint. Defaults to the Railway production URL if unset. |
+| `CLERK_DOMAIN` | Yes (service-account mint) | `https://clerk.my-app.com` | Frontend API origin of the Clerk instance that issued `CLERK_SECRET_KEY`. No default (since 6.0.0): an unset, empty or whitespace-only value is refused before any Clerk call, with an error naming `CLERK_DOMAIN`. Set it before upgrading to 6.0.0. Clerk JWT verification still falls back to a default for this variable in 6.0.0. |
 | `PORT` | No | `3000` | HTTP port the server listens on. Defaults to `3000`. Railway sets this automatically via the `PORT` env var. |
 | `NODE_ENV` | No | `production` | Standard Node.js environment flag. Set to `production` by Railway automatically. Affects logging verbosity and error detail exposure. |
 | `VP_EMIT_UI_MARKERS` | No | `true` | When set to `true`, the MCP server emits `__VP_TOOL_RESULT__` stream markers in tool responses. Used by the VantagePeers Gen UI iframe embed to distinguish structured tool output from prose. Disabled by default. |
@@ -70,6 +71,7 @@ The OAuth token infrastructure (`oauth.ts`, `oauthDcr.ts`) persists all client r
 | `CONVEX_URL` | No | Yes (stdio) |
 | `CONVEX_URL_INTERNAL` | No | Yes (HTTP) |
 | `PUBLIC_BASE_URL` | No | Yes (HTTP) |
+| `CLERK_DOMAIN` | No | Yes (HTTP) |
 | `PORT` | No | Yes (HTTP) |
 | `NODE_ENV` | No | Yes |
 | `VP_EMIT_UI_MARKERS` | No | Yes |

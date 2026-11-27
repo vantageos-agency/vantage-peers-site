@@ -605,9 +605,11 @@ Automatisation basée sur cron. Voir [Tâches récurrentes](/docs/capabilities/r
 
 | Outil | Description |
 |-------|-------------|
-| `create_recurring_task` | Créer un nouveau modèle de tâche récurrente |
+| `create_recurring_task` | Créer un nouveau modèle de tâche récurrente ; `project` est requis |
 | `list_recurring_tasks` | Lister tous les modèles de tâches récurrentes |
 | `delete_recurring_task` | Supprimer un modèle |
+
+`project` est requis pour `create_recurring_task` (depuis la 6.0.0). Un appel sans `project`, ou avec un `project` vide ou composé d'espaces, est refusé. Chaque tâche générée par le planning porte ce projet, et la facturation regroupe les tâches terminées par projet. Les appelants qui migrent depuis la 5.x doivent passer `project`.
 
 ### `pause_recurring_task`
 
@@ -667,7 +669,7 @@ Suivi d'issues avec synchronisation webhook et auto-liaison. Voir [Issues GitHub
 | Outil | Description |
 |-------|-------------|
 | `add_repo_mapping` | Mapper un dépôt GitHub à un orchestrateur |
-| `list_repo_mappings` | Lister tous les mappages de dépôts |
+| `list_repo_mappings` | Lister tous les mappages de dépôts ; les pages suivantes se lisent en repassant le `nextCursor` retourné dans `cursor` |
 | `remove_repo_mapping` | Supprimer un mappage de dépôt |
 | `list_issues` | Lister les issues avec filtres |
 | `get_issue` | Récupérer une issue |
