@@ -5,6 +5,36 @@ description: Historique des versions de vantage-peers-mcp.
 
 # Journal des modifications
 
+## v7.0.0 — 2026-11-27
+
+La 7.0.0 est une version majeure (Cloud et Self-host) : les cinq outils de la base de connaissances et la couche JWT Clerk refusent ce que la 6.0.0 acceptait.
+
+### Modifié (incompatible)
+
+- **Les outils de la base de connaissances refusent un bearer sans organisation vérifiée** — `store_document_chunked`, `soft_delete_document`, `claim_upload` et `generate_upload_url` (avec et sans `sha256`) refusent un bearer qui n'est ni le master ni une session Clerk et n'a aucune organisation vérifiée. Le refus est `RBAC_DENIED` avec la raison `verified-org-unresolved`, et aucun appel au backend n'est fait ([#1804](https://github.com/vantageos-agency/vantage-peers/issues/1804)). Les appelants master et session Clerk sont inchangés. Le Cloud n'est pas concerné : la production compte 0 bearer sans slug d'organisation.
+- **Self-host : `CLERK_DOMAIN` est désormais requis aussi par la couche JWT Clerk, `whoami` et le jeton d'administration d'organisation**, et plus seulement par l'émission du jeton de compte de service. Une valeur absente, vide ou composée d'espaces est refusée au lieu de retomber sur une instance Clerk de développement ([#1802](https://github.com/vantageos-agency/vantage-peers/issues/1802)). Le Cloud n'est pas concerné : `CLERK_DOMAIN` est défini sur Railway. Voir [Variables d'environnement](/docs/self-host/env-vars).
+
+### Modifié
+
+- **ID d'agent vérifié transmis** — les outils transmettent l'ID d'agent vérifié de l'appelant aux portes du backend qui le prennent, et refusent par un `RBAC_DENIED` typé avant la porte un appelant qui n'en a pas là où la porte n'en admet aucun (`accept_mandate`, `update_mandate`, `settle_mandate` ; `debate_get_room` et `improvisation_digest` pour un appelant qui n'est pas une session Clerk). Un producteur unique construit tous les refus d'identité ([#1803](https://github.com/vantageos-agency/vantage-peers/issues/1803)).
+- **`get_memory` transmet l'organisation vérifiée de l'appelant** à la porte du backend ([#1804](https://github.com/vantageos-agency/vantage-peers/issues/1804)).
+
+### Corrigé
+
+- **Pagination de `list_bus`** — `list_bus` transmet le `nextCursor` `{time,id}` qu'il émet, donc sa page 2 est atteignable. `list_bus` et `list_repo_mappings` refusent un curseur de forme inconnue au lieu de repartir silencieusement à la page 1 ([#1807](https://github.com/vantageos-agency/vantage-peers/issues/1807)).
+
+### Notes de migration
+
+- Appeler les outils de la base de connaissances avec un bearer qui porte une organisation vérifiée.
+- Self-host : définir CLERK_DOMAIN avant la mise à niveau, sinon tout JWT Clerk est refusé.
+
+### Liens
+
+- npm : [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- Journal complet : [mcp-server/CHANGELOG.md](https://github.com/vantageos-agency/vantage-peers/blob/main/mcp-server/CHANGELOG.md)
+
+---
+
 ## v6.0.0 — 2026-11-27
 
 La 6.0.0 est une version majeure (Cloud et Self-host).
