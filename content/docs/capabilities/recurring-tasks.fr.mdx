@@ -27,6 +27,8 @@ Les tâches récurrentes sont des modèles qui créent automatiquement de nouvel
 }
 ```
 
+`project` est requis (depuis la 6.0.0) : un appel sans `project`, ou avec un `project` vide ou composé d'espaces, est refusé. Chaque tâche générée par le planning le porte, et la facturation regroupe les tâches terminées par projet.
+
 ### Format des expressions cron
 
 Cron standard à 5 champs : `minute heure jour-du-mois mois jour-de-la-semaine`
@@ -42,7 +44,7 @@ Cron standard à 5 champs : `minute heure jour-du-mois mois jour-de-la-semaine`
 
 | Outil | Description |
 |-------|-------------|
-| `create_recurring_task` | Créer un nouveau modèle de tâche récurrente |
+| `create_recurring_task` | Créer un nouveau modèle de tâche récurrente (`project` requis) |
 | `list_recurring_tasks` | Lister tous les modèles de tâches récurrentes |
 | `pause_recurring_task` | Mettre en pause (arrête la création automatique) |
 | `resume_recurring_task` | Reprendre une tâche en pause |

@@ -27,6 +27,8 @@ Recurring tasks are templates that automatically create new tasks on a schedule.
 }
 ```
 
+`project` is required (since 6.0.0): a call with no `project`, or an empty or blank one, is refused. Every task the schedule generates carries it, and billing groups done tasks by it.
+
 ### Cron Expression Format
 
 Standard 5-field cron: `minute hour day-of-month month day-of-week`
@@ -42,7 +44,7 @@ Standard 5-field cron: `minute hour day-of-month month day-of-week`
 
 | Tool | Description |
 |------|-------------|
-| `create_recurring_task` | Create a new recurring task template |
+| `create_recurring_task` | Create a new recurring task template (`project` required) |
 | `list_recurring_tasks` | List all recurring task templates |
 | `pause_recurring_task` | Pause (stops auto-creation) |
 | `resume_recurring_task` | Resume a paused task |

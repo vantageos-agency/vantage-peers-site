@@ -5,6 +5,33 @@ description: Release history for vantage-peers-mcp.
 
 # Changelog
 
+## v6.0.0 — 2026-11-27
+
+6.0.0 is a major release (Cloud and Self-host).
+
+### Changed (breaking)
+
+- **`create_recurring_task` requires `project`** — a schedule with no `project`, or an empty or blank one, is refused. Every task the schedule generates carries that project, and billing groups done tasks by it ([#1800](https://github.com/vantageos-agency/vantage-peers/issues/1800)). See [Recurring Tasks](/docs/capabilities/recurring-tasks).
+- **Self-host: `CLERK_DOMAIN` is required for the service-account mint** — it has no default. An unset, empty or whitespace-only value is refused before any Clerk call, with an error naming `CLERK_DOMAIN` ([#1795](https://github.com/vantageos-agency/vantage-peers/issues/1795)). Clerk JWT verification still defaults this variable in 6.0.0. See [Environment Variables](/docs/self-host/env-vars).
+- **`ui://` reads forward the caller's verified organisation** — a bearer that carries no organisation is refused ([#1801](https://github.com/vantageos-agency/vantage-peers/issues/1801)).
+
+### Fixed
+
+- **`list_repo_mappings` paging** — pages beyond the first are read by passing the returned `nextCursor` back as `cursor`. A page that holds an out-of-scope row is served: on that row `orchestrator` is absent and `outOfScope.reason` says why ([#1805](https://github.com/vantageos-agency/vantage-peers/issues/1805)). See [list_repo_mappings](/docs/cloud/mcp-tools/list-repo-mappings).
+- **Startup log** — the server logs the port it listens on, never the hostname ([#1797](https://github.com/vantageos-agency/vantage-peers/issues/1797)).
+
+### Upgrade notes
+
+- Callers of `create_recurring_task` must pass `project`.
+- Self-host: set `CLERK_DOMAIN` (the Frontend API origin of the Clerk instance that issued `CLERK_SECRET_KEY`) before upgrading.
+
+### Links
+
+- npm: [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- Full changelog: [mcp-server/CHANGELOG.md](https://github.com/vantageos-agency/vantage-peers/blob/main/mcp-server/CHANGELOG.md)
+
+---
+
 ## v5.0.0 — 2026-11-24
 
 ### Added
@@ -50,7 +77,7 @@ description: Release history for vantage-peers-mcp.
 
 ---
 
-## v2.12.0 — 2026-06-06 (current)
+## v2.12.0 — 2026-06-06
 
 ### Security
 

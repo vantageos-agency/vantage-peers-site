@@ -817,11 +817,14 @@ Defines a recurring task template.
   "title": "Daily standup: review open tasks and unread messages",
   "cronExpression": "0 9 * * *",
   "assignedTo": "alice",
-  "priority": "medium"
+  "priority": "medium",
+  "project": "vantage-peers"
 }
 ```
 
 Standard cron expressions. Convex runs the scheduler.
+
+`project` is required (since 6.0.0). A call with no `project`, or with an empty or blank one, is refused. Every task the schedule generates carries that project, and billing groups done tasks by it. Callers upgrading from 5.x must pass `project`.
 
 ### `get_recurring_task`
 
@@ -928,7 +931,7 @@ Issue tracking with webhook sync and auto-linking. See [GitHub Issues](/docs/inf
 | `issue_stats` | Get issue count stats |
 | `link_issue_to_pattern` | Link an issue to a fix pattern |
 | `add_repo_mapping` | Map a GitHub repo to an orchestrator |
-| `list_repo_mappings` | List all repo mappings |
+| `list_repo_mappings` | List all repo mappings; read further pages by passing the returned `nextCursor` back as `cursor` |
 | `remove_repo_mapping` | Remove a repo mapping |
 | `get_repo_mapping` | Fetch a single repo mapping by slug (owner/name) |
 

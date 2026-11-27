@@ -118,7 +118,7 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 
 | Outil | Objectif | Curseur/Limite |
 |---|---|---|
-| `create_recurring_task` | Définir un modèle de tâche récurrente avec expression cron | N |
+| `create_recurring_task` | Définir un modèle de tâche récurrente avec expression cron ; `project` requis (vide ou composé d'espaces refusé) | N |
 | `get_recurring_task` | Récupérer une seule définition de tâche récurrente par ID de document Convex | N |
 | `list_recurring_tasks` | Lister tous les modèles de tâches récurrentes ; limite par défaut 20, plafond 200 | O |
 | `update_recurring_task` | Mettre à jour un modèle de tâche récurrente | N |
@@ -165,7 +165,7 @@ Le support curseur/limite (O/N/EXCEPTION) reflète l'audit Day-114. Tous les out
 | Outil | Objectif | Curseur/Limite |
 |---|---|---|
 | `add_repo_mapping` | Mapper un slug de dépôt GitHub à un orchestrateur | N |
-| `list_repo_mappings` | Lister tous les mappings de dépôts ; `fields=lite|full`, `cursor` ; limite par défaut 20, plafond 200 | O |
+| `list_repo_mappings` | Lister tous les mappings de dépôts ; `fields=lite|full`, `cursor` (repasser le `nextCursor` retourné pour la page suivante) ; limite par défaut 20, plafond 200 ; les lignes hors périmètre sont servies sans `orchestrator`, avec `outOfScope.reason` | O |
 | `remove_repo_mapping` | Supprimer un mapping de dépôt | N |
 | `get_repo_mapping` | Récupérer un seul mapping de dépôt par slug (propriétaire/nom) | N |
 

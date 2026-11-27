@@ -118,7 +118,7 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 
 | Tool | Purpose | Cursor/Limit |
 |---|---|---|
-| `create_recurring_task` | Define a recurring task template with cron expression | N |
+| `create_recurring_task` | Define a recurring task template with cron expression; `project` required (empty or blank refused) | N |
 | `get_recurring_task` | Fetch a single recurring task definition by Convex document ID | N |
 | `list_recurring_tasks` | List all recurring task templates; default limit 20, cap 200 | Y |
 | `update_recurring_task` | Update a recurring task template | N |
@@ -165,7 +165,7 @@ Cursor/limit support (Y/N/EXCEPTION) reflects the Day-114 audit. All `list_*` to
 | Tool | Purpose | Cursor/Limit |
 |---|---|---|
 | `add_repo_mapping` | Map a GitHub repo slug to an orchestrator | N |
-| `list_repo_mappings` | List all repo mappings; `fields=lite|full`, `cursor`; default limit 20, cap 200 | Y |
+| `list_repo_mappings` | List all repo mappings; `fields=lite|full`, `cursor` (pass the returned `nextCursor` back for the next page); default limit 20, cap 200; out-of-scope rows come with `orchestrator` absent and `outOfScope.reason` | Y |
 | `remove_repo_mapping` | Remove a repo mapping | N |
 | `get_repo_mapping` | Fetch a single repo mapping by slug (owner/name) | N |
 
