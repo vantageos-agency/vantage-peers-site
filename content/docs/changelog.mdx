@@ -5,6 +5,36 @@ description: Release history for vantage-peers-mcp.
 
 # Changelog
 
+## v7.0.0 — 2026-11-27
+
+7.0.0 is a major release (Cloud and Self-host): the five Knowledge Base tools and the Clerk-JWT layer refuse what 6.0.0 accepted.
+
+### Changed (breaking)
+
+- **Knowledge Base tools refuse a bearer with no verified organisation** — `store_document_chunked`, `soft_delete_document`, `claim_upload` and `generate_upload_url` (with and without `sha256`) refuse a bearer that is neither the master nor a Clerk session and has no verified organisation. The refusal is `RBAC_DENIED` with reason `verified-org-unresolved`, and no backend call is made ([#1804](https://github.com/vantageos-agency/vantage-peers/issues/1804)). Master and Clerk-session callers are unchanged. Cloud is unaffected: production has 0 bearers without an org slug.
+- **Self-host: `CLERK_DOMAIN` is now required by the Clerk-JWT layer, `whoami` and the org-admin token too**, not only the service-account mint. An unset, empty or whitespace-only value is refused instead of defaulting to a dev Clerk instance ([#1802](https://github.com/vantageos-agency/vantage-peers/issues/1802)). Cloud is unaffected: `CLERK_DOMAIN` is set on Railway. See [Environment Variables](/docs/self-host/env-vars).
+
+### Changed
+
+- **Verified agent ID forwarded** — the tools forward the caller's verified agent ID to the backend doors that take it, and refuse with a typed `RBAC_DENIED` before the door a caller with none where the door admits none (`accept_mandate`, `update_mandate`, `settle_mandate`; `debate_get_room` and `improvisation_digest` for a caller that is not a Clerk session). One shared producer builds every identity refusal ([#1803](https://github.com/vantageos-agency/vantage-peers/issues/1803)).
+- **`get_memory` forwards the caller's verified organisation** to the backend door ([#1804](https://github.com/vantageos-agency/vantage-peers/issues/1804)).
+
+### Fixed
+
+- **`list_bus` paging** — `list_bus` forwards the `{time,id}` `nextCursor` it emits, so its page 2 is reachable. `list_bus` and `list_repo_mappings` refuse a cursor of an unknown shape instead of silently restarting at page 1 ([#1807](https://github.com/vantageos-agency/vantage-peers/issues/1807)).
+
+### Upgrade notes
+
+- Call the Knowledge Base tools with a bearer that carries a verified organisation.
+- Self-host: set CLERK_DOMAIN before upgrading, or every Clerk JWT is refused.
+
+### Links
+
+- npm: [vantage-peers-mcp](https://www.npmjs.com/package/vantage-peers-mcp)
+- Full changelog: [mcp-server/CHANGELOG.md](https://github.com/vantageos-agency/vantage-peers/blob/main/mcp-server/CHANGELOG.md)
+
+---
+
 ## v6.0.0 — 2026-11-27
 
 6.0.0 is a major release (Cloud and Self-host).
